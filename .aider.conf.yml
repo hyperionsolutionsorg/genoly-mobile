@@ -1,0 +1,8 @@
+# Aider default config — fitness monorepo
+model: ollama/qwen2.5-coder:32b
+read:
+  - CONTEXT.md
+  - memory-bank/activeContext.md
+  - memory-bank/progress.md
+auto-commits: true
+git: true

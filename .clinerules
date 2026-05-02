@@ -1,0 +1,18 @@
+# Cline Rules — fitness (monorepo)
+
+## FIRST ACTION
+Read `CONTEXT.md` in this repo root before every task.
+
+## Then load based on task:
+- Starting a session → also read `memory-bank/activeContext.md`
+- Working on features → also read `memory-bank/progress.md`
+- Touching packages/ or config → also read `memory-bank/techStack.md`
+- Architecture decisions → also read `memory-bank/systemPatterns.md`
+
+## Critical rule
+Health sync logic belongs in `packages/health-sync/` only — never in app screens.
+
+## Git
+`Genoly Projects <git@hyperionsolutions.org>`
+Never add Co-Authored-By Claude/Anthropic to commits.
+Use Compact Prompt mode.
