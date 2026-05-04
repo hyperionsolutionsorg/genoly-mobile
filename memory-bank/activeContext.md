@@ -1,25 +1,25 @@
-# Active Context — fitness
+# Active Context — genoly-mobile
 
 **Last Updated:** 2026-05-03
-**Status:** 🔵 PLANNING — architecture finalized, beginning Phase 0
+**Status:** 🔵 PLANNING — architecture migration COMPLETE, ready to start Phase 0 mobile work
 
 ---
 
-## Repository Strategy (decided 2026-05-03)
+## Repository Strategy (✅ COMPLETE 2026-05-03)
 
-This repo (`hyperionsolutionsorg/fitness`) will be **renamed to `hyperionsolutionsorg/genoly-mobile`** and slimmed to mobile + shared packages only. All fitness web code moves into `genoly-family-web/src/pages/fitness/`.
+This repo is now `hyperionsolutionsorg/genoly-mobile` (renamed from `fitness`) — slimmed to mobile + shared packages only. All fitness web code lives in `genoly-family-web/src/pages/fitness/`.
 
-| Repo | Role |
-|---|---|
-| `genoly-family-web` | All web (Genoly + fitness pages co-hosted). Single Convex deployment. |
-| `genoly-mobile` (renamed from `fitness`) | One unified Expo React Native app for ALL Genoly mobile (fitness is the first filled section). Cross-platform: same codebase ships iOS + Android. |
-| ~~`genoly-family-web-docs`~~ | **To be deleted** — consolidate into `genoly-family-web/docs/`. Duplicate memory-bank caused drift. |
+| Repo | Role | State |
+|---|---|---|
+| `genoly-family-web` | All web (Genoly + fitness pages co-hosted) + all docs + canonical memory-bank. Single Convex deployment. | ✅ Phase 2 ~99% complete; awaiting fitness section work |
+| `genoly-mobile` (this repo) | One unified Expo React Native app for ALL Genoly mobile. Cross-platform: same TS codebase ships iOS + Android. Fitness is the first filled section. | ✅ Renamed + slimmed; Phase 0 init pending |
+| ~~`genoly-family-web-docs`~~ | Archived as `OLD_genoly-family-web-docs` on github.com — read-only history. Content lives in `genoly-family-web/docs/` and `genoly-family-web/memory-bank/`. | ✅ Retired |
 
-Local cleanup needed BEFORE rename push:
-- Delete `apps/web/` from this repo (web migrates to genoly-family-web)
-- Confirm `apps/mobile/` + `packages/{health-sync,types,api-client}` stay
-- Update `package.json` workspace globs accordingly
-- Update README, CONTEXT.md, .clinerules to reflect mobile-only scope
+Migration cleanup done:
+- ✅ `apps/web/` removed (commit c5a0984)
+- ✅ Local folder + GitHub repo renamed `fitness` → `genoly-mobile`
+- ✅ Local remote URL updated to `https://github.com/hyperionsolutionsorg/genoly-mobile.git`
+- ✅ README, CONTEXT.md, memory-bank updated to reflect mobile-only scope
 
 ---
 
@@ -38,7 +38,7 @@ Local cleanup needed BEFORE rename push:
   - All fitness tables prefixed `fitness_*`
   - **Identity indirection** — NO `fitness_*` table directly references `users._id`. All identity links go through `fitness_users.genolyUserId`.
   - **Code isolation** — fitness backend code lives in `genoly-family-web/convex/fitness/`. ESLint rule blocks Genoly→fitness imports and restricts fitness→Genoly imports to a small allow-list.
-  - `FORK_PROCEDURE.md` documents step-by-step extraction
+  - `FORK_PROCEDURE.md` (to be written) documents step-by-step extraction
 - **Daily aggregates only** — steps + calories per (user, date), upsert idempotent
 
 ### Auth
@@ -58,15 +58,14 @@ Local cleanup needed BEFORE rename push:
 
 ---
 
-## Phase 0 — Active Work Queue
+## Phase 0 — What's Next
 
-1. Consolidate `genoly-family-web-docs` → `genoly-family-web/docs/`, delete standalone repo
-2. Strip `apps/web/` from this repo
-3. Rename GitHub repo `fitness` → `genoly-mobile`
-4. Update local clone paths and remotes
-5. Design fitness Convex schema (`fitness_users` indirection + `fitness_health_daily`, `fitness_friendships`, `fitness_goals`, `fitness_devices`, `fitness_tokens`)
-6. Design mobile→server API contract (HTTP routes under `/api/fitness/*` in `genoly-family-web/convex/http.ts`)
-7. Set up ESLint cross-boundary import rule in genoly-family-web
-8. Write `FORK_PROCEDURE.md`
-9. Initialize Expo app structure in `apps/mobile/`
-10. Configure EAS Build for Android (iOS deferred)
+Migration housekeeping is done. The next session should pick up at the actual mobile design work, in the genoly-family-web repo first since the schema + API need to land before mobile can call them:
+
+1. **Design fitness Convex schema** in `genoly-family-web/convex/schema.ts` — tables: `fitness_users` (indirection), `fitness_health_daily`, `fitness_friendships`, `fitness_goals`, `fitness_devices`, `fitness_tokens`
+2. **Design mobile→server HTTP API contract** under `/api/fitness/*` in `genoly-family-web/convex/http.ts`
+3. **Set up ESLint cross-boundary import rule** in genoly-family-web (blocks Genoly→fitness, restricts fitness→Genoly to allow-list)
+4. **Write `FORK_PROCEDURE.md`** in this repo documenting fitness extraction strategy
+5. **Initialize Expo app structure** in `apps/mobile/` with TypeScript template + bottom-tab nav skeleton
+6. **Wire `packages/health-sync` interface** (HealthKit + Health Connect adapter shapes — implementation later)
+7. **Configure EAS Build for Android** (iOS deferred)

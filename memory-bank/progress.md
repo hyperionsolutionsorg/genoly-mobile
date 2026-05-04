@@ -1,10 +1,10 @@
-# Progress — fitness (→ to be renamed `genoly-mobile`)
+# Progress — genoly-mobile
 
 **Last Updated:** 2026-05-03
 
 ---
 
-## Status: 🔵 PLANNING — architecture finalized, beginning Phase 0
+## Status: 🔵 PLANNING — architecture migration COMPLETE; ready to start Phase 0 mobile work
 
 ---
 
@@ -30,13 +30,15 @@
 
 ---
 
-## 🔴 Phase 0 — Foundation (active)
+## ✅ Phase 0 prerequisites — Repo cleanup (DONE 2026-05-03)
 
-### Repo cleanup
-- [ ] Delete `genoly-family-web-docs` repo (move docs into `genoly-family-web/docs/`)
-- [ ] Strip `apps/web/` from this repo
-- [ ] Rename GitHub `fitness` → `genoly-mobile`
-- [ ] Update local remotes + paths
+- [x] Archive `genoly-family-web-docs` (renamed to `OLD_genoly-family-web-docs` on github.com); content consolidated into `genoly-family-web/docs/` and `genoly-family-web/memory-bank/`
+- [x] Strip `apps/web/` from this repo (commit c5a0984)
+- [x] Rename GitHub `fitness` → `genoly-mobile`
+- [x] Update local remote URL to `https://github.com/hyperionsolutionsorg/genoly-mobile.git`
+- [x] Update local folder name + all CONTEXT.md / memory-bank files to reflect mobile-only scope
+
+## 🔴 Phase 0 — Foundation (active)
 
 ### Schema + API
 - [ ] Design Convex `fitness_*` schema (users, health_daily, friendships, goals, devices, tokens) — added to `genoly-family-web/convex/schema.ts`
