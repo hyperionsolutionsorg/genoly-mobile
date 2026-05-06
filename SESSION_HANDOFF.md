@@ -8,6 +8,21 @@
 
 ---
 
+## 📋 Standing instruction to any AI agent
+
+**Update the live state files whenever any of these triggers occur:**
+
+| Trigger | Files to update (within this repo) |
+|---|---|
+| 🎯 **Progress made** — mobile task status changed | `memory-bank/progress.md` + `memory-bank/activeContext.md` + this file |
+| 🏛 **Major decision made** — mobile architecture, convention, scope change | `memory-bank/systemPatterns.md` (if rule), `memory-bank/projectbrief.md` (if scope/stack), this file, `memory-bank/activeContext.md`. Plus `master-context.md` if cross-repo. |
+| 💾 **Commit landed** | Mention commit hash + summary in this file and `memory-bank/activeContext.md`. If tied to a task in `progress.md`, note hash there. |
+| 🆕 **New doc added (e.g., FORK_PROCEDURE iteration)** | This file's "Cross-references" section |
+
+Full rule + cross-repo trigger matrix: `master-context.md` → "Standing Instruction to Any AI Agent". Don't skip the parallel update — drift breaks handoffs.
+
+---
+
 ## What this repo is
 
 **`genoly-mobile`** — ONE unified Expo React Native app for ALL Genoly mobile. Cross-platform (iOS + Android from a single TypeScript codebase). Bottom-tab navigation: Family Tree / Fitness / Notifications / Settings. **Fitness is the first filled section** in v1.
