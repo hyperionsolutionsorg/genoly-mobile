@@ -1,5 +1,11 @@
 # CONTEXT — genoly-mobile
 <!-- AI: Read Zone 1 always. Load Zone 2 files based on your context capacity. -->
+<!-- AGENT HANDOFF: If you are a NEW AI agent picking up this project cold,
+     read /Users/snalluri/Personal/Code/Geno/master-context.md FIRST. That is
+     the workspace-level entry point and routing dispatcher. Then read
+     genoly-mobile/SESSION_HANDOFF.md for the current mobile state. Do NOT
+     start from this file — start from master-context.md. -->
+
 
 ---
 
