@@ -1,10 +1,10 @@
 # Progress — genoly-mobile
 
-**Last Updated:** 2026-05-03
+**Last Updated:** 2026-05-07
 
 ---
 
-## Status: 🔵 PLANNING — architecture migration COMPLETE; ready to start Phase 0 mobile work
+## Status: 🟢 Phase 0 mobile init landed — apps/mobile/ scaffolded with Expo Router tabs (Family / Fitness / Notifications / Settings). npm workspaces wired at repo root. Ready for `npm install` + first smoke test, then Task #8 (package interface stubs).
 
 ---
 
@@ -52,9 +52,10 @@
 - [ ] Add fitness routes to App router
 
 ### Mobile (in genoly-mobile, this repo)
-- [ ] Initialize Expo app in `apps/mobile/` with TypeScript template
-- [ ] Bottom-tab navigation skeleton: Family / Fitness / Notifications / Settings
-- [ ] Wire `packages/health-sync` interface (HealthKit + Health Connect adapters)
+- [x] Initialize Expo app in `apps/mobile/` with TypeScript template (Task #7, 2026-05-07) — Expo Router 6 tabs template, SDK 54, RN 0.81, New Architecture enabled, typed routes experiment on. Bundle id `org.hyperionsolutions.genoly`, deep-link scheme `genoly://`.
+- [x] Bottom-tab navigation skeleton: Family / Fitness / Notifications / Settings (Task #7) — file-based routes in `apps/mobile/app/(tabs)/`, FontAwesome icons (sitemap / heartbeat / bell / cog), placeholder screens with phase notes.
+- [x] npm workspaces wired at repo root (Task #7 follow-up) — root `package.json` with `apps/*` + `packages/*` workspaces, stub `package.json` in each of `packages/{health-sync,types,api-client}`, `metro.config.js` for monorepo Metro resolution.
+- [ ] **Task #8** — Wire `packages/health-sync` interface (HealthKit + Health Connect adapters), plus `packages/types` and `packages/api-client` interface definitions. Implementation in Phase 1.
 - [ ] Login screen (calls server's mobile token endpoint)
 - [ ] Background sync task scheduler
 

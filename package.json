@@ -1,0 +1,20 @@
+{
+  "name": "genoly-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ONE unified Genoly mobile app (Expo React Native, cross-platform iOS+Android). Fitness is the first filled section. A product of Hyperion Solutions LLC.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "mobile": "npm --workspace @genoly/mobile run start",
+    "mobile:android": "npm --workspace @genoly/mobile run android",
+    "mobile:ios": "npm --workspace @genoly/mobile run ios",
+    "mobile:web": "npm --workspace @genoly/mobile run web",
+    "typecheck": "npm --workspace @genoly/mobile run typecheck"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

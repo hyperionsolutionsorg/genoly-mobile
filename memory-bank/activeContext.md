@@ -1,7 +1,7 @@
 # Active Context — genoly-mobile
 
-**Last Updated:** 2026-05-03
-**Status:** 🔵 PLANNING — architecture migration COMPLETE, ready to start Phase 0 mobile work
+**Last Updated:** 2026-05-07
+**Status:** 🟢 Phase 0 mobile init landed — apps/mobile/ scaffolded; ready for first `npm install` + smoke test, then Task #8 (package interfaces)
 
 ---
 
@@ -58,14 +58,33 @@ Migration cleanup done:
 
 ---
 
-## Phase 0 — What's Next
+## What landed 2026-05-07 (Task #7 — initialize Expo app)
 
-Migration housekeeping is done. The next session should pick up at the actual mobile design work, in the genoly-family-web repo first since the schema + API need to land before mobile can call them:
+`apps/mobile/` scaffolded via `npx create-expo-app@latest --template tabs --no-install` and customized:
 
-1. **Design fitness Convex schema** in `genoly-family-web/convex/schema.ts` — tables: `fitness_users` (indirection), `fitness_health_daily`, `fitness_friendships`, `fitness_goals`, `fitness_devices`, `fitness_tokens`
-2. **Design mobile→server HTTP API contract** under `/api/fitness/*` in `genoly-family-web/convex/http.ts`
-3. **Set up ESLint cross-boundary import rule** in genoly-family-web (blocks Genoly→fitness, restricts fitness→Genoly to allow-list)
-4. **Write `FORK_PROCEDURE.md`** in this repo documenting fitness extraction strategy
-5. **Initialize Expo app structure** in `apps/mobile/` with TypeScript template + bottom-tab nav skeleton
-6. **Wire `packages/health-sync` interface** (HealthKit + Health Connect adapter shapes — implementation later)
-7. **Configure EAS Build for Android** (iOS deferred)
+- **Expo SDK 54** with React Native 0.81.5, React 19.1, TypeScript 5.9, Expo Router 6.
+- **New Architecture enabled** (`newArchEnabled: true` in `app.json`) — Fabric / TurboModules.
+- **Typed routes experiment on** — file-system → URL mapping is type-checked at build time.
+- **Bundle id** `org.hyperionsolutions.genoly` (Android `package` + iOS `bundleIdentifier`).
+- **Deep-link scheme** `genoly://` — Family tab is at `/` (so `genoly://` deep-links straight to it, matching Expo Router's standard tabs convention where the first tab uses `index.tsx`). Other tabs at `/fitness`, `/notifications`, `/settings`. Nested routes for tree/person detail (Phase 2) will live under e.g. `app/(tabs)/tree/[treeSlug]/person/[personSlug].tsx`, deep-linkable as `genoly://tree/<treeSlug>/person/<personSlug>`.
+- **App name** `Genoly` / **slug** `genoly-mobile`.
+- **Bottom tabs** in `apps/mobile/app/(tabs)/`: `family.tsx` (default), `fitness.tsx`, `notifications.tsx`, `settings.tsx`. FontAwesome 5 icons: sitemap, heartbeat, bell, cog.
+- **Placeholder screens** show the phase the screen is waiting on; Settings includes the legal attribution and the "manage subscription on the website" copy (Apple anti-steering compliance).
+- **npm workspaces** wired at `genoly-mobile/package.json` root with `apps/*` + `packages/*`; stub `package.json` files added to each of `packages/{health-sync, types, api-client}`.
+- **`metro.config.js`** in `apps/mobile/` configures Metro to watch the workspace root and resolve hoisted deps (per Expo's monorepo guide).
+
+**Not yet done in this scaffold (deliberately deferred):**
+
+- `npm install` — user runs this on their laptop after pulling. Sandbox uses `--no-install`.
+- Smoke test — user runs `npx expo start` and tests on Expo Go (Android phone) or an emulator.
+- Pruning of unused template artifacts — `components/EditScreenInfo.tsx`, `ExternalLink.tsx`, `StyledText.tsx`, `app/modal.tsx` are no longer referenced by our 4 tabs but were left in place to avoid noisy deletes in the init commit. Clean up in a later commit if desired.
+- The original `apps/mobile/.gitkeep` and `packages/*/.gitkeep` placeholders remain alongside the new content. Harmless but redundant — `rm` them when convenient.
+
+## Phase 0 — what's next
+
+1. **Task #8** — Wire `packages/health-sync` interface (HealthKit + Health Connect adapter shapes) plus `packages/types` and `packages/api-client` shapes. Interface definitions only; implementation in Phase 1.
+2. **Task #10** — Configure EAS Build for Android (iOS deferred until Apple Developer Program signup is justified).
+3. **Task #9** — GitHub Actions: `build-android.yml` here, web deploy lives in `genoly-family-web`.
+4. **Task #11** — Verify Phase 0 baseline: clean TypeScript build (`npm run typecheck`) + EAS Build produces a working signed APK.
+
+Earlier Phase 0 prerequisites that landed in `genoly-family-web` (2026-05-05): fitness schema, API contract, ESLint forkability rule, FORK_PROCEDURE.md, co-hosted-architecture.md.

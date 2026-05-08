@@ -4,7 +4,7 @@
 
 **Audience:** AI agent or human colleague working on the Genoly mobile app. Read this if you're touching anything in `genoly-mobile/`.
 
-**Last updated:** 2026-05-05.
+**Last updated:** 2026-05-07.
 
 ---
 
@@ -58,16 +58,17 @@ For the architectural pattern (why Genoly + Fitness coexist, the forkability inv
 | Repo rename + slim (`fitness` → `genoly-mobile`, removed `apps/web/`) | 2026-05-03 | commit `c5a0984` |
 | Identity finalized in CONTEXT.md + memory-bank | 2026-05-03 | commit `dc7b233` |
 | `FORK_PROCEDURE.md` written | 2026-05-05 | 9-phase extraction playbook (~10–15 working days estimated) |
+| **Task #7 — initialize Expo app** | 2026-05-07 | `apps/mobile/` scaffolded via `create-expo-app --template tabs` (Expo SDK 54, RN 0.81, Expo Router 6, New Architecture, typed routes). 4-tab nav skeleton: Family / Fitness / Notifications / Settings with placeholder screens. npm workspaces wired at repo root with stubs for `packages/{health-sync, types, api-client}`. `metro.config.js` for monorepo deps resolution. App name `Genoly`, slug `genoly-mobile`, scheme `genoly://`, bundle id `org.hyperionsolutions.genoly`. Bundled into the same commit as today's doc-org edits per the user's preference. |
 
 ### 🔵 Phase 0 work — what's next (in dependency order)
 
 | # | Task | Notes |
 |---|---|---|
-| 7 | **Initialize Expo app** in `apps/mobile/` | TypeScript template, bottom-tab nav skeleton (Family / Fitness / Notifications / Settings) |
-| 8 | **Stub packages** | `health-sync`, `types`, `api-client` — interface definitions only, implementations later |
+| — | **Local smoke test (handoff to user)** | `cd apps/mobile && npm install` (or from repo root: `npm install` to install workspaces). Then `npx expo start`, scan QR on Expo Go (Android phone). Confirm 4 tabs render with their icons and placeholder content. |
+| 8 | **Stub packages** | `health-sync`, `types`, `api-client` — interface definitions only (`src/index.ts` per package), implementations land in Phase 1. Package.json stubs already in place from Task #7. |
 | 10 | **EAS Build for Android** | Android-first per the distribution decision (iOS deferred until Apple Developer Program signup) |
 | 9 | **GitHub Actions** | `build-android.yml` here; web deploy lives in `genoly-family-web` |
-| 11 | **Verify Phase 0 baseline** | Clean TypeScript build + EAS produces a working signed APK |
+| 11 | **Verify Phase 0 baseline** | Clean TypeScript build (`npm run typecheck`) + EAS produces a working signed APK |
 
 ### 🟡 Phase 1 (after Phase 0 baseline)
 
@@ -131,6 +132,7 @@ Open the `genoly-mobile` folder in VS Code. First message:
 ## Cross-references
 
 - Workspace top-of-stack: `/Users/snalluri/Personal/Code/Geno/master-context.md` (read first)
+- Architecture & design doc index (registry of every architecture/design doc): `../genoly-family-web/docs/architecture-index.md`
 - Mobile repo entry: [`CONTEXT.md`](./CONTEXT.md)
 - Fitness extraction playbook: [`FORK_PROCEDURE.md`](./FORK_PROCEDURE.md)
 - Mobile memory-bank: [`memory-bank/`](./memory-bank/) — activeContext, progress, projectbrief, systemPatterns, techStack
