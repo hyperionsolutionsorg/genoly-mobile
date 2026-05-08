@@ -58,9 +58,21 @@ Migration cleanup done:
 
 ---
 
-## What landed 2026-05-07 (Task #7 — initialize Expo app)
+## What landed 2026-05-08 (Task #8 — package interface stubs, commit pending)
 
-`apps/mobile/` scaffolded via `npx create-expo-app@latest --template tabs --no-install` and customized:
+Three TypeScript-interface-only packages wired to the API contract:
+
+- `packages/types/src/index.ts` — the leaf of the type dependency graph. All literal unions, entity shapes (HealthEntry, FitnessUser, FitnessDevice, FriendBrief, Goal, etc.), the `SubscriptionStatus` with `isPaymentNeutral: true` tripwire, and the `ApiError` shape. No imports — pure types. Aligned 1:1 with `genoly-family-web/docs/fitness-api-contract.md` so server impl + mobile client share the same contract.
+- `packages/health-sync/src/index.ts` — `HealthAdapter` interface (`getPlatform`, `isAvailable`, `requestPermissions`, `readDailyAggregates`). Imports from `@genoly/types` only. Forkability rule preserved: this package is the sole home of health-reading code; screens never import HealthKit / Health Connect symbols directly.
+- `packages/api-client/src/index.ts` — `ApiClient` interface mirroring all 20 endpoints (auth × 3, sync × 2, friends × 6, goals × 4, devices × 3, subscription × 1, leaderboard × 1) plus `ApiClientConfig` and a typed `ApiClientError` thrown class.
+
+Cross-package deps wired in package.json (apps/mobile pulls all three; health-sync and api-client pull @genoly/types). npm workspaces handles resolution via the existing root-level symlinks under `node_modules/@genoly/`.
+
+Verification pending on user's laptop: `cd /Users/snalluri/Personal/Code/Geno/genoly-mobile && npm install && cd apps/mobile && npx tsc --noEmit`. Expected outcome: no errors. Once green, single commit lands Task #8 + the uncommitted hash-trail edits from `6da2488`/`72187d8`.
+
+## What landed 2026-05-07 (Task #7 — initialize Expo app, commit `6da2488`)
+
+`apps/mobile/` scaffolded via `npx create-expo-app@latest --template tabs --no-install` and customized. Smoke-tested via Expo Go tunnel mode on Android. Code review by `qwen2.5-coder:32b` came back clean (one minor `.gitignore` cleanup applied pre-commit). Companion commit on web side: `genoly-family-web@72187d8` (doc-org adds + 277b446 hash trail).
 
 - **Expo SDK 54** with React Native 0.81.5, React 19.1, TypeScript 5.9, Expo Router 6.
 - **New Architecture enabled** (`newArchEnabled: true` in `app.json`) — Fabric / TurboModules.

@@ -10,6 +10,10 @@ export function ExternalLink(
     <Link
       target="_blank"
       {...props}
+      // @ts-expect-error — External URLs aren't typed in Expo Router's typedRoutes.
+      // This component accepts arbitrary external strings; typedRoutes only knows
+      // internal routes. Suppressing the error here is the Expo template's
+      // intended pattern.
       href={props.href}
       onPress={(e) => {
         if (Platform.OS !== 'web') {

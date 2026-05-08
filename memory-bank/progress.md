@@ -52,10 +52,14 @@
 - [ ] Add fitness routes to App router
 
 ### Mobile (in genoly-mobile, this repo)
-- [x] Initialize Expo app in `apps/mobile/` with TypeScript template (Task #7, 2026-05-07) — Expo Router 6 tabs template, SDK 54, RN 0.81, New Architecture enabled, typed routes experiment on. Bundle id `org.hyperionsolutions.genoly`, deep-link scheme `genoly://`.
-- [x] Bottom-tab navigation skeleton: Family / Fitness / Notifications / Settings (Task #7) — file-based routes in `apps/mobile/app/(tabs)/`, FontAwesome icons (sitemap / heartbeat / bell / cog), placeholder screens with phase notes.
-- [x] npm workspaces wired at repo root (Task #7 follow-up) — root `package.json` with `apps/*` + `packages/*` workspaces, stub `package.json` in each of `packages/{health-sync,types,api-client}`, `metro.config.js` for monorepo Metro resolution.
-- [ ] **Task #8** — Wire `packages/health-sync` interface (HealthKit + Health Connect adapters), plus `packages/types` and `packages/api-client` interface definitions. Implementation in Phase 1.
+- [x] Initialize Expo app in `apps/mobile/` with TypeScript template (Task #7, 2026-05-07, **commit `6da2488`**) — Expo Router 6 tabs template, SDK 54, RN 0.81, New Architecture enabled, typed routes experiment on. Bundle id `org.hyperionsolutions.genoly`, deep-link scheme `genoly://`. Family tab is at `app/(tabs)/index.tsx` (URL `/`), three more tabs at `/fitness`, `/notifications`, `/settings`.
+- [x] Bottom-tab navigation skeleton: Family / Fitness / Notifications / Settings (Task #7, commit `6da2488`) — file-based routes in `apps/mobile/app/(tabs)/`, FontAwesome icons (sitemap / heartbeat / bell / cog), placeholder screens with phase notes. Smoke-tested via Expo Go tunnel mode on Android.
+- [x] npm workspaces wired at repo root (Task #7 follow-up, commit `6da2488`) — root `package.json` with `apps/*` + `packages/*` workspaces, stub `package.json` in each of `packages/{health-sync,types,api-client}`, `metro.config.js` extends `watchFolders` to workspace root for fast refresh on packages/* edits (verified via `expo-doctor` 17/17).
+- [x] **Task #8** — Wire interface definitions in all three workspace packages. Code-complete 2026-05-08 (commit pending user verification). Implementation (HealthKit, Health Connect, fetch client) lands in Phase 1.
+  - `packages/types/src/index.ts` — all shared types: literal unions (`Platform`, `HealthSource`, `SubscriptionTier`, `FriendshipStatus`, `DeviceStatus`, `GoalPeriod`, `GoalMetric`, `TokenScope`); `HealthEntry` + `HealthEntryUpload`; `FitnessUser`, `FitnessDevice`, `FitnessTokenIssue`; `FriendBrief`, `FriendsByStatus`, `LeaderboardRow`, `Leaderboard`; `Goal`, `ArchivedGoal`; `SubscriptionStatus` (with `isPaymentNeutral: true` literal tripwire); `SessionState`; `ApiError` + `ApiErrorResponse`. Aligned 1:1 with `genoly-family-web/docs/fitness-api-contract.md`.
+  - `packages/health-sync/src/index.ts` — `HealthAdapter` interface (`getPlatform`, `isAvailable`, `requestPermissions`, `readDailyAggregates`); `HealthSample`, `HealthMetric`, `HealthAdapterPermissionState`, `HealthAdapterOptions`. Imports from `@genoly/types` only.
+  - `packages/api-client/src/index.ts` — `ApiClient` interface mirroring all 20 endpoints from the contract; `ApiClientConfig`; `ApiClientError` thrown class. Imports from `@genoly/types` only.
+  - Cross-package wiring: `apps/mobile/package.json` declares `@genoly/{types,health-sync,api-client}` as deps; `health-sync` and `api-client` each declare `@genoly/types` as a dep. npm workspaces resolves via symlinks at the repo-root `node_modules/@genoly/`.
 - [ ] Login screen (calls server's mobile token endpoint)
 - [ ] Background sync task scheduler
 
