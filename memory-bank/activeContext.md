@@ -1,7 +1,7 @@
 # Active Context — genoly-mobile
 
 **Last Updated:** 2026-05-08
-**Status:** 🟢 Phase 0 mobile substantially complete — Expo Router tabs scaffolded (Task #7), package interface stubs landed (Task #8), EAS Build pipeline producing signed APK that runs on Android (Task #10), Phase 0 baseline verified (Task #11). Only Task #9 (GitHub Actions) remains for Phase 0 closure.
+**Status:** 🟢 **Phase 0 mobile FULLY CLOSED.** All five Phase 0 tasks done (#7 init, #8 package stubs, #10 EAS Build, #11 baseline verify, #9 CI). Mobile builds automatically on push to main via GitHub Actions; signed APKs are produced in EAS cloud and verified to run on a real Android phone. Ready for Phase 1.
 
 ---
 
@@ -57,6 +57,33 @@ Migration cleanup done:
 - Module separation: ALL health reading code in `packages/health-sync/` only — never in screen components
 
 ---
+
+## What landed 2026-05-08 — Task #9 (GitHub Actions for build-android), commit `03e5a73`, pushed
+
+`.github/workflows/build-android.yml` automates `eas build --platform android --profile preview` on every push to main that touches `apps/mobile/**`, `packages/**`, or the workflow file itself. `workflow_dispatch` trigger added for manual runs from the GitHub Actions tab with a profile dropdown (`preview` default, `development` and `production` available). Concurrency set to cancel in-progress builds on rapid pushes for the same branch — saves EAS Hobby tier quota. Uses `--no-wait` so the GitHub Actions job exits in ~3 min after kicking off the EAS cloud build (saves Actions minutes; build URL surfaces inline as `::notice` annotations in the job log).
+
+**Auth chain:** `EXPO_TOKEN` GitHub secret (generated at https://expo.dev/settings/access-tokens, added under repo Settings → Secrets and variables → Actions). Local git push required adding the `workflow` scope to the existing `PAT-May-2026` GitHub Personal Access Token (without that scope, GitHub refuses to accept commits that touch `.github/workflows/*.yml`).
+
+**Verification:** the workflow commit's own push triggered an automated EAS build (`89183f18-3024-4785-8b97-d1d524303828`). End-to-end pipeline confirmed: GitHub Actions Run → Expo API → EAS cloud build → signed APK. Different from the earlier manual build `b0260446-e70b-4832-8ee6-567a5731545c` (Task #10) which was triggered from a local terminal.
+
+## Phase 0 closure summary
+
+All five Phase 0 mobile tasks landed and verified:
+
+| Task | Commit | Verification |
+|---|---|---|
+| **#7** init Expo app | `6da2488` | Smoke-tested via Expo Go tunnel on Android — 4 tabs render |
+| **#8** package interface stubs | `9657069` | `tsc --noEmit` clean from `apps/mobile/` |
+| **#10** EAS Build for Android | committed earlier today | Manual `eas build` produced APK `b0260446...` — installed on real phone, all 4 tabs render |
+| **#11** Phase 0 baseline verify | (covered by #10's commit) | `tsc --noEmit` clean + working signed APK on device |
+| **#9** GitHub Actions for build-android | `03e5a73` | Auto-triggered EAS build `89183f18...` from CI on the workflow commit's own push |
+
+Mobile is now ready for Phase 1. The actual fitness-feature implementation work (mutation handlers per `fitness-api-contract.md`, `expo-secure-store` integration for bearer tokens, `expo-background-fetch` scheduler, login screen, HealthKit + Health Connect adapter implementations) lives across both repos:
+
+- **`genoly-family-web/convex/fitness/`** — server-side: tasks #18 (`syncFitnessUserFromGenoly` internal mutation), #19 (race-condition-safe friendship mutations), #20 (`setPrimaryDevice` atomic mutation), plus the matching `convex/http.ts` route registrations for all 20 endpoints from the contract
+- **`genoly-mobile/packages/health-sync/src/`** — `HealthKitAdapter` and `HealthConnectAdapter` implementations
+- **`genoly-mobile/packages/api-client/src/`** — fetch-based `ApiClient` implementation
+- **`genoly-mobile/apps/mobile/app/`** — login screen, settings (sign out, primary device toggle), background sync registration
 
 ## What landed 2026-05-08 — Task #10 (EAS Build for Android) + Task #11 (Phase 0 baseline verify), commit pending
 
