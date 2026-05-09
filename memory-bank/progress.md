@@ -4,7 +4,7 @@
 
 ---
 
-## Status: 🟢 Phase 0 mobile init landed — apps/mobile/ scaffolded with Expo Router tabs (Family / Fitness / Notifications / Settings). npm workspaces wired at repo root. Ready for `npm install` + first smoke test, then Task #8 (package interface stubs).
+## Status: 🟢 Phase 0 mobile substantially complete — Expo Router tabs scaffolded (Task #7), package interface stubs landed (Task #8), EAS Build configured + first signed APK shipped to a real Android phone with all four tabs rendering (Task #10, build `b0260446-e70b-4832-8ee6-567a5731545c`, 2026-05-08). Phase 0 baseline (Task #11 — clean TS build + working signed APK) is met. Only Task #9 (GitHub Actions for `build-android.yml`) remains before declaring Phase 0 fully closed.
 
 ---
 
@@ -51,17 +51,24 @@
 - [ ] Add `convex/fitness/` directory for fitness queries/mutations
 - [ ] Add fitness routes to App router
 
-### Mobile (in genoly-mobile, this repo)
+### Mobile (in genoly-mobile, this repo) — Phase 0 substantially complete
+
+Cumulative results: Tasks 7, 8, 10, 11 done; Task 9 remaining.
+
+
 - [x] Initialize Expo app in `apps/mobile/` with TypeScript template (Task #7, 2026-05-07, **commit `6da2488`**) — Expo Router 6 tabs template, SDK 54, RN 0.81, New Architecture enabled, typed routes experiment on. Bundle id `org.hyperionsolutions.genoly`, deep-link scheme `genoly://`. Family tab is at `app/(tabs)/index.tsx` (URL `/`), three more tabs at `/fitness`, `/notifications`, `/settings`.
 - [x] Bottom-tab navigation skeleton: Family / Fitness / Notifications / Settings (Task #7, commit `6da2488`) — file-based routes in `apps/mobile/app/(tabs)/`, FontAwesome icons (sitemap / heartbeat / bell / cog), placeholder screens with phase notes. Smoke-tested via Expo Go tunnel mode on Android.
 - [x] npm workspaces wired at repo root (Task #7 follow-up, commit `6da2488`) — root `package.json` with `apps/*` + `packages/*` workspaces, stub `package.json` in each of `packages/{health-sync,types,api-client}`, `metro.config.js` extends `watchFolders` to workspace root for fast refresh on packages/* edits (verified via `expo-doctor` 17/17).
-- [x] **Task #8** — Wire interface definitions in all three workspace packages. Code-complete 2026-05-08 (commit pending user verification). Implementation (HealthKit, Health Connect, fetch client) lands in Phase 1.
+- [x] **Task #8** — Wire interface definitions in all three workspace packages. Landed 2026-05-08, **commit `9657069`** (11 files, +586/-11), pushed to origin. Implementation (HealthKit, Health Connect, fetch client) lands in Phase 1.
   - `packages/types/src/index.ts` — all shared types: literal unions (`Platform`, `HealthSource`, `SubscriptionTier`, `FriendshipStatus`, `DeviceStatus`, `GoalPeriod`, `GoalMetric`, `TokenScope`); `HealthEntry` + `HealthEntryUpload`; `FitnessUser`, `FitnessDevice`, `FitnessTokenIssue`; `FriendBrief`, `FriendsByStatus`, `LeaderboardRow`, `Leaderboard`; `Goal`, `ArchivedGoal`; `SubscriptionStatus` (with `isPaymentNeutral: true` literal tripwire); `SessionState`; `ApiError` + `ApiErrorResponse`. Aligned 1:1 with `genoly-family-web/docs/fitness-api-contract.md`.
   - `packages/health-sync/src/index.ts` — `HealthAdapter` interface (`getPlatform`, `isAvailable`, `requestPermissions`, `readDailyAggregates`); `HealthSample`, `HealthMetric`, `HealthAdapterPermissionState`, `HealthAdapterOptions`. Imports from `@genoly/types` only.
   - `packages/api-client/src/index.ts` — `ApiClient` interface mirroring all 20 endpoints from the contract; `ApiClientConfig`; `ApiClientError` thrown class. Imports from `@genoly/types` only.
   - Cross-package wiring: `apps/mobile/package.json` declares `@genoly/{types,health-sync,api-client}` as deps; `health-sync` and `api-client` each declare `@genoly/types` as a dep. npm workspaces resolves via symlinks at the repo-root `node_modules/@genoly/`.
-- [ ] Login screen (calls server's mobile token endpoint)
-- [ ] Background sync task scheduler
+- [x] **Task #10** — EAS Build for Android. eas.json with three profiles (`development` / `preview` / `production`); preview profile produces a sideloadable APK via internal distribution. First build: `b0260446-e70b-4832-8ee6-567a5731545c` on EAS Hobby tier (free). Android keystore auto-managed by Expo (cloud-stored, no local `.jks` file). Bundle id `org.hyperionsolutions.genoly`. Verified by installing on a real Android phone via Chrome QR-scan + sideload — all four tabs (Family, Fitness, Notifications, Settings) render with their FontAwesome 5 icons (sitemap, heartbeat, bell, cog), navigation works, no error overlay. EAS project: `@hyperionsolutionsorg/genoly-mobile` (project ID `a059fba2-1ef7-431c-9870-6325603f3ada`). 2026-05-08.
+- [x] **Task #11** — Verify Phase 0 baseline. Met: `npx tsc --noEmit` clean from `apps/mobile/` (verified after Task #8), and EAS produced a working signed APK that runs on a real Android device with the expected UI (verified after Task #10). 2026-05-08.
+- [ ] **Task #9** — GitHub Actions for `build-android.yml` (uses `eas build --platform android --profile preview --non-interactive` triggered on push to main with path filter on `apps/mobile/**` and `packages/**`). Requires an Expo access token stored as a GitHub secret. Estimated 30–45 min including testing the workflow with a no-op commit.
+- [ ] Login screen (calls server's mobile token endpoint) — Phase 1
+- [ ] Background sync task scheduler — Phase 1
 
 ### CI/CD
 - [ ] GitHub Actions for `genoly-family-web`: deploy-web with path filter on `convex/fitness/**` + `src/pages/fitness/**`

@@ -2,6 +2,7 @@
   "expo": {
     "name": "Genoly",
     "slug": "genoly-mobile",
+    "owner": "hyperionsolutionsorg",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -36,6 +37,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a059fba2-1ef7-431c-9870-6325603f3ada"
+      }
     }
   }
 }

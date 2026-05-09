@@ -4,7 +4,7 @@
 
 **Audience:** AI agent or human colleague working on the Genoly mobile app. Read this if you're touching anything in `genoly-mobile/`.
 
-**Last updated:** 2026-05-07.
+**Last updated:** 2026-05-08.
 
 ---
 
@@ -58,18 +58,15 @@ For the architectural pattern (why Genoly + Fitness coexist, the forkability inv
 | Repo rename + slim (`fitness` → `genoly-mobile`, removed `apps/web/`) | 2026-05-03 | commit `c5a0984` |
 | Identity finalized in CONTEXT.md + memory-bank | 2026-05-03 | commit `dc7b233` |
 | `FORK_PROCEDURE.md` written | 2026-05-05 | 9-phase extraction playbook (~10–15 working days estimated) |
-| **Task #8 — package interface stubs** | 2026-05-08 | **commit pending user verification.** `packages/types/src/index.ts` (all shared types — literal unions, entity shapes, `isPaymentNeutral: true` tripwire, `ApiError`); `packages/health-sync/src/index.ts` (`HealthAdapter` interface); `packages/api-client/src/index.ts` (`ApiClient` interface mirroring all 20 endpoints from `fitness-api-contract.md`). Cross-package deps wired in package.json (apps/mobile pulls all three; health-sync and api-client pull `@genoly/types`). Verification command on user's laptop: `cd /Users/snalluri/Personal/Code/Geno/genoly-mobile && npm install && cd apps/mobile && npx tsc --noEmit`. Implementations (HealthKit, Health Connect, fetch client) land in Phase 1. |
+| **Task #10 — EAS Build for Android** + **Task #11 — Phase 0 baseline verify** | 2026-05-08 | **commit pending.** EAS account `@hyperionsolutionsorg` (Hobby tier, free) created via GitHub OAuth. EAS project `@hyperionsolutionsorg/genoly-mobile` (ID `a059fba2-1ef7-431c-9870-6325603f3ada`) registered via `eas init`. `apps/mobile/eas.json` with three profiles: `development` (dev client + APK), `preview` (Genoly's primary distribution — APK, internal), `production` (AAB for future Play Store). Android keystore auto-generated and stored cloud-side. First preview APK built (`b0260446-e70b-4832-8ee6-567a5731545c`), installed on a real Android phone via QR-scan + Chrome sideload, all four tabs render with their icons, navigation works, no error overlay. Phase 0 baseline (Task #11) confirmed met: `tsc --noEmit` clean + working signed APK on device. |
+| **Task #8 — package interface stubs** | 2026-05-08 | **commit `9657069`** (11 files, +586/-11), pushed to origin. `packages/types/src/index.ts` (all shared types — literal unions, entity shapes, `isPaymentNeutral: true` tripwire, `ApiError`); `packages/health-sync/src/index.ts` (`HealthAdapter` interface); `packages/api-client/src/index.ts` (`ApiClient` interface mirroring all 20 endpoints from `fitness-api-contract.md`). Cross-package deps wired in package.json (apps/mobile pulls all three; health-sync and api-client pull `@genoly/types`). Verified `npm install` (716 packages audited, clean) + `npx tsc --noEmit` from `apps/mobile/` (silent, clean). Code review tooling exhaustively tested across local Ollama models — see `memory-bank/activeContext.md` for the comparison data (operating envelope: Aider only, qwen2.5-coder:32b only, ≤3k lines total context, `--read` not `@`). Implementations (HealthKit, Health Connect, fetch client) land in Phase 1. |
 | **Task #7 — initialize Expo app** | 2026-05-07 | **commit `6da2488`** (40 files, +10216/-20). `apps/mobile/` scaffolded via `create-expo-app --template tabs` (Expo SDK 54, RN 0.81, Expo Router 6, New Architecture, typed routes). 4-tab nav skeleton: Family (default route at `/`, file `app/(tabs)/index.tsx`) / Fitness / Notifications / Settings with FontAwesome icons (sitemap / heartbeat / bell / cog) and placeholder screens. npm workspaces wired at repo root with stubs for `packages/{health-sync, types, api-client}`. `metro.config.js` extends `watchFolders` to workspace root for fast refresh on packages/* edits. App name `Genoly`, slug `genoly-mobile`, scheme `genoly://`, bundle id `org.hyperionsolutions.genoly`. Smoke-tested via Expo Go tunnel mode on Android (4 tabs render with correct icons, placeholder content loads, light/dark follows system). Code review by `qwen2.5-coder:32b` came back clean (one `.gitignore` redundancy fixed pre-commit, one false positive about `expo-router/entry` dismissed). |
 
 ### 🔵 Phase 0 work — what's next (in dependency order)
 
 | # | Task | Notes |
 |---|---|---|
-| — | **Local smoke test (handoff to user)** | `cd apps/mobile && npm install` (or from repo root: `npm install` to install workspaces). Then `npx expo start`, scan QR on Expo Go (Android phone). Confirm 4 tabs render with their icons and placeholder content. |
-| 8 | **Stub packages** | `health-sync`, `types`, `api-client` — interface definitions only (`src/index.ts` per package), implementations land in Phase 1. Package.json stubs already in place from Task #7. |
-| 10 | **EAS Build for Android** | Android-first per the distribution decision (iOS deferred until Apple Developer Program signup) |
-| 9 | **GitHub Actions** | `build-android.yml` here; web deploy lives in `genoly-family-web` |
-| 11 | **Verify Phase 0 baseline** | Clean TypeScript build (`npm run typecheck`) + EAS produces a working signed APK |
+| 9 | **GitHub Actions for `build-android.yml`** | Trigger on push to main with path filter on `apps/mobile/**` + `packages/**`. Calls `eas build --platform android --profile preview --non-interactive`. Requires an Expo access token (https://expo.dev/settings/access-tokens) stored as the `EXPO_TOKEN` secret in the GitHub repo settings. ~30–45 min including a no-op test commit. **Last remaining Phase 0 task.** |
 
 ### 🟡 Phase 1 (after Phase 0 baseline)
 
