@@ -1,0 +1,83 @@
+# Build Android (Preview APK) via EAS Build.
+#
+# Triggers:
+#   - push to main with changes to apps/mobile/** or packages/** or this workflow
+#   - manual dispatch from the GitHub Actions tab (with optional profile choice)
+#
+# Auth: requires the EXPO_TOKEN secret. Generate one at
+# https://expo.dev/settings/access-tokens and add it under Settings →
+# Secrets and variables → Actions → New repository secret.
+#
+# Note: this workflow uses --no-wait, so the GitHub Actions job exits in
+# ~3-5 minutes after kicking off the EAS cloud build. Monitor build progress
+# at https://expo.dev/accounts/hyperionsolutionsorg/projects/genoly-mobile/builds
+# or via `eas build:list --limit 5` from a local terminal.
+
+name: Build Android (Preview APK)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+      - '.github/workflows/build-android.yml'
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - preview
+          - development
+          - production
+
+# Cancel in-progress builds for the same branch when a new push lands.
+# Saves EAS quota — no point building stale code.
+concurrency:
+  group: build-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Trigger EAS Android build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install workspace dependencies
+        run: npm ci
+
+      - name: Setup EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Trigger EAS build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        working-directory: apps/mobile
+        run: |
+          PROFILE="${{ github.event.inputs.profile || 'preview' }}"
+          echo "Triggering EAS build with profile: $PROFILE"
+          eas build \
+            --platform android \
+            --profile "$PROFILE" \
+            --non-interactive \
+            --no-wait
+
+      - name: Print follow-up instructions
+        if: success()
+        run: |
+          echo "::notice title=EAS build queued::Build kicked off in EAS cloud."
+          echo "::notice title=Monitor::https://expo.dev/accounts/hyperionsolutionsorg/projects/genoly-mobile/builds"
+          echo "::notice title=Local CLI::Run 'eas build:list --limit 5' to see recent builds with their status."
