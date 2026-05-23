@@ -13,6 +13,66 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 
 ---
+## [2026-05-22] note | AI memory bank Phase 2 — PARKED (integration friction)
+
+Phase 2 (mcp-memory-service as index layer) attempted and parked.
+
+What worked:
+- `brew install pipx` → pipx 1.12.0
+- `pipx install mcp-memory-service` → service installed
+- Service starts on `http://127.0.0.1:8000` (NOT 8765 — env var did not take effect; service uses its own default port)
+- `/api/openapi.json` returns valid FastAPI OpenAPI spec (~105KB)
+- 70+ endpoints exposed (see full list below)
+- `/api/health` confirmed healthy: `{"status":"healthy"}` — service itself is functional, just the MCP integration layer is broken
+
+What did NOT work:
+- The documented health endpoint paths from `../genoly-family-web/docs/external-ai-memory-bank-guide.md` Part 4 are wrong for this build — they're all under `/api/` prefix (e.g., `/api/health`, `/api/search`, `/api/memories`) not at root
+- `/docs` and `/favicon.ico` return 404 (FastAPI Swagger UI disabled in this build)
+- OpenCode/Kimi connects to `/mcp/` successfully but MCP queries return "Internal server error: unhashable type: 'dict' [retrying in 7s]" — response-shape mismatch between THIS mcp-memory-service version and OpenCode's MCP parser
+- Kimi reports "Searched MCP memory — found only a malformed template entry, no real content" — either indexing of `/Users/snalluri/Personal/Code/Geno` didn't run, or response shape mangled the content
+
+Endpoint inventory (for future debugging — found via curl /openapi.json):
+- Health: /api/health, /api/health/detailed, /api/health/sync-status
+- Memory ops: /api/memories, /api/memory-stats, /api/clear-caches
+- Search: /api/search, /api/search/by-tag, /api/search/by-time, /api/search/similar/{content_hash}
+- Tags & sessions: /api/tags, /api/sessions, /api/types
+- Management: /api/manage/* (bulk-delete, cleanup-duplicates, untagged, etc.)
+- Analytics: /api/analytics/* (overview, memory-growth, tag-usage, performance, etc.)
+- Events: /api/events, /api/events/stats
+- Sync: /api/sync/* (status, force, pause, resume)
+- Backup: /api/backup/* (status, now, list)
+- Quality: /api/quality/* (rate, evaluate, distribution, trends)
+- Documents: /api/documents/* (upload, batch-upload, status, history)
+- Consolidation: /api/consolidation/* (trigger, status, recommendations)
+- Server: /api/server/* (status, version/check, restart, update)
+- Config: /api/config/* (env, credentials)
+- OAuth: /api/oauth/status
+- Conflicts: /api/conflicts, /api/conflicts/resolve
+- Harvest: /api/harvest
+- MCP protocol: /mcp, /mcp/, /mcp/tools, /mcp/health
+- Misc: /api-overview, /api/languages, /
+
+Diagnosis: the mcp-memory-service implementation has diverged from the
+spec described in `../genoly-family-web/docs/external-ai-memory-bank-guide.md`
+Part 4 (actual endpoints prefixed with /api/, response shape on /mcp/
+incompatible with OpenCode). The MCP ecosystem in 2026 is fragmented — different
+implementations expose different endpoint layouts and response formats.
+
+Decision: park Phase 2. Phase 1 (Karpathy structure + compact-state-files
++ AGENTS.md cross-tool entry) already delivers ~50% session-start
+savings. Phase 2's marginal benefit (~20% additional via semantic
+search) is not worth multi-hour debug of a fragmented ecosystem.
+
+Reopen criteria:
+- mcp-memory-service ecosystem stabilizes (look for major version 2.0
+  or an officially-blessed OpenCode-compatible build)
+- We hit token-cost pain again that Phase 1's compaction doesn't solve
+- Specific killer feature emerges that requires semantic search
+
+Service NOT uninstalled (pipx package remains for future reattempt).
+Update `../genoly-family-web/docs/external-ai-memory-bank-guide.md` Part 4
+with correct endpoint paths (e.g., `/api/health` instead of `/health`)
+when Phase 2 is revisited.
 
 ## [2026-05-22] rule | AI memory bank Phase 1 migration — Karpathy hybrid adopted
 
