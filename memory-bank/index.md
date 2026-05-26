@@ -12,6 +12,7 @@
 
 ## Phases (chronological, most-recent first)
 
+- [[2026-05-26-phase-3-graphify-mobile]] — AI memory bank Phase 3 (Graphify) — code knowledge graph: docs/GRAPH_REPORT.md + AST-extracted graph.json + hooks + adapters. Closes the 3-phase plan.
 - [[2026-05-22-karpathy-adoption-mobile]] — AI memory bank Phase 1 migration (this repo's contribution)
 - [[2026-05-08-phase-0-complete]] — Phase 0 closed: Expo init + package stubs + EAS Build + GitHub Actions
 

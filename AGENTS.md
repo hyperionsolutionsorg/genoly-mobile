@@ -292,3 +292,27 @@ CLI: `aider --read AGENTS.md --read memory-bank/wiki/current/active-context.md -
 ---
 
 *Repo-level schema for genoly-mobile. Maintained by Hyperion Solutions LLC. Read workspace `AGENTS.md` for cross-repo context.*
+
+## Code knowledge graph report
+
+This project has a code knowledge graph report at **`docs/GRAPH_REPORT.md`** — generated 2026-05-26 by Claude as the mobile-side Phase 3 deliverable. Companion to `../genoly-family-web/docs/GRAPH_REPORT.md` for the workspace.
+
+It's a heavily forward-looking report — most of the mobile codebase is still Expo boilerplate awaiting Phase 1 implementation. The report describes BOTH what's here today AND the planned structure per `../genoly-family-web/docs/mobile-sync-architecture.md`.
+
+**Rules for AI tools (Claude Code, OpenCode/Kimi, Cursor, etc.):**
+
+- **Before grepping, find, fd, or rg for code-structure questions, read `docs/GRAPH_REPORT.md` first.** It maps everything that exists today (Expo boilerplate + memory bank + planning docs) plus the planned packages (`api-client`, `health-sync`, `types`) with file pointers.
+- §3 (repo map) + §4 (current code) + §5 (planned packages) + §7 (5 blocking decisions) + §8 (hard rules) should answer 90% of "where does X go?" without searching.
+- **Don't grep `node_modules/`** — it's 100% noise. All real code lives in `apps/mobile/` + `packages/`.
+- The auto-installed `.claude/settings.json` and `.opencode/plugins/graphify.js` hooks check for `graphify-out/graph.json` and stay silent or active depending on its presence. `graphify update .` was run 2026-05-26 (425 nodes, 413 edges, 44 communities), so `graph.json` exists; the `query`/`path`/`explain` graphify CLI commands ARE viable from a local shell (not from a Cowork sandbox).
+
+**Available graphify commands once you're in a local shell with graphify installed:**
+
+- `graphify query "<question>"` — scoped BFS subgraph for a question, default 2000-token budget
+- `graphify path "<A>" "<B>"` — shortest path between two nodes
+- `graphify explain "<concept>"` — focused explanation of a node + neighbors
+- `graphify update .` — re-extract AST after code changes (also runs automatically via post-commit hook)
+- `open graphify-out/graph.html` — interactive D3 viewer (force-directed)
+- `graphify tree && open graphify-out/GRAPH_TREE.html` — hierarchical collapsible-tree viewer
+
+**When the report goes stale:** when Phase 1 actually ships (token store + ApiClient skeleton + real screens replace boilerplate placeholders). Regen via Claude OR — if `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` is set — `graphify extract . --backend <provider>`.

@@ -13,6 +13,21 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 
 ---
+
+## [2026-05-26] merge | AI memory bank Phase 3 (mobile) — Code knowledge graph
+
+Mobile mirror of the workspace-wide Phase 3 work. Ran `graphify update .` (AST-only, no LLM), shipped `docs/GRAPH_REPORT.md` (~280 lines, narrative form via Claude), installed graphify hooks + Claude/OpenCode adapters.
+
+Skipped the LLM extraction path entirely (which is what failed for the web repo). AST-only extraction completed in ~15 seconds: 425 nodes, 413 edges, 44 communities.
+
+Auto-installed AGENTS.md and CLAUDE.md sections cleaned up to point at `docs/GRAPH_REPORT.md` (instead of the original `graphify-out/GRAPH_REPORT.md` paths) and to document all 6 graphify CLI commands available.
+
+This closes mobile's contribution to the 3-phase AI memory bank plan: Phase 1 (Karpathy hybrid) 2026-05-22; Phase 2 (mcp-memory-service) STAY PARKED 2026-05-26 (workspace-wide); Phase 3 (Graphify) DONE 2026-05-26.
+
+Page: [[2026-05-26-phase-3-graphify-mobile]]
+Web companion phase page: `../../../genoly-family-web/memory-bank/wiki/phases/2026-05-26-phase-3-graphify.md`
+Commit: TBD
+
 ## [2026-05-22] note | AI memory bank Phase 2 — PARKED (integration friction)
 
 Phase 2 (mcp-memory-service as index layer) attempted and parked.
