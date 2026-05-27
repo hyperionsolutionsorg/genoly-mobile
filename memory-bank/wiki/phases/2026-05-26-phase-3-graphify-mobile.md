@@ -3,7 +3,7 @@ type: phase
 phase: ai-memory-bank-phase-3-mobile
 date: 2026-05-26
 status: merged
-commit: TBD
+commit: 07ab407
 owner: claude
 collaborator: graphify (CLI, AST-only path)
 tags: [memory-bank, graphify, knowledge-graph, ai-tooling]
