@@ -34,9 +34,7 @@ status: active
    - Convert legacy files to deprecation pointers
    - Move `SESSION_HANDOFF.md` (repo root) → `wiki/current/session-handoff.md` (with pointer)
 
-2. **AI memory bank Phase 2** (after Phase 1):
-   - mcp-memory-service install (also for this repo)
-   - Register with Claude Code + OpenCode/Kimi
+2. ~~**AI memory bank Phase 2**~~ **DECOMMISSIONED 2026-05-27.** Was parked 2026-05-26 (response-shape mismatch with OpenCode MCP parser); escalated to decommissioned after server discovered running + leaking 404s on web-repo side. Shut down + `pipx uninstall mcp-memory-service`. No mobile-side action needed — never integrated here. Reopen criteria unchanged. See `../genoly-family-web/memory-bank/wiki/decisions/ai-memory-bank-phase-2-revisit-2026-05-26.md` 2026-05-27 footer.
 
 3. **Mobile-side implementation** (after Shankar's 5 decisions):
    - Step 1: token store + ApiClient skeleton (~1 day)
