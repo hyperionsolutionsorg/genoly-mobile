@@ -9,9 +9,10 @@ That's the cross-tool schema — every AI tool (Claude Code, OpenCode/Kimi, Curs
 1. `/Users/snalluri/Personal/Code/Geno/AGENTS.md` (workspace operating manual)
 2. `/Users/snalluri/Personal/Code/Geno/master-context.md` (cross-repo state snapshot)
 3. `./AGENTS.md` (this repo's operating manual)
-4. `./memory-bank/index.md` (content catalog)
-5. Last 10 entries of `./memory-bank/log.md`
-6. `./memory-bank/wiki/current/*` (current focus, progress, handoff, overview)
+4. **`./docs/GRAPH_REPORT.md` (code knowledge graph — every directory, planned package, hard rule with file pointers; read THIS before grepping)**
+5. `./memory-bank/index.md` (content catalog)
+6. Last 10 entries of `./memory-bank/log.md`
+7. `./memory-bank/wiki/current/*` (current focus, progress, handoff, overview)
 
 After that, wait for the user's instruction.
 
@@ -22,6 +23,6 @@ For implementation work, also read:
 - `../genoly-family-web/docs/fitness-api-contract.md` (the 20 server endpoints this app talks to)
 - `./FORK_PROCEDURE.md` (if working on fork-impact assessment)
 
-## Code knowledge graph report
+## Code knowledge graph report (additional context)
 
-**Before grepping for code-structure questions, read `docs/GRAPH_REPORT.md` first.** It maps every directory + planned package + hard rule with file pointers. Most "where does X go?" questions are answered there without searching. See `AGENTS.md`'s "Code knowledge graph report" section for the full guidance, the list of available graphify CLI commands (`query`, `path`, `explain`, `update`, `tree`), and the local-only artifacts (`graph.html`, `GRAPH_TREE.html`) for visual browsing.
+`docs/GRAPH_REPORT.md` is the highest-leverage orientation doc — read it at step 4 above, not as an afterthought. See `AGENTS.md`'s "Code knowledge graph report" section for the full guidance, the list of available graphify CLI commands (`query`, `path`, `explain`, `update`, `tree`), and the local-only artifacts (`graph.html`, `GRAPH_TREE.html`) for visual browsing.
