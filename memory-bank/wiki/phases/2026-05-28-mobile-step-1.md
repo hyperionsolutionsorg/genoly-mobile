@@ -20,15 +20,16 @@ sources: ["[[mobile-phase-1-implementation]]"]
 |---|---|---|
 | `@genoly/api-client` | `packages/api-client/src/token-store.ts` | Complete `TokenStore` interface with hardware-backed `SecureTokenStore` (using `expo-secure-store`) and custom `MemoryTokenStore` (for mock/Node.js testing). Guaranteed no token value leakage in logging. |
 | `@genoly/api-client` | `packages/api-client/src/client.ts` | Implemented `FetchApiClient` with bearer token integration, standard response parsing into custom typed `ApiClientError` classes, and exponential backoff retry policy for GET requests (0s, 1s, 3s with ±200ms jitter) and rate-limit handling. Stubbed 19 other methods with descriptive `not_implemented` errors. |
-| `@genoly/api-client` | `packages/api-client/src/index.ts` | Wired exports for `FetchApiClient`, `TokenStore`, `MemoryTokenStore`, `SecureTokenStore`, and exported a module-level configured singleton `apiClient` mapping to the dev backend `robust-oyster-899`. |
-| `@genoly/mobile` | `apps/mobile/scripts/test-api-client.ts` | local CLI script using `npx tsx` that performs a live `issueToken` call against the dev Convex backend, serving as the smoke-test environment for step 1 verification. |
+| `@genoly/api-client` | `packages/api-client/src/index.ts` | Wired exports for `FetchApiClient`, `TokenStore`, `MemoryTokenStore`, `SecureTokenStore`, and a factory function `createApiClient`. |
+| `@genoly/mobile` | `apps/mobile/utils/api.ts` | Dynamic initialization of the `apiClient` singleton client inside the app layer, sourcing dynamic configuration from Expo. |
+| `@genoly/mobile` | `apps/mobile/scripts/test-api-client.ts` | Local CLI script using `npx tsx` that performs a live `issueToken` call against the dev Convex backend, serving as the smoke-test environment for step 1 verification. |
 
 ## Decided In Step 1
 
 The following five previously pending decisions were resolved and integrated under Step 1:
-1. **Production Convex URL**: Dynamic client options designed to stay flexible; prod URL verification deferred to production-level EAS timing.
-2. **App version source**: Set dynamically using `Constants.expoConfig.version` in the mobile wrapper application.
-3. **Singleton instantiation**: Module-level singleton `apiClient` exported from the package's primary entrypoint `src/index.ts`.
+1. **Production Convex URL (Blocked)**: The production base URL is still pending Shankar's confirmation. In the meantime, the package is kept completely environment-agnostic with no hardcoded base URLs.
+2. **App version source**: Set dynamically using `Constants.expoConfig.version` at singleton construction in `apps/mobile/utils/api.ts`.
+3. **Singleton instantiation**: Move creation out of the package into `apps/mobile/utils/api.ts`, initialized from Expo Constants config.
 4. **Implement `issueToken` now**: Fully built, storing the returned token securely inside `tokenStore` on success.
 5. **Test script location**: Implemented in `apps/mobile/scripts/test-api-client.ts`.
 
