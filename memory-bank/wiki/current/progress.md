@@ -26,11 +26,17 @@ status: active
 | `03e5a73` | GitHub Actions for build-android.yml |
 | `89183f18` (EAS) | First CI-triggered EAS build |
 
+## Phase 1 commits (reference)
+
+| Date | Commit | Subject |
+|---|---|---|
+| 2026-05-28 | `75d6e1a` (squash merge of PR #3) | feat(mobile): Phase 1 Step 1 — token store + ApiClient skeleton + issueToken (Antigravity) |
+
 ## Phase 1 plan (13 steps from `../genoly-family-web/docs/mobile-sync-architecture.md` §15)
 
 | # | Step | Owner | Status |
 |---|---|---|---|
-| 1 | Token store + ApiClient skeleton | Claude/Antigravity | DONE (on `active-agravity-branch`) |
+| 1 | Token store + ApiClient skeleton | Antigravity (Claude reviewed) | DONE 2026-05-28 — merged via PR #3, squash `75d6e1a` |
 | 2 | Login screen (email + password) | Claude | Depends on #1 |
 | 3 | Session check on cold start | Claude | Depends on #1 |
 | 4 | HealthKit adapter + permission flow | Claude | Depends on #3 |
