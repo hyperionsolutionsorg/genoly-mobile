@@ -49,7 +49,7 @@ async function runTests() {
   console.log('All MemoryTokenStore tests passed successfully!');
 }
 
-runTests().catch((err) => {
+runTests().catch((err: unknown) => {
   console.error('Test suite failed:', err);
   process.exit(1);
 });

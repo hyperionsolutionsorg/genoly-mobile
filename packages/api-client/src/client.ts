@@ -84,7 +84,7 @@ export class FetchApiClient implements ApiClient {
 
     const isGet = method === 'GET';
     const maxAttempts = isGet ? 3 : 1;
-    let lastError: any = null;
+    let lastError: ApiClientError | null = null;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
@@ -144,14 +144,16 @@ export class FetchApiClient implements ApiClient {
         }
 
         throw clientError;
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (err instanceof ApiClientError) {
           throw err;
         }
 
+        const errMsg = err instanceof Error ? err.message : 'Network request failed';
+
         // Network error retry check
         const clientError = new ApiClientError(
-          { code: 'internal', message: err.message || 'Network request failed', details: err },
+          { code: 'internal', message: errMsg, details: err },
           500
         );
 

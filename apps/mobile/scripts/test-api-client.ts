@@ -44,7 +44,7 @@ async function runSmokeTest() {
     console.log(`Token:        ${res.token}`);
     console.log(`Expires At:   ${new Date(res.expiresAt).toLocaleString()}`);
     console.log('----------------\n');
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('\n--- FAILED! ---');
     console.error(err);
     console.error('----------------\n');
@@ -52,7 +52,7 @@ async function runSmokeTest() {
   }
 }
 
-runSmokeTest().catch((err) => {
+runSmokeTest().catch((err: unknown) => {
   console.error('Smoke test runner failed:', err);
   process.exit(1);
 });

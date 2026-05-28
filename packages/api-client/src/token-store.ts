@@ -43,17 +43,23 @@ export class MemoryTokenStore implements TokenStore {
   }
 }
 
+interface ExpoSecureStore {
+  getItemAsync(key: string): Promise<string | null>;
+  setItemAsync(key: string, value: string): Promise<void>;
+  deleteItemAsync(key: string): Promise<void>;
+}
+
 /**
  * Device-backed secure TokenStore leveraging expo-secure-store.
  */
 export class SecureTokenStore implements TokenStore {
-  private secureStore: any;
+  private secureStore: ExpoSecureStore | null = null;
 
   constructor() {
     // Dynamic import to prevent crash in Node environments where native module is missing
     try {
       this.secureStore = require('expo-secure-store');
-    } catch (e) {
+    } catch {
       this.secureStore = null;
     }
   }
@@ -71,8 +77,11 @@ export class SecureTokenStore implements TokenStore {
         return null;
       }
       return parsed.token;
-    } catch (e) {
-      // Fail silently, returning null (user will be unauthenticated)
+    } catch (err: unknown) {
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`[SecureTokenStore] Failed to read token: ${msg}`);
+      }
       return null;
     }
   }
@@ -101,7 +110,11 @@ export class SecureTokenStore implements TokenStore {
       if (!raw) return true;
       const parsed: StoredTokenBlob = JSON.parse(raw);
       return Date.now() >= parsed.expiresAt;
-    } catch (e) {
+    } catch (err: unknown) {
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`[SecureTokenStore] Failed to check token expiry: ${msg}`);
+      }
       return true;
     }
   }
