@@ -214,10 +214,9 @@ export * from './token-store';
 export * from './client';
 
 import { FetchApiClient } from './client';
-import { SecureTokenStore } from './token-store';
+import type { FetchApiClientOptions } from './client';
 
-export const apiClient = new FetchApiClient({
-  tokenStore: new SecureTokenStore(),
-  baseUrl: 'https://robust-oyster-899.convex.site',
-});
+export function createApiClient(opts: FetchApiClientOptions): FetchApiClient {
+  return new FetchApiClient(opts);
+}
 
