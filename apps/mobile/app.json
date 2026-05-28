@@ -42,7 +42,9 @@
       "router": {},
       "eas": {
         "projectId": "a059fba2-1ef7-431c-9870-6325603f3ada"
-      }
+      },
+      "convexBaseUrl": "https://robust-oyster-899.convex.site",
+      "convexProdBaseUrl": "keen-owl-415-placeholder"
     }
   }
 }

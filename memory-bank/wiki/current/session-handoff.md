@@ -12,13 +12,15 @@ status: active
 ## State right now
 
 **Main branch:** `d4fbecc` — Karpathy hybrid Phase 1 foundation (AGENTS.md + CLAUDE.md). Origin synced.
+**Active branch:** `active-agravity-branch` contains the complete Phase 1, Step 1 implementation (token store, ApiClient skeleton, and issueToken end-to-end smoke test).
 
-**Working tree:** active — new files in `memory-bank/wiki/` for the Karpathy migration. Verify with `git status --short`.
+**Working tree:** clean, ready for review.
 
-**Code:** Phase 0 complete. No active implementation work — blocked on 5 decisions from Shankar.
+**Code:** Step 1 completed and verified.
 
 ## What's done (recent)
 
+- ✅ Phase 1, Step 1 fully implemented and verified on `active-agravity-branch` 2026-05-28
 - ✅ Phase 0 fully closed 2026-05-08 (signed APK on Android, EAS Build + GitHub Actions wired)
 - ✅ Mobile sync architecture doc locked in `../genoly-family-web/docs/mobile-sync-architecture.md` (2026-05-15)
 - ✅ FORK_PROCEDURE.md updated 2026-05-15 (Phase A forkability lint fix consequences)
@@ -26,20 +28,10 @@ status: active
 
 ## What's next
 
-1. **Finish AI memory bank Phase 1 migration** (this session):
-   - Populate `memory-bank/wiki/current/*` — IN PROGRESS
-   - Populate `memory-bank/index.md`
-   - Populate `memory-bank/log.md`
-   - Create representative `wiki/phases/` and `wiki/decisions/` pages
-   - Convert legacy files to deprecation pointers
-   - Move `SESSION_HANDOFF.md` (repo root) → `wiki/current/session-handoff.md` (with pointer)
+1. **Review and Merge Step 1 PR** (open as Draft).
+2. **Mobile-side Step 2: login screen** (email + password form using `react-hook-form` + `zod`, calling `issueToken`, saving, and navigating).
+3. **Steps 3-13** per `mobile-sync-architecture.md` §15.
 
-2. ~~**AI memory bank Phase 2**~~ **DECOMMISSIONED 2026-05-27.** Was parked 2026-05-26 (response-shape mismatch with OpenCode MCP parser); escalated to decommissioned after server discovered running + leaking 404s on web-repo side. Shut down + `pipx uninstall mcp-memory-service`. No mobile-side action needed — never integrated here. Reopen criteria unchanged. See `../genoly-family-web/memory-bank/wiki/decisions/ai-memory-bank-phase-2-revisit-2026-05-26.md` 2026-05-27 footer.
-
-3. **Mobile-side implementation** (after Shankar's 5 decisions):
-   - Step 1: token store + ApiClient skeleton (~1 day)
-   - Step 2: login screen
-   - Steps 3-13 per `mobile-sync-architecture.md` §15
 
 ## Reading order for the next agent
 

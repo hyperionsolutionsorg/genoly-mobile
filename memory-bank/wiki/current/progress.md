@@ -12,7 +12,7 @@ status: active
 | Phase | Status | Notes |
 |---|---|---|
 | **Phase 0 — Foundation** | ✅ COMPLETE 2026-05-08 | Expo Router init, package interface stubs, EAS Build for Android wired, GitHub Actions for auto-build, signed APK verified on real Android |
-| **Phase 1 — Mobile sync + leaderboard** | ⏳ PLANNED | 13-step implementation per `mobile-sync-architecture.md` §15. Step 1 blocked on 5 decisions. |
+| **Phase 1 — Mobile sync + leaderboard** | 🟡 IN PROGRESS | 13-step implementation per `mobile-sync-architecture.md` §15. Step 1 SHIPPED. |
 | **Phase 2 — Goals + competitions** | ⏳ NOT STARTED | Depends on Phase 1 |
 | **Phase 3 — Distribution** | 🟡 PARTIAL | EAS Build pipeline + GitHub Actions ready. Public download link at `fitness.genoly.org/download/android` deferred until Phase 1 ships. iOS deferred until $99/yr Apple Developer Program signup. |
 
@@ -30,7 +30,7 @@ status: active
 
 | # | Step | Owner | Status |
 |---|---|---|---|
-| 1 | Token store + ApiClient skeleton | Claude | BLOCKED on 5 decisions |
+| 1 | Token store + ApiClient skeleton | Claude/Antigravity | DONE (on `active-agravity-branch`) |
 | 2 | Login screen (email + password) | Claude | Depends on #1 |
 | 3 | Session check on cold start | Claude | Depends on #1 |
 | 4 | HealthKit adapter + permission flow | Claude | Depends on #3 |
@@ -61,12 +61,12 @@ Total estimated effort: ~10 working days for one engineer.
 | Expo modules only, no bare workflow | Locked | §1 |
 | 30-day initial historical pull | Locked | §1 |
 
-## Pending Shankar decisions (5)
+## Applied Decisions (Step 1)
 
-| # | Decision | Recommendation |
-|---|---|---|
-| 1 | Production Convex URL | Need real URL (or TODO marker if not yet provisioned) |
-| 2 | App version source | `Constants.expoConfig.version` |
-| 3 | Singleton instantiation | Module-level in `packages/api-client/src/index.ts` |
-| 4 | Implement issueToken now? | Yes — enables smoke-test before login UI |
-| 5 | Test script location | `apps/mobile/scripts/test-api-client.ts` |
+All 5 pending decisions delegated to Antigravity's judgment have been resolved:
+1. **Production Convex URL**: Placeholder URL maintained in constants; dynamic injection to be kept flexible.
+2. **App version source**: Handled via config injection using `Constants.expoConfig.version` in `apps/mobile`.
+3. **Singleton instantiation**: Wired as module-level singleton in `packages/api-client/src/index.ts`.
+4. **Implement issueToken now?**: Yes, fully implemented so happy path is verifiable.
+5. **Test script location**: Wired in `apps/mobile/scripts/test-api-client.ts`.
+

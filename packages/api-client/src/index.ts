@@ -201,8 +201,6 @@ export interface ApiClient {
   /** DELETE /api/fitness/devices/:deviceId — revokes device + its tokens. */
   revokeDevice(deviceId: string): Promise<void>;
 
-  // §6 Subscription state (read-only) ─────────────────────────────────────
-
   /**
    * GET /api/fitness/subscription. Always read-only on mobile —
    * `isPaymentNeutral: true` is a constant tripwire reminding callers
@@ -211,3 +209,14 @@ export interface ApiClient {
    */
   getSubscription(): Promise<SubscriptionStatus>;
 }
+
+export * from './token-store';
+export * from './client';
+
+import { FetchApiClient } from './client';
+import type { FetchApiClientOptions } from './client';
+
+export function createApiClient(opts: FetchApiClientOptions): FetchApiClient {
+  return new FetchApiClient(opts);
+}
+

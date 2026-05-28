@@ -11,8 +11,19 @@ Append-only chronological record. **Strict format**:
 Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
-
 ---
+
+## [2026-05-28] merge | Phase 1 Step 1 — Token store + ApiClient skeleton SHIPPED
+
+Implemented Step 1 of the mobile sync plan on branch `active-agravity-branch`:
+- Built `TokenStore` interface, `MemoryTokenStore`, and `SecureTokenStore` backed by `expo-secure-store` with dynamic import guard.
+- Built `FetchApiClient` class supporting standard error parsing mapped to the 8-code matrix and GET automatic retry policy with exponential backoff and jitter.
+- Fully implemented `issueToken` happy path.
+- Created `apps/mobile/scripts/test-api-client.ts` smoke-test runner.
+- Updated all four active context wiki files.
+
+Page: [[2026-05-28-mobile-step-1]]
+Commit: active-agravity-branch (draft PR)
 
 ## [2026-05-26] merge | AI memory bank Phase 3 (mobile) — Code knowledge graph
 
