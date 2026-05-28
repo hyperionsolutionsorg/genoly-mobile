@@ -8,13 +8,16 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@genoly/api-client": "*",
     "@genoly/health-sync": "*",
     "@genoly/types": "*",
+    "@hookform/resolvers": "^5.4.0",
     "@react-navigation/native": "^7.1.8",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.13",
@@ -26,16 +29,22 @@
     "expo-web-browser": "~15.0.10",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-hook-form": "^7.76.1",
     "react-native": "0.81.5",
-    "react-native-worklets": "0.5.1",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-web": "~0.21.0"
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.5.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
     "react-test-renderer": "19.1.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "jest": "^29.7.0",
+    "@testing-library/react-native": "^12.1.2",
+    "@testing-library/jest-native": "^5.4.3",
+    "ts-jest": "^29.1.2"
   }
 }
