@@ -2,8 +2,9 @@
 
 **Repo:** genoly-mobile (Expo mobile app + cross-platform packages)
 **Operator:** Hyperion Solutions LLC
-**Last updated:** 2026-05-22
+**Last updated:** 2026-05-29 (Phase 1 Steps 1-7 shipped since 2026-05-22 — schema below is still valid; `Last updated:` bumped per doc-hygiene audit 2026-05-29)
 **Parent schema:** `/Users/snalluri/Personal/Code/Geno/AGENTS.md` (workspace-level rules)
+**Companion file (MUST read before building UI):** [`./DESIGN.md`](./DESIGN.md) — the mobile design system contract (palette, typography, component stylings, native-vs-custom patterns, do's-and-don'ts). AI agents read this to generate UI that matches the existing visual language without inventing values. Mirror of the web `genoly-family-web/DESIGN.md` adapted for React Native.
 
 This file is the repo-specific operating manual. Read it AFTER the workspace `AGENTS.md` and `master-context.md`. It owns: mobile-specific rules and patterns, page templates for `memory-bank/wiki/`, operations workflows, Expo/native guidance.
 
