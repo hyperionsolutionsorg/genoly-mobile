@@ -9,12 +9,14 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { tokenStore } from '../utils/api';
+import { getHasRequestedHealthPermissions } from '../utils/preferences';
 
 // Cast once at module scope — Expo Router's Href type is generated from
 // the file system route map, but `(auth)/login` is a group-route the
 // generator doesn't always pick up. Narrow `as any` to JUST the string
 // argument so router-object typing stays intact.
 const LOGIN_ROUTE = '/(auth)/login' as unknown as Href;
+const PERMISSIONS_ROUTE = '/(auth)/permissions' as unknown as Href;
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -46,12 +48,16 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
-  // Check authentication status on mount.
+  // Check authentication status + first-run permissions on mount.
   //
   // Per the Phase 1 sync architecture (§13), the cold-start gate is a
   // local-only check: "I have a non-expired local token = I'm signed in."
-  // The server-side getSession() validation is a later step. Two-arm
-  // check: no token OR expired token → redirect to login.
+  // The server-side getSession() validation is a later step.
+  //
+  // Three-arm routing:
+  //   1. No token OR expired token → /(auth)/login
+  //   2. Token valid + permissions not yet requested → /(auth)/permissions
+  //   3. Token valid + permissions resolved → render (tabs)
   useEffect(() => {
     async function checkAuth() {
       try {
@@ -59,7 +65,16 @@ export default function RootLayout() {
         const expired = await tokenStore.isExpired();
         if (!token || expired) {
           router.replace(LOGIN_ROUTE);
+          return;
         }
+        // Step 4 — first-run permissions screen.
+        const hasRequested = await getHasRequestedHealthPermissions();
+        if (!hasRequested) {
+          router.replace(PERMISSIONS_ROUTE);
+          return;
+        }
+        // Otherwise: signed in + permissions resolved → fall through to
+        // the Stack render below.
       } catch {
         // On any storage error, fail closed: redirect to login.
         router.replace(LOGIN_ROUTE);

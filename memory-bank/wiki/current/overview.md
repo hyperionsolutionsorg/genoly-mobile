@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Overview — genoly-mobile"
-updated: 2026-05-28
+updated: 2026-05-29
 status: active
 ---
 
@@ -9,10 +9,10 @@ status: active
 
 `genoly-mobile` is the Expo mobile app + cross-platform packages for the Genoly Fitness product. Mobile is payment-neutral (no in-app purchases) — web (genoly.org/billing) is the sole subscription surface.
 
-**Where things stand (2026-05-28):**
+**Where things stand (2026-05-29):**
 
 - **Phase 0 is COMPLETE** as of 2026-05-08. Signed APK runs on a real Android phone; CI auto-triggers EAS builds on every `main` push.
-- **Phase 1 (mobile sync + leaderboard) is IN PROGRESS.** Steps 1, 2, and 3 implementation done. Step 1 merged via PR #3 (`75d6e1a`). Steps 2+3 (login screen + cold-start auth gate + Jest setup) ready to merge on `active-agravity-step2-branch`. **Step 4 (HealthKit adapter) is next.**
+- **Phase 1 (mobile sync + leaderboard) is IN PROGRESS.** Steps 1, 2, 3 merged (`75d6e1a`, `d2e3a35`). **Steps 4 + 12 + 5 + 11 + 6 + mobile DESIGN.md** implementation complete in working tree from 2026-05-29 autonomous Claude overnight across THREE rounds; awaiting morning review + commit. The mobile app now has: health adapters, permissions flow, SQLite-backed offline outbox + drainer, full Settings screen with sign-out, background-fetch wiring to call `SyncQueue.drain()`, and a repo-level `DESIGN.md` design-system contract. **Step 7 (Dashboard) is next.**
 - **Server side (genoly-family-web/convex/fitness/) is COMPLETE.** 20 endpoints live on dev (`robust-oyster-899`). All curl smoke tests pass. Mobile just needs to consume them.
 
 

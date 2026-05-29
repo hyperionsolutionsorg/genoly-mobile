@@ -103,3 +103,49 @@ export interface HealthAdapterOptions {
    */
   debugLogging?: boolean;
 }
+
+// ── Concrete adapters ──────────────────────────────────────────────────
+
+import { HealthKitAdapter } from './HealthKitAdapter';
+import { HealthConnectAdapter } from './HealthConnectAdapter';
+import { MockHealthAdapter } from './MockHealthAdapter';
+
+export { HealthKitAdapter, HealthConnectAdapter, MockHealthAdapter };
+export type { MockHealthAdapterOptions } from './MockHealthAdapter';
+
+/**
+ * Platform-routing factory. Returns the right HealthAdapter for the
+ * current platform — HealthKitAdapter on iOS, HealthConnectAdapter on
+ * Android, MockHealthAdapter (empty) elsewhere (web, tests).
+ *
+ * Use this in `apps/mobile/utils/healthSync.ts` (or equivalent) rather
+ * than newing up specific adapters at call sites. That preserves the
+ * forkability rule — only this file imports the platform-specific
+ * adapter classes.
+ *
+ * NOTE: this function imports `react-native`'s Platform symbol lazily
+ * (inside the function body) so the package can be imported from Node
+ * test environments without the React Native runtime present. Jest tests
+ * that don't go through this factory remain platform-pure.
+ */
+export function createHealthAdapter(options: HealthAdapterOptions = {}): HealthAdapter {
+  let os: string;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- REASON: lazy require to keep this package usable in Node test environments.
+    const { Platform } = require('react-native') as { Platform: { OS: string } };
+    os = Platform.OS;
+  } catch {
+    // No react-native (Node test env) — return the mock so callers can
+    // still construct an adapter without crashing.
+    return new MockHealthAdapter({ available: false });
+  }
+
+  if (os === 'ios') {
+    return new HealthKitAdapter(options);
+  }
+  if (os === 'android') {
+    return new HealthConnectAdapter(options);
+  }
+  // Web, Windows, macOS — no native health store. Return an unavailable mock.
+  return new MockHealthAdapter({ available: false });
+}

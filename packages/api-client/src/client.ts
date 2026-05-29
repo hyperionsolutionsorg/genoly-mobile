@@ -200,14 +200,24 @@ export class FetchApiClient implements ApiClient {
     return res;
   }
 
-  /** POST /api/fitness/auth/revoke. */
+  /** POST /api/fitness/auth/revoke. Used by Settings → Sign out flow. */
   async revokeToken(opts: { scope: 'this_token' | 'this_device' | 'all_devices' }): Promise<void> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    // Note: server expects { scope } in the body. The bearer token in the
+    // Authorization header identifies the caller; the scope picks which
+    // tokens to invalidate. On success the server returns 204 No Content
+    // (our request<T>() helper handles empty-body responses by treating
+    // anything 2xx-without-JSON as void).
+    await this.request<void>('POST', '/api/fitness/auth/revoke', opts);
+    // Clear the local token regardless of scope so the next cold start
+    // routes through login. For 'this_device' or 'all_devices' scopes the
+    // local clear is required; for 'this_token' it's still the right call
+    // because we just invalidated the one we have.
+    await this.tokenStore.clearToken();
   }
 
   /** GET /api/fitness/auth/me — cold-start check. */
   async getSession(): Promise<SessionState> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    return this.request<SessionState>('GET', '/api/fitness/auth/me');
   }
 
   // §2 Daily sync (the hot path) ──────────────────────────────────────────
@@ -218,7 +228,12 @@ export class FetchApiClient implements ApiClient {
     to: string;
     entries: HealthEntry[];
   }> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    // Server expects query params, not a body.
+    const qs = new URLSearchParams({ from: opts.from, to: opts.to }).toString();
+    return this.request<{ from: string; to: string; entries: HealthEntry[] }>(
+      'GET',
+      `/api/fitness/sync/daily?${qs}`,
+    );
   }
 
   /** POST /api/fitness/sync/daily — idempotent upsert by (userId, date). */
@@ -227,7 +242,11 @@ export class FetchApiClient implements ApiClient {
     rejected: Array<{ index: number; code: string; message: string }>;
     serverTime: number;
   }> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    return this.request<{
+      accepted: number;
+      rejected: Array<{ index: number; code: string; message: string }>;
+      serverTime: number;
+    }>('POST', '/api/fitness/sync/daily', { entries });
   }
 
   // §3 Friends & leaderboard ──────────────────────────────────────────────

@@ -70,22 +70,35 @@ jest.mock('../utils/api', () => ({
   },
 }));
 
+// Round 1 (Step 4) added a third routing arm: valid token + no
+// permissions prompt yet → /(auth)/permissions. Mock the preferences
+// module so each test can control which arm fires.
+jest.mock('../utils/preferences', () => ({
+  getHasRequestedHealthPermissions: jest.fn(),
+}));
+
 // Import the SUT AFTER all mocks are in place.
 import RootLayout from '../app/_layout';
 import { tokenStore } from '../utils/api';
+import { getHasRequestedHealthPermissions } from '../utils/preferences';
 
 // ── Tests ──────────────────────────────────────────────────────────────
 
-describe('Auth gate (cold-start session check, Step 3)', () => {
+describe('Auth gate (cold-start session check, Step 3 + Step 4)', () => {
   beforeEach(() => {
     mockReplace.mockClear();
     (tokenStore.getToken as jest.Mock).mockReset();
     (tokenStore.isExpired as jest.Mock).mockReset();
+    (getHasRequestedHealthPermissions as jest.Mock).mockReset();
+    // Default: permissions screen already shown — so the third arm
+    // only fires in tests that explicitly opt in via mockResolvedValue(false).
+    (getHasRequestedHealthPermissions as jest.Mock).mockResolvedValue(true);
   });
 
-  it('renders authenticated content when a valid non-expired token exists', async () => {
+  it('renders authenticated content when a valid non-expired token exists and permissions resolved', async () => {
     (tokenStore.getToken as jest.Mock).mockResolvedValue('valid-bearer-token');
     (tokenStore.isExpired as jest.Mock).mockResolvedValue(false);
+    (getHasRequestedHealthPermissions as jest.Mock).mockResolvedValue(true);
 
     render(<RootLayout />);
 
@@ -93,10 +106,23 @@ describe('Auth gate (cold-start session check, Step 3)', () => {
     await waitFor(() => {
       expect(tokenStore.getToken).toHaveBeenCalled();
       expect(tokenStore.isExpired).toHaveBeenCalled();
+      expect(getHasRequestedHealthPermissions).toHaveBeenCalled();
     });
 
-    // Crucially: NO redirect for a signed-in user.
+    // Crucially: NO redirect for a signed-in user with permissions resolved.
     expect(mockReplace).not.toHaveBeenCalled();
+  });
+
+  it('redirects to /(auth)/permissions when valid token + permissions not yet requested', async () => {
+    (tokenStore.getToken as jest.Mock).mockResolvedValue('valid-bearer-token');
+    (tokenStore.isExpired as jest.Mock).mockResolvedValue(false);
+    (getHasRequestedHealthPermissions as jest.Mock).mockResolvedValue(false);
+
+    render(<RootLayout />);
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/(auth)/permissions');
+    });
   });
 
   it('redirects to /(auth)/login when no token exists', async () => {
