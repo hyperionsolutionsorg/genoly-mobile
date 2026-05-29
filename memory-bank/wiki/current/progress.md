@@ -30,6 +30,7 @@ status: active
 
 | Date | Commit | Subject |
 |---|---|---|
+| 2026-05-29 | `f2463a8` (squash merge of PR #6, src commit `4fee913`) | chore(mobile): install native deps + app.json plugin config + post-merge state cascade — fixes CI failure on `10f6f03` |
 | 2026-05-29 | `10f6f03` (squash merge of PR #5, src commit `51d5259`) | feat(mobile): Phase 1 Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md — health adapters + permissions + sync queue + Settings + background fetch + mobile design system (Claude autonomous overnight, 3 rounds) |
 | 2026-05-28 | `d2e3a35` (squash merge of PR #4) | feat(mobile): Phase 1 Step 2+3 — login screen + cold-start auth gate + Jest setup (4-round Antigravity → Claude completion) |
 | 2026-05-28 | `75d6e1a` (squash merge of PR #3) | feat(mobile): Phase 1 Step 1 — token store + ApiClient skeleton + issueToken (Antigravity) |
@@ -43,7 +44,7 @@ status: active
 | 3 | Session check on cold start | Antigravity + Claude | DONE 2026-05-28 — same PR as Step 2 |
 | 4 | HealthKit adapter + permission flow | Claude (autonomous overnight Round 1) | DONE 2026-05-29 — merged via PR #5, squash `10f6f03` |
 | 5 | SQLite sync queue + drainer | Claude (autonomous overnight Round 2) | DONE 2026-05-29 — `@genoly/sync-queue` package merged via PR #5, squash `10f6f03`. 16-test suite. |
-| 6 | Background fetch wiring | Claude (autonomous overnight Round 3) | DONE 2026-05-29 — `apps/mobile/utils/backgroundSync.ts` wires `expo-background-fetch` + `expo-task-manager` to call `SyncQueue.drain()`. 12-test suite. Merged via PR #5, squash `10f6f03`. Follow-up infra commit pending for app.json `UIBackgroundModes` + `RECEIVE_BOOT_COMPLETED`. |
+| 6 | Background fetch wiring | Claude (autonomous overnight Round 3) | DONE 2026-05-29 — `apps/mobile/utils/backgroundSync.ts` wires `expo-background-fetch` + `expo-task-manager` to call `SyncQueue.drain()`. 12-test suite. Merged via PR #5 (`10f6f03`). Follow-up infra config (`UIBackgroundModes` + `RECEIVE_BOOT_COMPLETED`) merged via PR #6 (`f2463a8`). |
 | 7 | Dashboard (today + last 7 days) | Claude | Next handoff — anchored by new mobile `DESIGN.md`. |
 | 8 | Leaderboard screen | Claude | Depends on #7 |
 | 9 | Friends list + actions | Claude | Depends on #8 |

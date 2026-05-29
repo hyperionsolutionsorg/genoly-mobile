@@ -21,7 +21,7 @@
  */
 
 import React from 'react';
-import { render, waitFor, act } from '@testing-library/react-native';
+import { render, waitFor } from '@testing-library/react-native';
 
 // ── Mocks (must be declared BEFORE importing the SUT) ────────────────
 
@@ -153,13 +153,17 @@ describe('Auth gate (cold-start session check, Step 3 + Step 4)', () => {
   it('redirects on storage error (fail-closed)', async () => {
     // Defense-in-depth: if SecureStore throws (corrupted keychain,
     // hardware issue, etc.), fail closed by sending the user to login.
+    //
+    // Note: we do NOT wrap render() in act(). Earlier attempt did, but
+    // RNTL+react-test-renderer 19 errors with "Can't access .root on
+    // unmounted test renderer" — the rejected getToken() unmounts the
+    // tree before act()'s async callback resolves. waitFor() below
+    // handles the async settle correctly without act wrapping.
     (tokenStore.getToken as jest.Mock).mockRejectedValue(
       new Error('SecureStore read failed'),
     );
 
-    await act(async () => {
-      render(<RootLayout />);
-    });
+    render(<RootLayout />);
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith('/(auth)/login');

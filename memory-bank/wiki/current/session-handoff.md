@@ -11,8 +11,8 @@ status: active
 
 ## State right now
 
-**Main branch:** `10f6f03` — Phase 1 Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md merged (PR #5, source commit `51d5259`). Origin synced.
-**Active state:** Follow-up infra commit IN PROGRESS in working tree on main — native modules installed via `npx expo install` (regenerates package-lock.json + fixes CI on 10f6f03), app.json plugin config + iOS UIBackgroundModes + Android RECEIVE_BOOT_COMPLETED, plus this post-merge state cascade.
+**Main branch:** `f2463a8` — Phase 1 overnight bundle merged via PR #5 (`10f6f03`) + infra setup merged via PR #6 (`f2463a8`). Origin synced. CI green.
+**Active state:** Main is clean and CI-green. Ready for Step 7 (Dashboard). Real-device smoke test pending Shankar (iOS simulator + Android emulator + actual device for background-fetch verification).
 
 **Code state by step:**
 - Steps 1, 2, 3 — MERGED to main (PRs #3, #4).
@@ -33,12 +33,10 @@ status: active
 
 ## What's next
 
-1. **Commit + push the infra-setup PR** — bundles `app.json` (`UIBackgroundModes`, `RECEIVE_BOOT_COMPLETED`, react-native-health plugin config), regenerated `package-lock.json` (fixes the CI failure on `10f6f03`), plus this post-merge state cascade.
-2. **Verify CI green** on the merge to main once that's in.
-3. **Real-device smoke test** — iOS simulator + Android emulator. Background-fetch in particular needs a real device (simulator doesn't wake on 15-min cadence).
-4. **Step 7** — Dashboard (today + last 7 days) reading from `apiClient.getDailyAggregates()`. UI work, anchored by the new mobile `DESIGN.md`.
-5. **Steps 8-10, 13** per `mobile-sync-architecture.md` §15.
-6. **Theme module migration** — Lift inlined hex literals from screens into a `theme/colors.ts`. Mechanical PR once dark palette is decided. Tracked in `DESIGN.md` §10.
+1. **Real-device smoke test** — iOS simulator + Android emulator. Background-fetch in particular needs a real device (simulator doesn't wake on 15-min cadence).
+2. **Step 7** — Dashboard (today + last 7 days) reading from `apiClient.getDailyAggregates()`. UI work, anchored by the new mobile `DESIGN.md`. Next handoff target.
+3. **Steps 8-10, 13** per `mobile-sync-architecture.md` §15.
+4. **Theme module migration** — Lift inlined hex literals from screens into a `theme/colors.ts`. Mechanical PR once dark palette is decided. Tracked in `DESIGN.md` §10.
 
 
 ## Reading order for the next agent
