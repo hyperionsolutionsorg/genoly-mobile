@@ -16,6 +16,7 @@
     "@expo/vector-icons": "^15.0.3",
     "@genoly/api-client": "*",
     "@genoly/health-sync": "*",
+    "@genoly/sync-queue": "*",
     "@genoly/types": "*",
     "@hookform/resolvers": "^5.4.0",
     "@react-navigation/native": "^7.1.8",

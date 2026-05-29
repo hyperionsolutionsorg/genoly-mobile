@@ -13,6 +13,89 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-05-29] note | Phase 1 Steps 4 + 12 + 5 + 11 + 6 + mobile DESIGN.md — Round 3 added Settings + bg fetch + design system (autonomous, uncommitted)
+
+Three rounds of one overnight Claude session per Shankar's "work completely independent for tonight" delegation. Round 1 shipped Steps 4 + 12. Round 2 shipped Step 5 after Shankar checked back with "Steps 4+12+5" green-light. Round 3 shipped Steps 11 + 6 + the new mobile `DESIGN.md` after Shankar's second autonomous green-light ("look for any other tasks ... and DESIGN.md format for the mobile version also").
+
+**Round 3 additions:**
+
+- **Step 11 — Settings + sign-out.** `apps/mobile/app/(tabs)/settings.tsx` replaces the stub with a full screen. Account section with email (best-effort `getSession()`) + Sign out button. Health-sync section with status + Manage permissions link to `/(auth)/permissions`. Subscription section with Linking.openURL to `genoly.org/account` (payment-neutral, no in-app upsell). Legal footer. Sign-out flow: native `Alert.alert` confirm (destructive style) → `apiClient.revokeToken({ scope: 'this_device' })` → reset permission prefs → `unregisterBackgroundSync()` → `router.replace('/(auth)/login')`. Fail-closed: `tokenStore.clearToken()` fallback if revokeToken throws. 8-test Jest suite.
+
+- **Step 6 — Background fetch wiring.** `apps/mobile/utils/backgroundSync.ts` wires `expo-background-fetch` + `expo-task-manager` to a named task `genoly.sync.healthAggregates`. `runBackgroundSyncTask()` re-checks `getHealthSyncEnabled()` at top (double-gated against intent + registration). Drains ONCE per wake (no inner loop — iOS 30s budget). Maps drain result to BackgroundFetchResult enum. `register*()` / `unregister*()` / `isBackgroundSyncRegistered()` public API. Min interval 15 min, `stopOnTerminate: false`, `startOnBoot: true`. Wired: permissions.tsx grant → register; settings.tsx sign-out → unregister. 12-test Jest suite. Defensive native-module loading via lazy require.
+
+- **Mobile DESIGN.md.** New `DESIGN.md` at repo root mirroring `genoly-family-web/DESIGN.md` (Stitch format) but adapted for React Native: light-only palette (dark deferred to Phase 1.5), system fonts, StyleSheet.create patterns, native `Alert.alert` over custom modal, defensive native-module loading, expo-router Href cast pattern, safe-area + iOS/Android platform quirks, ready-to-use agent prompts. ~500 lines. Same role as the web DESIGN.md: prevents future Antigravity drift on mobile UI.
+
+- **Auth-gate test refresh.** `apps/mobile/__tests__/auth-gate.test.tsx` was broken by Round 1's third routing arm (preferences module added to _layout.tsx without a mock in the test). Round 3 added the preferences mock + a new test case covering the "valid token + no permissions prompt → /(auth)/permissions" arm. Existing 4 tests refactored to set `hasRequestedHealthPermissions=true` as default. Now 5 tests total.
+
+**Round 3 verification:**
+- `npx tsc --noEmit -p apps/mobile/tsconfig.json` — exit 0 ✓
+
+**Combined Round 1 + 2 + 3 file count:**
+- 17 new files (3 health adapters + mock + factory + adapter test + permissions screen + preferences util + 4 sync-queue files + sync-queue test + Settings screen + Settings test + backgroundSync util + backgroundSync test + repo-root DESIGN.md)
+- 13 modified files (api-client/src/client.ts, mobile/app/_layout.tsx, mobile/app/(auth)/permissions.tsx, health-sync/src/index.ts, mobile/__tests__/auth-gate.test.tsx, mobile/package.json, plus the 6 cascade files + the workspace master-context.md)
+- Plus state-file cascade across this log + index.md + 4 wiki/current files + workspace master-context.md
+
+Tests: 52 new (16 health-sync + 16 sync-queue + 8 settings + 12 background-sync). With refreshed auth-gate (5) + login (1) = 58 total Jest tests in the workspace.
+
+Pages: `wiki/phases/2026-05-29-mobile-step-4-12-overnight.md` (covers all six steps despite the name), `vault/overnight-questions.md` (10 judgment-call items), `vault/overnight-morning-review.md` (commit script + verification steps).
+
+---
+
+## [2026-05-29] note | Phase 1 Steps 4 + 12 + 5 — Health adapters + sync queue IMPLEMENTATION COMPLETE (Rounds 1+2, superseded by Round 3 entry above)
+
+Two rounds of one overnight Claude session per Shankar's "work completely independent for tonight" delegation. Round 1 shipped Steps 4 + 12. Round 2 shipped Step 5 after Shankar checked back with "Steps 4+12+5" green-light.
+
+**Round 2 addition — Step 5 (SQLite sync queue + drainer):**
+
+New `@genoly/sync-queue` workspace package:
+- `packages/sync-queue/src/store.ts` — abstract `SyncStore` interface + `MemoryStore` (tests) + `ExpoSqliteStore` (production with `sync_outbox` schema, expo-sqlite-backed, defensive native-module loading)
+- `packages/sync-queue/src/queue.ts` — `SyncQueue` class implementing the drainer logic per architecture §11. `enqueue(entries, idFor)`, `drain()`, `getQueueDepth()`, `getDeadLetterDepth()`, `clearDeadLetters()`. Retry classifier: 5xx + 429 + 408 = retryable, 4xx-other = permanent. MAX_ATTEMPTS=5, BATCH_SIZE=50 (configurable). Concurrent-safe drain.
+- `packages/sync-queue/src/index.ts` — public exports + `createSyncQueue()` factory with ExpoSqlite-or-Memory fallback
+- `packages/sync-queue/src/SyncQueue.test.ts` — 16 tests: enqueue idempotency, drain happy-path / partial-rejection / retryable error / max-attempts-exhaustion / permanent error / rate_limited treated as retryable / dead-letter management / concurrent drain no-op
+
+`apps/mobile/package.json` updated to add `@genoly/sync-queue` as workspace dep.
+
+**Round 2 verification:**
+- `npx tsc --noEmit -p apps/mobile/tsconfig.json` — exit 0 ✓
+
+**Combined Round 1 + Round 2 file count:**
+- 14 new files (3 health adapters + mock + factory + adapter test + permissions screen + preferences util + 4 sync-queue files + sync-queue test)
+- 4 modified files (`api-client/src/client.ts`, `mobile/app/_layout.tsx`, `health-sync/src/index.ts`, `mobile/package.json`)
+- Plus state-file cascade
+
+Pages: `wiki/phases/2026-05-29-mobile-step-4-12-overnight.md` (covers all three steps despite the name), `vault/overnight-questions.md`, `vault/overnight-morning-review.md`.
+
+---
+
+## [2026-05-29] note | Phase 1 Steps 4 + 12 — Round 1 (now superseded by combined Round 1+2 entry above)
+
+Claude autonomous overnight run per Shankar's "work completely independent for tonight" delegation (2026-05-28 night). **Working tree on `main`, no commits, no pushes — per Shankar's explicit instruction "we are not going to commit anything till tomorrow morning."**
+
+**Code:**
+- `HealthKitAdapter` (iOS, `react-native-health` wrapper, defensive native-module loading, per-metric reads with clock-drift defense + sparse semantics)
+- `HealthConnectAdapter` (Android, `react-native-health-connect` wrapper, same surface as HealthKit; library choice logged in vault/overnight-questions.md Q1)
+- `MockHealthAdapter` (in-memory, configurable platform/availability/permission-grant, used in tests)
+- `createHealthAdapter()` factory in `packages/health-sync/src/index.ts` — lazy `require('react-native')` so the package stays Node-importable for tests
+- `apps/mobile/app/(auth)/permissions.tsx` — first-run permission request screen, Grant/Skip, friendly metric explainers + privacy note
+- `apps/mobile/utils/preferences.ts` — AsyncStorage-backed flag store for `hasRequestedHealthPermissions` + `healthSyncEnabled`, defensive native-module loading with in-memory shim for Node tests
+- `apps/mobile/app/_layout.tsx` — three-arm routing (no-token → login, no-permissions → permissions, fully-resolved → tabs)
+- `packages/api-client/src/client.ts` — 4 methods unstubbed: `revokeToken` (POST + clear local token), `getSession` (cold-start check), `getDailyAggregates` (query-params GET), `syncDailyAggregates` (drainer-style POST). ApiClient now at 5/20 methods implemented.
+
+**Tests:** `packages/health-sync/src/HealthAdapter.test.ts` — 16 tests across MockHealthAdapter (8) + HealthKitAdapter graceful-degradation (4) + HealthConnectAdapter graceful-degradation (4). Tests verify adapter logic without native modules; real-device validation deferred to Shankar's morning smoke test.
+
+**Verification:**
+- `npx tsc --noEmit -p apps/mobile/tsconfig.json` — exit 0 ✓
+- Jest run requires installing the new dev deps first (jest-expo + RNTL); Shankar's morning task per the commit script.
+
+**Decisions taken autonomously** (overridable per `vault/overnight-questions.md`):
+- Android library = `react-native-health-connect` (NOT `expo-health-connect`)
+- Permission scope = Steps + ActiveEnergyBurned + Distance (Shankar's approved scope minus ExerciseTime which isn't in the HealthMetric enum yet)
+- Step 5 stretch goal DEFERRED — conservative call on scope to ensure Steps 4+12 are rock-solid
+
+**Files:** 9 new + 3 modified. Pages: `wiki/phases/2026-05-29-mobile-step-4-12-overnight.md`, `vault/overnight-questions.md`, `vault/overnight-morning-review.md`. Workspace `master-context.md` update pending Shankar's review.
+
+---
+
 ## [2026-05-28] merge | Phase 1 Step 2 + Step 3 — Login screen + cold-start auth gate SHIPPED
 
 Implemented Steps 2 and 3 of the mobile sync plan on branch `active-agravity-step2-branch`. Took 4 review iterations across two Antigravity model rotations (Gemini Flash Low → GPT-OSS 120B medium) before Claude took over and completed it directly.

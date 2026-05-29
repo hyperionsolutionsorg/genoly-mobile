@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Session handoff — genoly-mobile"
-updated: 2026-05-28
+updated: 2026-05-29
 status: active
 ---
 
@@ -11,15 +11,21 @@ status: active
 
 ## State right now
 
-**Main branch:** `75d6e1a` — Phase 1 Step 1 merged (PR #3). Origin synced.
-**Active branch:** `active-agravity-step2-branch` contains Step 2+3 implementation (login screen + auth gate + Jest setup + tests). **Awaiting Shankar's `git push` + draft PR — see commit script in chat.**
+**Main branch:** `d2e3a35` — Phase 1 Step 2+3 merged (PR #4). Origin synced.
+**Active state:** Steps 4 + 12 + 5 + 11 + 6 + mobile `DESIGN.md` implementation complete in **working tree on main** (no branch, no commits — per Shankar's autonomous-overnight instruction 2026-05-29 covering 3 rounds). **Awaiting morning review + commit.**
 
-**Working tree:** Step 2+3 changes uncommitted on `active-agravity-step2-branch` after Claude's takeover from Antigravity (4 review iterations, summary in `[[2026-05-28-mobile-step-2-3]]`).
+**Working tree:** ~17 new files + 13 modified files. See `[[2026-05-29-mobile-step-4-12-overnight]]` for the file-by-file breakdown across all three autonomous rounds, and `vault/overnight-questions.md` for 10 judgment-call review items. NEW `@genoly/sync-queue` package from Round 2 + Settings + background-fetch + DESIGN.md from Round 3.
 
-**Code:** Steps 1, 2, and 3 of Phase 1 implementation complete. Step 4 (HealthKit adapter) is the next handoff target after Step 2+3 merges.
+**Code state by step:**
+- Steps 1, 2, 3 — MERGED to main.
+- Steps 4, 5, 6, 11, 12 — IMPLEMENTATION COMPLETE in working tree (uncommitted).
+- Step 7 (Dashboard) — next handoff target.
 
 ## What's done (recent)
 
+- ✅ Phase 1 Steps 11 + 6 + mobile `DESIGN.md` complete 2026-05-29 overnight Round 3.
+- ✅ Phase 1 Step 5 (`@genoly/sync-queue`) complete 2026-05-29 overnight Round 2.
+- ✅ Phase 1 Steps 4 + 12 complete 2026-05-29 overnight Round 1.
 - ✅ Phase 1 Step 2 + Step 3 implementation complete 2026-05-28 (on `active-agravity-step2-branch`, pending push + merge). See `[[2026-05-28-mobile-step-2-3]]`.
 - ✅ Phase 1 Step 1 MERGED via PR #3 (squash `75d6e1a`) 2026-05-28.
 - ✅ Phase 0 fully closed 2026-05-08 (signed APK on Android, EAS Build + GitHub Actions wired)
@@ -29,10 +35,13 @@ status: active
 
 ## What's next
 
-1. **Shankar pushes `active-agravity-step2-branch` + opens draft PR** — commit script provided in this session's chat.
-2. **Step 2+3 PR merges** to main.
-3. **Mobile Step 4: HealthKit adapter + permission flow** (iOS). Will need: `expo-health-kit` package selection + decision on which HealthKit identifiers to request + mock HealthKit shim for jest. Hand off to Antigravity OR Claude continues directly.
-4. **Steps 5-13** per `mobile-sync-architecture.md` §15.
+1. **Morning review of overnight Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md** — read phase page + `vault/overnight-questions.md` + commit script in `vault/overnight-morning-review.md`.
+2. **Install native dependencies** (now including `expo-background-fetch` + `expo-task-manager` for Round 3) + add `react-native-health` plugin + iOS `UIBackgroundModes` + Android `RECEIVE_BOOT_COMPLETED` to `app.json`.
+3. **Run `npm test` and tsc** to verify the overnight work (52 new tests).
+4. **Commit + push** the bundle on a branch + open PR.
+5. **Step 7** — Dashboard (today + last 7 days) reading from `apiClient.getDailyAggregates()`. UI work, anchored by the new mobile `DESIGN.md`.
+6. **Steps 8-10, 13** per `mobile-sync-architecture.md` §15.
+7. **Theme module migration** — Lift inlined hex literals from screens into a `theme/colors.ts`. Mechanical PR once dark palette is decided. Tracked in `DESIGN.md` §10.
 
 
 ## Reading order for the next agent

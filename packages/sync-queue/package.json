@@ -1,0 +1,13 @@
+{
+  "name": "@genoly/sync-queue",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Offline-tolerant outbox queue for health-aggregate uploads. Backed by expo-sqlite at runtime, MemoryStore for tests. Implements the drainer + retry + dead-letter logic from mobile-sync-architecture.md §11.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@genoly/api-client": "*",
+    "@genoly/types": "*"
+  }
+}
