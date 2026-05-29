@@ -13,6 +13,21 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-05-29] doc | Doc hygiene from markdown audit — CONTEXT.md retired, AGENTS.md DESIGN.md companion line
+
+Two-file doc-hygiene pass driven by `Genoly/Genoly-Vault/_scratch/markdown-audit-2026-05-29.md`:
+
+1. **`CONTEXT.md` retired** — converted from the pre-Karpathy "Zone 1/Zone 2" framing (which falsely claimed mobile was in "PLANNING — no app code yet" — that hasn't been true since Phase 0 closed 2026-05-08) into a 5-line redirect pointer following the same pattern `SESSION_HANDOFF.md` already uses. Pointer references AGENTS.md, the wiki/current/ files, DESIGN.md, FORK_PROCEDURE.md, and the architecture docs. The file is kept (not deleted) because `start-session.sh` and `.clinerules` still reference it for backwards compat — modernizing those scripts to read AGENTS.md directly is a separate future task.
+2. **`AGENTS.md` minor updates** — bumped `Last updated: 2026-05-22` → `2026-05-29` with a one-line note that the schema is still valid; added "Companion file (MUST read before building UI): `./DESIGN.md`" line mirroring web AGENTS.md's pattern (this gap was the audit's #2 recommendation).
+
+Companion change in genoly-family-web: same CONTEXT.md retirement + DESIGN.md "Lessons from Antigravity drift" section. See web `memory-bank/log.md`.
+
+Companion change in workspace: `ai-memory-bank-guide.md` decision-page link upgraded from plain text to markdown link with explicit reopen-criteria callout.
+
+Pages: `Genoly/Genoly-Vault/_scratch/markdown-audit-2026-05-29.md` (the audit report).
+
+---
+
 ## [2026-05-29] note | Phase 1 Step 7 (Dashboard) IMPLEMENTATION COMPLETE in working tree
 
 New files:
