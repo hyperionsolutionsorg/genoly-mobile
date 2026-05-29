@@ -2,7 +2,10 @@
   "name": "genoly-mobile",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["apps/*","packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "mobile": "npm --workspace @genoly/mobile run start",
     "mobile:android": "npm --workspace @genoly/mobile run android",
@@ -12,15 +15,15 @@
     "test": "jest"
   },
   "devDependencies": {
+    "@hookform/resolvers": "^3.9.0",
     "@testing-library/jest-native": "^5.4.2",
     "@testing-library/react-native": "^12.5.0",
-    "@hookform/resolvers": "^3.9.0",
+    "@types/jest": "^29.5.0",
     "jest": "^29.7.0",
-    "jest-expo": "^53.0.2",
-    "ts-jest": "^29.2.5",
-    "zod": "^3.22.4",
+    "jest-expo": "~54.0.0",
     "react-hook-form": "^7.48.2",
-    "@types/jest": "^29.5.0"
+    "ts-jest": "^29.2.5",
+    "zod": "^3.22.4"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -39,10 +42,10 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
-    "react-native-worklets": "0.5.1",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-    "react-native-web": "~0.21.0"
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.5.1"
   }
 }

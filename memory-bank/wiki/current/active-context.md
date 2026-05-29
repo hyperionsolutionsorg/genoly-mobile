@@ -11,7 +11,7 @@ status: active
 
 ## Current focus
 
-**Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md MERGED 2026-05-29 via PR #5, squash commit `10f6f03` on main.** Follow-up infra commit in progress: native modules installed via `npx expo install` + app.json plugin config + iOS UIBackgroundModes + Android RECEIVE_BOOT_COMPLETED — fixes the CI failure on `10f6f03` (out-of-sync package-lock.json). Plus the post-merge state cascade.
+**Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md MERGED 2026-05-29 via PR #5 (squash `10f6f03`) + infra-setup follow-up MERGED via PR #6 (squash `f2463a8`).** CI green on `f2463a8` (1m 2s). EAS Android build triggered async. Next: real-device smoke test + Step 7 (Dashboard).
 
 What landed across the rounds:
 - **Round 1 (Steps 4 + 12):** `HealthKitAdapter` (iOS, `react-native-health`), `HealthConnectAdapter` (Android, `react-native-health-connect`), `MockHealthAdapter`, `createHealthAdapter()` factory, first-run permissions screen (`/(auth)/permissions`), auth-gate three-arm routing, `apps/mobile/utils/preferences.ts`, 4 ApiClient methods unstubbed (`revokeToken`, `getSession`, `getDailyAggregates`, `syncDailyAggregates`).

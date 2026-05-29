@@ -12,7 +12,7 @@ status: active
 **Where things stand (2026-05-29):**
 
 - **Phase 0 is COMPLETE** as of 2026-05-08. Signed APK runs on a real Android phone; CI auto-triggers EAS builds on every `main` push.
-- **Phase 1 (mobile sync + leaderboard) is IN PROGRESS.** Steps 1, 2, 3 merged (`75d6e1a`, `d2e3a35`). **Steps 4 + 12 + 5 + 11 + 6 + mobile DESIGN.md** MERGED via PR #5 (squash `10f6f03`) on 2026-05-29 — three rounds of autonomous Claude overnight work. The mobile app now has: health adapters, permissions flow, SQLite-backed offline outbox + drainer, full Settings screen with sign-out, background-fetch wiring to call `SyncQueue.drain()`, and a repo-level `DESIGN.md` design-system contract. Follow-up infra commit (native deps install + app.json config) in progress to fix CI on the merge. **Step 7 (Dashboard) is next.**
+- **Phase 1 (mobile sync + leaderboard) is IN PROGRESS.** Steps 1, 2, 3 merged (`75d6e1a`, `d2e3a35`). **Steps 4 + 12 + 5 + 11 + 6 + mobile DESIGN.md** MERGED via PR #5 (squash `10f6f03`) + **infra setup** (native deps + app.json plugin config + UIBackgroundModes + RECEIVE_BOOT_COMPLETED) MERGED via PR #6 (squash `f2463a8`) on 2026-05-29. CI green. The mobile app now has: health adapters, permissions flow, SQLite-backed offline outbox + drainer, full Settings screen with sign-out, background-fetch wiring to call `SyncQueue.drain()`, and a repo-level `DESIGN.md` design-system contract. **Step 7 (Dashboard) is next.**
 - **Server side (genoly-family-web/convex/fitness/) is COMPLETE.** 20 endpoints live on dev (`robust-oyster-899`). All curl smoke tests pass. Mobile just needs to consume them.
 
 

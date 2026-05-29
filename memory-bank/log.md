@@ -13,6 +13,18 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-05-29] merge | Infra setup MERGED via PR #6 (`f2463a8`) — CI green
+
+Squash merge of `chore/infra-setup-post-overnight` (source commit `4fee913`) onto main as `f2463a8`. 10 files changed, 431 insertions, 34 deletions. Branch deleted both locally and on origin.
+
+CI on the merge commit: **Trigger EAS Android build ran in 1m 2s — Success.** Fixes the `npm ci` failure on `10f6f03` (out-of-sync `package-lock.json`). EAS Android build triggered async in the cloud.
+
+What landed: native deps installed via `npx expo install` (regenerated `package-lock.json` to include @genoly/sync-queue workspace package + 6 native modules), `app.json` updated with `react-native-health` plugin config (`healthSharePermission`), iOS `infoPlist.UIBackgroundModes = ["fetch", "processing"]`, Android `permissions += RECEIVE_BOOT_COMPLETED`, plus the post-PR-#5 state cascade.
+
+Pages: `[[2026-05-29-mobile-step-4-12-overnight]]` (status: merged).
+
+---
+
 ## [2026-05-29] merge | Phase 1 Steps 4 + 12 + 5 + 11 + 6 + mobile DESIGN.md MERGED via PR #5 (`10f6f03`)
 
 Squash merge of `feat/step-4-12-5-11-6-overnight` (source commit `51d5259`) onto main as `10f6f03`. 30 files changed, 4559 insertions, 65 deletions. Branch deleted.
