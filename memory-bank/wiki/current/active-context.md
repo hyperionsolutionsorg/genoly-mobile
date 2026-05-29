@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Active context — genoly-mobile"
-updated: 2026-05-26
+updated: 2026-05-28
 status: active
 ---
 
@@ -11,12 +11,14 @@ status: active
 
 ## Current focus
 
-**Mobile-side implementation Step 1 has shipped!** Token store + ApiClient skeleton happy path is live on `active-agravity-branch` and ready for review. Step 2 (login screen UI) is the next upcoming target.
+**Mobile Step 2 + Step 3 SHIPPED!** Login screen (react-hook-form + zod + apiClient.issueToken) AND cold-start auth gate (local tokenStore check, no server round-trip) are live on `active-agravity-step2-branch` and ready for review/merge. Plus first-class Jest + React Native Testing Library testing setup. **Step 4 (HealthKit adapter + permission flow) is next.**
 
-**2026-05-28:** Step 1 implementation completed, tested via standalone local smoke-test runner, and branch isolated.
+**2026-05-28:** Step 1 merged via PR #3 (squash `75d6e1a`). Step 2+3 implementation completed across 4 review iterations (Gemini Flash Low → GPT-OSS 120B medium → Claude takeover). Code, tests, and Rule #0 cascade all done; awaiting Shankar's `git push` + draft PR.
 
 ## Recent events
 
+- **2026-05-28** — **Mobile Step 2 + Step 3 IMPLEMENTATION COMPLETE.** Login screen + cold-start auth gate + Jest setup + auth-gate test suite (4 cases) + login test (validation + success + error). See `[[2026-05-28-mobile-step-2-3]]`. 4 review iterations summarized there.
+- **2026-05-28** — **Mobile Step 1 MERGED via PR #3** (squash `75d6e1a` on main).
 - **2026-05-28** — **Mobile-side Step 1 Completed** — Built SecureTokenStore and MemoryTokenStore with `expo-secure-store` backend, FetchApiClient skeleton with GET retry semantics, and integrated `issueToken`.
 - **2026-05-26** — **AI memory bank Phase 3 (mobile)** — `docs/GRAPH_REPORT.md` + graphify AST extraction + hooks + adapter integrations. See `[[2026-05-26-phase-3-graphify-mobile]]`. Web companion phase shipped same day in `../genoly-family-web` at commit `0e3c402`.
 - **2026-05-22** — AI memory bank Phase 1 foundation landed (`d4fbecc`). `AGENTS.md` + `CLAUDE.md` thin pointer created. Wiki structure being populated this session.
@@ -36,8 +38,10 @@ status: active
 
 - ~~**AI memory bank Phase 1 migration**~~ DONE 2026-05-22 (`d4fbecc`).
 - ~~**AI memory bank Phase 3 (Graphify) — mobile**~~ DONE 2026-05-26. See `[[2026-05-26-phase-3-graphify-mobile]]`.
-- ~~**Mobile-side step 1: token store + ApiClient skeleton**~~ DONE 2026-05-28.
-- **Mobile-side step 2: login screen** — Ready to start after Step 1 PR review.
+- ~~**Mobile-side step 1: token store + ApiClient skeleton**~~ DONE 2026-05-28. Merged via PR #3 (`75d6e1a`).
+- ~~**Mobile-side step 2: login screen**~~ DONE 2026-05-28 (on `active-agravity-step2-branch`). See `[[2026-05-28-mobile-step-2-3]]`.
+- ~~**Mobile-side step 3: cold-start session check**~~ DONE 2026-05-28 (same branch as Step 2). See `[[2026-05-28-mobile-step-2-3]]`.
+- **Mobile-side step 4: HealthKit adapter + permission flow** — Next handoff. Depends on Step 2+3 PR merging first.
 
 
 ## Architecture reference
@@ -58,7 +62,10 @@ Server contract: [`../genoly-family-web/docs/fitness-api-contract.md`](../../../
 
 | Package | State |
 |---|---|
-| `packages/api-client/` | Interface defined (20 methods, ApiClientError, ApiClientConfig). Implementation pending step 1. |
+| `packages/api-client/` | Step 1 SHIPPED — `FetchApiClient` with `issueToken` happy path + 19 stubbed methods. Singleton wiring in `apps/mobile/utils/api.ts`. Now also exports a shared `tokenStore` used by both ApiClient + auth gate. |
 | `packages/health-sync/` | HealthAdapter interface defined. HealthKitAdapter / HealthConnectAdapter implementations pending step 4. |
 | `packages/types/` | Mirrors `docs/fitness-api-contract.md` types. `isPaymentNeutral: true` tripwire confirmed in `SubscriptionStatus` type. |
-| `apps/mobile/app/(tabs)/` | 4-tab scaffold with FontAwesome icons. All screens are placeholders. Login flow not wired. |
+| `apps/mobile/app/_layout.tsx` | Step 3 SHIPPED — cold-start auth gate. Two-arm redirect (no-token OR expired-token → login). Fail-closed on storage errors. |
+| `apps/mobile/app/(auth)/login.tsx` | Step 2 SHIPPED — login screen with react-hook-form + zod + Controller-wired inputs + ApiClientError → friendly message mapping. |
+| `apps/mobile/app/(tabs)/` | 4-tab scaffold unchanged (per Decision 6). Auth gate now gates access; tabs themselves still placeholders. Real content in Step 5+. |
+| `apps/mobile/__tests__/` | Jest + React Native Testing Library wired. login.test.tsx + auth-gate.test.tsx (4 cases) + token-store.test.ts. |

@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Overview — genoly-mobile"
-updated: 2026-05-22
+updated: 2026-05-28
 status: active
 ---
 
@@ -12,7 +12,7 @@ status: active
 **Where things stand (2026-05-28):**
 
 - **Phase 0 is COMPLETE** as of 2026-05-08. Signed APK runs on a real Android phone; CI auto-triggers EAS builds on every `main` push.
-- **Phase 1 (mobile sync + leaderboard) is IN PROGRESS.** Step 1 (token store + ApiClient skeleton) has been successfully implemented and verified on the `active-agravity-branch` branch.
+- **Phase 1 (mobile sync + leaderboard) is IN PROGRESS.** Steps 1, 2, and 3 implementation done. Step 1 merged via PR #3 (`75d6e1a`). Steps 2+3 (login screen + cold-start auth gate + Jest setup) ready to merge on `active-agravity-step2-branch`. **Step 4 (HealthKit adapter) is next.**
 - **Server side (genoly-family-web/convex/fitness/) is COMPLETE.** 20 endpoints live on dev (`robust-oyster-899`). All curl smoke tests pass. Mobile just needs to consume them.
 
 

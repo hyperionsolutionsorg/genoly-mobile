@@ -1,10 +1,12 @@
 // apps/mobile/app/(auth)/login.tsx
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { useForm } from 'react-hook-form';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Platform } from 'react-native';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
+import Constants from 'expo-constants';
 import { apiClient } from '../../utils/api';
+import { ApiClientError } from '@genoly/api-client';
 
 const schema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
@@ -13,11 +15,30 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+function mapLoginError(e: unknown): string {
+  if (e instanceof ApiClientError) {
+    switch (e.code) {
+      case 'unauthenticated':
+        return 'Wrong email or password. Try again.';
+      case 'bad_request':
+        return 'Please check your email and password.';
+      case 'rate_limited':
+        return 'Too many sign-in attempts. Wait a minute and try again.';
+      case 'token_expired':
+        return 'Your session expired. Please sign in again.';
+      case 'internal':
+        return 'Something went wrong on our end. Please try again.';
+      default:
+        return 'Something went wrong. Please try again.';
+    }
+  }
+  return 'An unexpected error occurred.';
+}
+
 export default function LoginScreen() {
   const router = useRouter();
   const {
     control,
-    setValue,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
@@ -30,11 +51,14 @@ export default function LoginScreen() {
       await apiClient.issueToken({
         email: data.email,
         password: data.password,
-        device: { platform: 'mobile' },
+        device: {
+          platform: Platform.OS as import('@genoly/types').Platform,
+          appVersion: Constants.expoConfig?.version,
+        },
       });
       router.replace('/(tabs)');
     } catch (e: unknown) {
-      const message = e instanceof Error ? e.message : 'Login failed';
+      const message = mapLoginError(e);
       Alert.alert('Login error', message);
     }
   };
@@ -42,25 +66,45 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Log in</Text>
-      <View style={styles.fieldContainer}>
-        <TextInput
-          placeholder="Email"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          style={styles.input}
-          editable={!isSubmitting}
-          onChangeText={(text) => setValue('email', text)}
-        />
-        {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
-        <TextInput
-          placeholder="Password"
-          secureTextEntry
-          style={styles.input}
-          editable={!isSubmitting}
-          onChangeText={(text) => setValue('password', text)}
-        />
-        {errors.password && <Text style={styles.error}>{errors.password.message}</Text>}
-      </View>
+        <View style={styles.fieldContainer}>
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <>
+                <TextInput
+                  placeholder="Email"
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  style={styles.input}
+                  editable={!isSubmitting}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+                {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
+              </>
+            )}
+          />
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <>
+                <TextInput
+                  placeholder="Password"
+                  secureTextEntry
+                  style={styles.input}
+                  editable={!isSubmitting}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+                {errors.password && <Text style={styles.error}>{errors.password.message}</Text>}
+              </>
+            )}
+          />
+        </View>
       <TouchableOpacity style={styles.button} onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
         {isSubmitting ? (
           <ActivityIndicator color="#fff" />

@@ -5,14 +5,15 @@
 
 ## Current state (cascade-redundant projections)
 
-- [[active-context]] — current focus, recent events, blockers (5 pending Shankar decisions)
+- [[active-context]] — current focus, recent events, active tasks
 - [[progress]] — task statuses, Phase 1 13-step plan
 - [[session-handoff]] — for the next agent: what's done, what's next, watchouts
 - [[overview]] — 30-second high-level summary
 
 ## Phases (chronological, most-recent first)
 
-- [[2026-05-28-mobile-step-1]] — Phase 1, Step 1: token store + ApiClient skeleton + issueToken happy path completed and verified.
+- [[2026-05-28-mobile-step-2-3]] — Phase 1, Step 2 + Step 3: login screen (react-hook-form + zod + Controller-wired inputs + ApiClientError → friendly message mapping) AND cold-start auth gate (local tokenStore check, two-arm redirect on no-token OR expired-token, fail-closed on storage errors) + Jest + RNTL setup + 4-case auth-gate.test.tsx + login.test.tsx. Took 4 review iterations across Gemini Flash Low + GPT-OSS 120B + Claude direct.
+- [[2026-05-28-mobile-step-1]] — Phase 1, Step 1: token store + ApiClient skeleton + issueToken happy path completed and verified. Merged via PR #3 (`75d6e1a`).
 - [[2026-05-26-phase-3-graphify-mobile]] — AI memory bank Phase 3 (Graphify) — code knowledge graph: docs/GRAPH_REPORT.md + AST-extracted graph.json + hooks + adapters. Closes the 3-phase plan.
 - [[2026-05-22-karpathy-adoption-mobile]] — AI memory bank Phase 1 migration (this repo's contribution)
 - [[2026-05-08-phase-0-complete]] — Phase 0 closed: Expo init + package stubs + EAS Build + GitHub Actions

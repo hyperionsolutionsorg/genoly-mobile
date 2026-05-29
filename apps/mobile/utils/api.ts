@@ -10,8 +10,13 @@ if (!baseUrl) {
   );
 }
 
+// Export a shared token store for use in auth gate checks
+const tokenStore = new SecureTokenStore();
+
 export const apiClient = createApiClient({
-  tokenStore: new SecureTokenStore(),
+  tokenStore,
   baseUrl,
   appVersion,
 });
+
+export { tokenStore };

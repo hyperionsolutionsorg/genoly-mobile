@@ -13,6 +13,46 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-05-28] merge | Phase 1 Step 2 + Step 3 — Login screen + cold-start auth gate SHIPPED
+
+Implemented Steps 2 and 3 of the mobile sync plan on branch `active-agravity-step2-branch`. Took 4 review iterations across two Antigravity model rotations (Gemini Flash Low → GPT-OSS 120B medium) before Claude took over and completed it directly.
+
+**What landed:**
+
+- **Login screen** (`apps/mobile/app/(auth)/login.tsx`): react-hook-form with `Controller`-wired inputs, zod schema (email + 8-char-min password), `apiClient.issueToken` on submit with `Platform.OS` + `Constants.expoConfig.version` in the device payload, `mapLoginError` mapping `ApiClientError.code` to user-facing strings (`unauthenticated` / `bad_request` / `rate_limited` / `token_expired` / `internal` → friendly messages), `router.replace('/(tabs)')` on success, Alert-based forgot-password pointer to genoly.org.
+- **Cold-start auth gate** (`apps/mobile/app/_layout.tsx`): on app boot, reads token via `tokenStore.getToken()` + `tokenStore.isExpired()`. Two-arm redirect: no-token OR expired-token → `/(auth)/login`. Storage errors fail closed (also redirect). Uses `Href` cast pattern (`'/(auth)/login' as unknown as Href`) — narrow cast on the route string, preserves router-object typing. Replaces earlier `(router as any).replace(...)` regression.
+- **Shared `tokenStore` export** (`apps/mobile/utils/api.ts`): same SecureStore handle used by both `apiClient` and the auth gate.
+- **Jest + React Native Testing Library setup** (root + `apps/mobile/jest.config.js` + `package.json` scripts).
+- **login.test.tsx**: validation errors + happy-path issueToken call + correct device-payload shape.
+- **auth-gate.test.tsx**: 4 cases — valid token renders content; no token redirects; expired token redirects; storage error fails closed. Uses module-scope `mockReplace` pattern to fix the earlier "fresh mock per call" review-cycle bug.
+- **Deleted** `LoginScreen.test.tsx` (was a 2-line duplicate stub).
+
+**Decisions taken:**
+
+1. Form: react-hook-form + zod + Controller (no bare setValue).
+2. Email validation: `z.string().email()` permissive.
+3. Password min: 8 chars (matches web).
+4. Forgot-password: Alert redirect to genoly.org (web owns the OTP flow).
+5. Cold-start UX: Expo splash stays mounted until `authChecked` resolves.
+6. Existing `(tabs)` scaffold: left as-is. Auth gate redirects INTO the placeholder tabs; real tab content lands in Step 5+.
+
+**Verification:**
+
+- `npx tsc --noEmit -p apps/mobile/tsconfig.json` — exit 0
+- `npm test` from `apps/mobile/` — login + auth-gate + Step 1's MemoryTokenStore all pass
+
+**Review-cycle iterations** (recorded for future Antigravity briefs):
+
+- R1 (Flash Low): structure correct but 5 critical bugs (form not Controller-wired, getSession instead of tokenStore, invented platform value, no cascade, no push).
+- R2 (Flash Low): fixed 3, introduced new regression (invented ApiErrorCode values), still no cascade.
+- R3 (GPT-OSS 120B): fixed the codes, introduced `(router as any)` regression to silence tsc, still no isExpired check.
+- R4 (Claude direct): replaced `(router as any)` with proper `Href` cast, added `isExpired()` check, rewrote auth-gate.test.tsx (4 cases, proper mock), did the Rule #0 cascade, deleted the duplicate test stub.
+
+Page: [[2026-05-28-mobile-step-2-3]]
+Branch: `active-agravity-step2-branch` (push pending Shankar's action)
+
+---
+
 ## [2026-05-28] merge | Phase 1 Step 1 — Token store + ApiClient skeleton SHIPPED
 
 Implemented Step 1 of the mobile sync plan on branch `active-agravity-branch`:

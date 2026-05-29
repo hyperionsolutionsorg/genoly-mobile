@@ -32,10 +32,10 @@ describe('LoginScreen', () => {
     fireEvent.press(loginButton);
     await waitFor(() => {
       expect(apiClient.issueToken).toHaveBeenCalledWith({
-        email: 'test@example.com',
-        password: 'password123',
-        device: { platform: 'mobile' },
-      });
+          email: 'test@example.com',
+          password: 'password123',
+          device: { platform: expect.any(String), appVersion: expect.any(String) },
+        });
       // No error alert should be shown
       expect(queryByText('Login error')).toBeNull();
     });
