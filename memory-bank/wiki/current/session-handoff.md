@@ -11,13 +11,14 @@ status: active
 
 ## State right now
 
-**Main branch:** `f2463a8` — Phase 1 overnight bundle merged via PR #5 (`10f6f03`) + infra setup merged via PR #6 (`f2463a8`). Origin synced. CI green.
-**Active state:** Main is clean and CI-green. Ready for Step 7 (Dashboard). Real-device smoke test pending Shankar (iOS simulator + Android emulator + actual device for background-fetch verification).
+**Main branch:** `df7d22c` — PR #5 (`10f6f03`) overnight bundle + PR #6 (`f2463a8`) infra setup + PR #7 (`df7d22c`) jest-green & cascade all merged. Origin synced. CI green.
+**Active state:** Step 7 (Dashboard) IMPLEMENTATION COMPLETE in working tree on main, PR pending. 4 new files: `hooks/useDashboardData.ts`, replaced `(tabs)/fitness.tsx`, two test files. 24 new Jest tests; 54 total in suite. Real-device smoke pending.
 
 **Code state by step:**
 - Steps 1, 2, 3 — MERGED to main (PRs #3, #4).
-- Steps 4, 5, 6, 11, 12 — MERGED to main (PR #5).
-- Step 7 (Dashboard) — next handoff target.
+- Steps 4, 5, 6, 11, 12 — MERGED to main (PR #5 + infra follow-ups PRs #6, #7).
+- Step 7 (Dashboard) — IMPLEMENTATION COMPLETE in working tree, PR pending.
+- Step 8 (Leaderboard) — next handoff target.
 
 ## What's done (recent)
 
@@ -33,10 +34,12 @@ status: active
 
 ## What's next
 
-1. **Real-device smoke test** — iOS simulator + Android emulator. Background-fetch in particular needs a real device (simulator doesn't wake on 15-min cadence).
-2. **Step 7** — Dashboard (today + last 7 days) reading from `apiClient.getDailyAggregates()`. UI work, anchored by the new mobile `DESIGN.md`. Next handoff target.
-3. **Steps 8-10, 13** per `mobile-sync-architecture.md` §15.
-4. **Theme module migration** — Lift inlined hex literals from screens into a `theme/colors.ts`. Mechanical PR once dark palette is decided. Tracked in `DESIGN.md` §10.
+1. **Open + merge the Step 7 Dashboard PR.**
+2. **Real-device smoke test** — iOS simulator + Android emulator. Background-fetch needs a real device (simulator doesn't wake on 15-min cadence). Dashboard's drain-on-mount + Refresh button can be smoke-tested in the simulator.
+3. **Step 8** — Leaderboard screen. Reads from `apiClient.getLeaderboard({ date })` (currently stubbed). Friends list (Step 9) is a soft prerequisite but not strict — leaderboard can ship with just self + accepted friends.
+4. **Steps 9, 10, 13** per `mobile-sync-architecture.md` §15.
+5. **Theme module migration** — Lift inlined hex literals from screens into a `theme/colors.ts`. Mechanical PR once dark palette is decided. Tracked in `DESIGN.md` §10.
+6. **Workspace test runner gap** — Make Jest see the 32 tests in `packages/health-sync` + `packages/sync-queue`. Currently `npm test` from `apps/mobile/` only sees `apps/mobile/__tests__/`.
 
 
 ## Reading order for the next agent

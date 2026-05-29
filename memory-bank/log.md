@@ -13,6 +13,41 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-05-29] note | Phase 1 Step 7 (Dashboard) IMPLEMENTATION COMPLETE in working tree
+
+New files:
+- `apps/mobile/hooks/useDashboardData.ts` — drain+fetch hook with local-TZ date math, queue/dead-letter counters, manual refresh
+- `apps/mobile/app/(tabs)/fitness.tsx` — replaced stub with full Dashboard (today big numbers + 7-day horizontal bars + one-tap-clear dead-letter banner + Refresh button + error banner with Retry + empty + loading states), per the mobile `DESIGN.md`
+- `apps/mobile/__tests__/useDashboardData.test.ts` — 12 hook tests
+- `apps/mobile/__tests__/fitness.test.tsx` — 12 screen tests
+
+Decisions Shankar approved this session:
+1. Visual: big today numbers + 7-day horizontal bars (no chart library; bars are plain `<View>` widths)
+2. Sync: drain+refetch on every mount + a manual Refresh button (pull-to-refresh deferred)
+3. Dead-letter UI: dashboard banner with one-tap Clear (resolves his "becomes noise" concern via immediate clear rather than silent auto-purge)
+
+Verification:
+- `npx tsc --noEmit -p apps/mobile/tsconfig.json` — exit 0
+- `npm test` — 7 suites, 54 tests passing (24 new), ~2.2s
+
+Pending: open PR, real-device smoke (iOS sim + Android emulator).
+
+Pages: `[[2026-05-29-mobile-step-7-dashboard]]`.
+
+---
+
+## [2026-05-29] merge | Jest suite green + post-PR-#6 cascade MERGED via PR #7 (`df7d22c`)
+
+Bundle: `jest-expo@~54.0.0` upgrade (was `^53.0.2`, broke against Expo SDK 54's expo-modules-core layout), removed custom `transformIgnorePatterns` override in `apps/mobile/jest.config.js` (preset's defaults are correct for SDK 54), split the chained `login.test.tsx` test in two (RHF's reValidateMode 'onChange' tick lives outside `act()`, so chaining "press empty → fill → press valid" lands the second press mid-revalidate), and dropped the `act(async () => render(...))` wrap in the auth-gate fail-closed test (react-test-renderer 19 errors with "Can't access .root on unmounted test renderer" when the rejected getToken() unmounts during act).
+
+Also bundled the post-PR-#6 state cascade (flipping "infra commit in progress" wording to "merged at f2463a8" across master-context + 6 mobile state files).
+
+Result: 30 tests, all passing, ~2.5s.
+
+Pages: `[[2026-05-29-mobile-step-4-12-overnight]]` (overnight bundle merged).
+
+---
+
 ## [2026-05-29] merge | Infra setup MERGED via PR #6 (`f2463a8`) — CI green
 
 Squash merge of `chore/infra-setup-post-overnight` (source commit `4fee913`) onto main as `f2463a8`. 10 files changed, 431 insertions, 34 deletions. Branch deleted both locally and on origin.

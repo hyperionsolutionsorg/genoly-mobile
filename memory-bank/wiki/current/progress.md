@@ -45,7 +45,7 @@ status: active
 | 4 | HealthKit adapter + permission flow | Claude (autonomous overnight Round 1) | DONE 2026-05-29 — merged via PR #5, squash `10f6f03` |
 | 5 | SQLite sync queue + drainer | Claude (autonomous overnight Round 2) | DONE 2026-05-29 — `@genoly/sync-queue` package merged via PR #5, squash `10f6f03`. 16-test suite. |
 | 6 | Background fetch wiring | Claude (autonomous overnight Round 3) | DONE 2026-05-29 — `apps/mobile/utils/backgroundSync.ts` wires `expo-background-fetch` + `expo-task-manager` to call `SyncQueue.drain()`. 12-test suite. Merged via PR #5 (`10f6f03`). Follow-up infra config (`UIBackgroundModes` + `RECEIVE_BOOT_COMPLETED`) merged via PR #6 (`f2463a8`). |
-| 7 | Dashboard (today + last 7 days) | Claude | Next handoff — anchored by new mobile `DESIGN.md`. |
+| 7 | Dashboard (today + last 7 days) | Claude (interactive) | IMPLEMENTATION COMPLETE 2026-05-29 — `apps/mobile/hooks/useDashboardData.ts` + `apps/mobile/app/(tabs)/fitness.tsx` (real Dashboard replacing stub). Big-number today card + 7-day horizontal bars + dead-letter banner + refresh button. 24-test suite. PR pending. See `[[2026-05-29-mobile-step-7-dashboard]]`. |
 | 8 | Leaderboard screen | Claude | Depends on #7 |
 | 9 | Friends list + actions | Claude | Depends on #8 |
 | 10 | Goals + history screens | Claude | Depends on #7 |

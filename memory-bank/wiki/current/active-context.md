@@ -11,7 +11,9 @@ status: active
 
 ## Current focus
 
-**Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md MERGED 2026-05-29 via PR #5 (squash `10f6f03`) + infra-setup follow-up MERGED via PR #6 (squash `f2463a8`).** CI green on `f2463a8` (1m 2s). EAS Android build triggered async. Next: real-device smoke test + Step 7 (Dashboard).
+**Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md MERGED 2026-05-29 via PR #5 (squash `10f6f03`) + infra setup via PR #6 (squash `f2463a8`) + jest-green follow-up via PR #7 (squash `df7d22c`). Step 7 (Dashboard) IMPLEMENTATION COMPLETE in working tree on main, awaiting PR.**
+
+Step 7 work: new `apps/mobile/hooks/useDashboardData.ts` hook + replaced `apps/mobile/app/(tabs)/fitness.tsx` stub with full Dashboard (big-number today card + 7-day horizontal bars + dead-letter banner with one-tap clear + manual refresh button). 24 new Jest tests; total 54 across 7 suites. CI green. Next: real-device smoke test.
 
 What landed across the rounds:
 - **Round 1 (Steps 4 + 12):** `HealthKitAdapter` (iOS, `react-native-health`), `HealthConnectAdapter` (Android, `react-native-health-connect`), `MockHealthAdapter`, `createHealthAdapter()` factory, first-run permissions screen (`/(auth)/permissions`), auth-gate three-arm routing, `apps/mobile/utils/preferences.ts`, 4 ApiClient methods unstubbed (`revokeToken`, `getSession`, `getDailyAggregates`, `syncDailyAggregates`).
@@ -61,7 +63,8 @@ See `[[2026-05-29-mobile-step-4-12-overnight]]` for full detail, `vault/overnigh
 - ~~**Mobile-side step 11: Settings + logout**~~ DONE 2026-05-29 (overnight Round 3).
 - ~~**Mobile-side step 6: background fetch wiring**~~ DONE 2026-05-29 (overnight Round 3).
 - ~~**Mobile `DESIGN.md`**~~ DONE 2026-05-29 (overnight Round 3).
-- **Mobile-side step 7: Dashboard (today + last 7 days)** — Next handoff. UI work; anchored by the new `DESIGN.md`.
+- ~~**Mobile-side step 7: Dashboard (today + last 7 days)**~~ IMPLEMENTATION COMPLETE 2026-05-29 (interactive session). See `[[2026-05-29-mobile-step-7-dashboard]]`. PR pending.
+- **Mobile-side step 8: Leaderboard screen** — Next handoff.
 
 
 ## Architecture reference
