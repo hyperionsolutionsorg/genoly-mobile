@@ -13,7 +13,19 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
-## [2026-05-29] note | Phase 1 Steps 4 + 12 + 5 + 11 + 6 + mobile DESIGN.md — Round 3 added Settings + bg fetch + design system (autonomous, uncommitted)
+## [2026-05-29] merge | Phase 1 Steps 4 + 12 + 5 + 11 + 6 + mobile DESIGN.md MERGED via PR #5 (`10f6f03`)
+
+Squash merge of `feat/step-4-12-5-11-6-overnight` (source commit `51d5259`) onto main as `10f6f03`. 30 files changed, 4559 insertions, 65 deletions. Branch deleted.
+
+Companion infra-setup commit in progress in working tree on main: native modules installed via `npx expo install react-native-health react-native-health-connect @react-native-async-storage/async-storage expo-sqlite expo-background-fetch expo-task-manager` (regenerates package-lock.json + fixes the `npm ci` CI failure on `10f6f03`). app.json updated with iOS `UIBackgroundModes: ["fetch", "processing"]`, Android `RECEIVE_BOOT_COMPLETED`, and `react-native-health` plugin config (healthSharePermission). Plus this post-merge state cascade.
+
+CI on `10f6f03` failed (`npm ci` strict mode tripped because package-lock.json was out of sync with the new `@genoly/sync-queue` workspace package). Will resolve once the infra-setup PR lands.
+
+Pages: `[[2026-05-29-mobile-step-4-12-overnight]]` (now status: merged).
+
+---
+
+## [2026-05-29] note | Phase 1 Steps 4 + 12 + 5 + 11 + 6 + mobile DESIGN.md — Round 3 added Settings + bg fetch + design system (autonomous, uncommitted, now superseded by merge entry above)
 
 Three rounds of one overnight Claude session per Shankar's "work completely independent for tonight" delegation. Round 1 shipped Steps 4 + 12. Round 2 shipped Step 5 after Shankar checked back with "Steps 4+12+5" green-light. Round 3 shipped Steps 11 + 6 + the new mobile `DESIGN.md` after Shankar's second autonomous green-light ("look for any other tasks ... and DESIGN.md format for the mobile version also").
 

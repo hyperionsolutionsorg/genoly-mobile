@@ -11,14 +11,12 @@ status: active
 
 ## State right now
 
-**Main branch:** `d2e3a35` — Phase 1 Step 2+3 merged (PR #4). Origin synced.
-**Active state:** Steps 4 + 12 + 5 + 11 + 6 + mobile `DESIGN.md` implementation complete in **working tree on main** (no branch, no commits — per Shankar's autonomous-overnight instruction 2026-05-29 covering 3 rounds). **Awaiting morning review + commit.**
-
-**Working tree:** ~17 new files + 13 modified files. See `[[2026-05-29-mobile-step-4-12-overnight]]` for the file-by-file breakdown across all three autonomous rounds, and `vault/overnight-questions.md` for 10 judgment-call review items. NEW `@genoly/sync-queue` package from Round 2 + Settings + background-fetch + DESIGN.md from Round 3.
+**Main branch:** `10f6f03` — Phase 1 Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md merged (PR #5, source commit `51d5259`). Origin synced.
+**Active state:** Follow-up infra commit IN PROGRESS in working tree on main — native modules installed via `npx expo install` (regenerates package-lock.json + fixes CI on 10f6f03), app.json plugin config + iOS UIBackgroundModes + Android RECEIVE_BOOT_COMPLETED, plus this post-merge state cascade.
 
 **Code state by step:**
-- Steps 1, 2, 3 — MERGED to main.
-- Steps 4, 5, 6, 11, 12 — IMPLEMENTATION COMPLETE in working tree (uncommitted).
+- Steps 1, 2, 3 — MERGED to main (PRs #3, #4).
+- Steps 4, 5, 6, 11, 12 — MERGED to main (PR #5).
 - Step 7 (Dashboard) — next handoff target.
 
 ## What's done (recent)
@@ -35,13 +33,12 @@ status: active
 
 ## What's next
 
-1. **Morning review of overnight Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md** — read phase page + `vault/overnight-questions.md` + commit script in `vault/overnight-morning-review.md`.
-2. **Install native dependencies** (now including `expo-background-fetch` + `expo-task-manager` for Round 3) + add `react-native-health` plugin + iOS `UIBackgroundModes` + Android `RECEIVE_BOOT_COMPLETED` to `app.json`.
-3. **Run `npm test` and tsc** to verify the overnight work (52 new tests).
-4. **Commit + push** the bundle on a branch + open PR.
-5. **Step 7** — Dashboard (today + last 7 days) reading from `apiClient.getDailyAggregates()`. UI work, anchored by the new mobile `DESIGN.md`.
-6. **Steps 8-10, 13** per `mobile-sync-architecture.md` §15.
-7. **Theme module migration** — Lift inlined hex literals from screens into a `theme/colors.ts`. Mechanical PR once dark palette is decided. Tracked in `DESIGN.md` §10.
+1. **Commit + push the infra-setup PR** — bundles `app.json` (`UIBackgroundModes`, `RECEIVE_BOOT_COMPLETED`, react-native-health plugin config), regenerated `package-lock.json` (fixes the CI failure on `10f6f03`), plus this post-merge state cascade.
+2. **Verify CI green** on the merge to main once that's in.
+3. **Real-device smoke test** — iOS simulator + Android emulator. Background-fetch in particular needs a real device (simulator doesn't wake on 15-min cadence).
+4. **Step 7** — Dashboard (today + last 7 days) reading from `apiClient.getDailyAggregates()`. UI work, anchored by the new mobile `DESIGN.md`.
+5. **Steps 8-10, 13** per `mobile-sync-architecture.md` §15.
+6. **Theme module migration** — Lift inlined hex literals from screens into a `theme/colors.ts`. Mechanical PR once dark palette is decided. Tracked in `DESIGN.md` §10.
 
 
 ## Reading order for the next agent
