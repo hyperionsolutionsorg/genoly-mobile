@@ -30,7 +30,7 @@ status: active
 
 | Date | Commit | Subject |
 |---|---|---|
-| 2026-05-29 | (uncommitted, working tree) | feat(mobile): Phase 1 Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md — health adapters + permissions + sync queue + Settings + background fetch + mobile design system (Claude autonomous overnight, 3 rounds) |
+| 2026-05-29 | `10f6f03` (squash merge of PR #5, src commit `51d5259`) | feat(mobile): Phase 1 Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md — health adapters + permissions + sync queue + Settings + background fetch + mobile design system (Claude autonomous overnight, 3 rounds) |
 | 2026-05-28 | `d2e3a35` (squash merge of PR #4) | feat(mobile): Phase 1 Step 2+3 — login screen + cold-start auth gate + Jest setup (4-round Antigravity → Claude completion) |
 | 2026-05-28 | `75d6e1a` (squash merge of PR #3) | feat(mobile): Phase 1 Step 1 — token store + ApiClient skeleton + issueToken (Antigravity) |
 
@@ -41,15 +41,15 @@ status: active
 | 1 | Token store + ApiClient skeleton | Antigravity (Claude reviewed) | DONE 2026-05-28 — merged via PR #3, squash `75d6e1a` |
 | 2 | Login screen (email + password) | Antigravity + Claude | DONE 2026-05-28 — merged via PR #4, squash `d2e3a35` |
 | 3 | Session check on cold start | Antigravity + Claude | DONE 2026-05-28 — same PR as Step 2 |
-| 4 | HealthKit adapter + permission flow | Claude (autonomous overnight Round 1) | IMPLEMENTATION COMPLETE 2026-05-29 — uncommitted in working tree, awaiting morning review |
-| 5 | SQLite sync queue + drainer | Claude (autonomous overnight Round 2) | IMPLEMENTATION COMPLETE 2026-05-29 — new `@genoly/sync-queue` package in working tree, awaiting morning review. 16-test suite. |
-| 6 | Background fetch wiring | Claude (autonomous overnight Round 3) | IMPLEMENTATION COMPLETE 2026-05-29 — `apps/mobile/utils/backgroundSync.ts` wires `expo-background-fetch` + `expo-task-manager` to call `SyncQueue.drain()`. 12-test suite. |
+| 4 | HealthKit adapter + permission flow | Claude (autonomous overnight Round 1) | DONE 2026-05-29 — merged via PR #5, squash `10f6f03` |
+| 5 | SQLite sync queue + drainer | Claude (autonomous overnight Round 2) | DONE 2026-05-29 — `@genoly/sync-queue` package merged via PR #5, squash `10f6f03`. 16-test suite. |
+| 6 | Background fetch wiring | Claude (autonomous overnight Round 3) | DONE 2026-05-29 — `apps/mobile/utils/backgroundSync.ts` wires `expo-background-fetch` + `expo-task-manager` to call `SyncQueue.drain()`. 12-test suite. Merged via PR #5, squash `10f6f03`. Follow-up infra commit pending for app.json `UIBackgroundModes` + `RECEIVE_BOOT_COMPLETED`. |
 | 7 | Dashboard (today + last 7 days) | Claude | Next handoff — anchored by new mobile `DESIGN.md`. |
 | 8 | Leaderboard screen | Claude | Depends on #7 |
 | 9 | Friends list + actions | Claude | Depends on #8 |
 | 10 | Goals + history screens | Claude | Depends on #7 |
-| 11 | Settings + subscription read + logout | Claude (autonomous overnight Round 3) | IMPLEMENTATION COMPLETE 2026-05-29 — `apps/mobile/app/(tabs)/settings.tsx` full Settings screen with sign-out flow (revokeToken + reset prefs + unregister bg-fetch + fail-closed if offline). 8-test suite. |
-| 12 | Health Connect adapter (Android parity) | Claude (autonomous overnight Round 1) | IMPLEMENTATION COMPLETE 2026-05-29 — `HealthConnectAdapter` (Android, `react-native-health-connect`). Awaiting morning review. |
+| 11 | Settings + subscription read + logout | Claude (autonomous overnight Round 3) | DONE 2026-05-29 — `apps/mobile/app/(tabs)/settings.tsx` full Settings screen with sign-out flow (revokeToken + reset prefs + unregister bg-fetch + fail-closed if offline). 8-test suite. Merged via PR #5, squash `10f6f03`. |
+| 12 | Health Connect adapter (Android parity) | Claude (autonomous overnight Round 1) | DONE 2026-05-29 — `HealthConnectAdapter` (Android, `react-native-health-connect`). Merged via PR #5, squash `10f6f03`. |
 | 13 | Polish + manual test + submit | Claude | Depends on all |
 
 Total estimated effort: ~10 working days for one engineer.
