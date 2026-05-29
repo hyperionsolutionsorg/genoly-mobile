@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Progress — genoly-mobile"
-updated: 2026-05-22
+updated: 2026-05-28
 status: active
 ---
 
@@ -30,6 +30,7 @@ status: active
 
 | Date | Commit | Subject |
 |---|---|---|
+| 2026-05-28 | (pending push) | feat(mobile): Phase 1 Step 2+3 — login screen + cold-start auth gate + Jest setup |
 | 2026-05-28 | `75d6e1a` (squash merge of PR #3) | feat(mobile): Phase 1 Step 1 — token store + ApiClient skeleton + issueToken (Antigravity) |
 
 ## Phase 1 plan (13 steps from `../genoly-family-web/docs/mobile-sync-architecture.md` §15)
