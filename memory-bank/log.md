@@ -28,6 +28,32 @@ Three PRs landed 2026-06-29/06-30 but were never cascaded into `wiki/current/` �
 **Today's dispatch (2026-07-09) — two-workstream run opened.** Workstream A: finish Phase 1 fitness (Step 8 leaderboard salvage — branch `feat/step-8-leaderboard-salvage`, sourced from `origin/feat/step-8-leaderboard` at `e630ba3`, pre-SDK-56, in flight now in a sibling worktree; then Step 9 friends, Step 10 goals+history, Step 13 polish) plus porting four Pro-gated tree surfaces from web to mobile (Explorer-as-default, Register table view, Classic pedigree, Fan-if-legible). Workstream B: challenge-growth / standalone-user research — report only, no code.
 
 **Baseline verified this session:** `npm run typecheck` — 0 errors. `npm test` — 189 passed / 12 skipped / 201 total, 14 of 15 suites run (1 UI suite skipped — jest-expo 56 TurboModule chain, pre-existing, not a regression). Uncommitted `package-lock.json` (3-line diff, `"version": "0.1.0"` → `"1.0.0"` in 3 places) is lockfile metadata drift left over from #25/#26's `package.json` edits never being run through `npm install` — harmless (no dependency changes), left uncommitted intentionally.
+## [2026-07-09] merge | Step 8 leaderboard salvage — cherry-picked into Activity tab, no new tab
+
+Cherry-picked `e630ba3` (`origin/feat/step-8-leaderboard`, predates SDK 56 + the
+member-app 5-tab redesign) per `vault/mobile-audit.md` §2 and
+`vault/handoff-mobile-e2e-2026-06-11.md` §7 item 2.
+
+**Conflicts resolved:**
+- `apps/mobile/app/(tabs)/_layout.tsx` — rejected the branch's 5th tab; today's
+  IA is fixed at 5 tabs (Home/Tree/Challenges/Activity/Settings). No entry added here.
+- `memory-bank/log.md` — this entry replaces the branch's stale 2026-05-29 note
+  (which described pre-fixup file locations no longer accurate).
+
+**IA decision:** the leaderboard is a pushed screen (`apps/mobile/app/leaderboard.tsx`,
+mirrors the existing `challenge/[challengeId].tsx` / `person/[personId]` top-level-route
+pattern) reached via a "Friends leaderboard" row on the Activity tab — not a tab.
+It inherits the same auth + Pro gate as every other top-level route (`_layout.tsx`
+`AuthGate` redirects any non-`(auth)`/`(gated)` segment to the paywall when
+`useHasProTenantAccess()` is false).
+
+**Mechanical fixups applied** (per audit §2): `@expo/vector-icons` →
+`@react-native-vector-icons/fontawesome`, restyled off inlined hex onto
+theme tokens (`useTheme`/`useThemedStyles`), reused `Banner`/`EmptyState` from
+`components/ui` instead of hand-rolled markup, adapted both test files to the
+current jest-expo 56 setup and mock conventions (`../utils/api`, hook mock).
+`getLeaderboard({ date })` in `packages/api-client/src/client.ts` cherry-picked cleanly
+(no conflict).
 
 ---
 
