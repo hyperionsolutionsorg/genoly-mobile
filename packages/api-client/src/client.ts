@@ -257,8 +257,20 @@ export class FetchApiClient implements ApiClient {
   }
 
   /** GET /api/fitness/friends/leaderboard?date=YYYY-MM-DD. */
+  /**
+   * GET /api/fitness/friends/leaderboard?date=YYYY-MM-DD — daily activity
+   * standings across accepted friends + self.
+   *
+   * Server returns `{date, rows: LeaderboardRow[], myStepGoal, myCalorieGoal}`
+   * sorted by step count desc with ties sharing rank. Self always present;
+   * is flagged via `isMe: true`.
+   */
   async getLeaderboard(opts: { date: string }): Promise<Leaderboard> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    const qs = new URLSearchParams({ date: opts.date }).toString();
+    return this.request<Leaderboard>(
+      'GET',
+      `/api/fitness/friends/leaderboard?${qs}`,
+    );
   }
 
   /** POST /api/fitness/friends/request. */

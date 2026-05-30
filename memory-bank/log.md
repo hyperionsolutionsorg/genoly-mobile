@@ -13,6 +13,28 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-05-29] note | Phase 1 Step 8 (Leaderboard) IMPLEMENTATION COMPLETE in working tree
+
+Code complete + tested. NOT YET COMMITTED. Built autonomously in parallel with web-side work (demo landing callout + nightly reset cron).
+
+**Files in working tree:**
+
+- `packages/api-client/src/client.ts` — MODIFIED. Implemented `getLeaderboard({ date })` (previously stubbed). Calls `GET /api/fitness/friends/leaderboard?date=YYYY-MM-DD`. Returns `Leaderboard` shape from `@genoly/types`.
+- `apps/mobile/hooks/useLeaderboardData.ts` — NEW. Drain-on-mount + refresh pattern (same shape as `useDashboardData`). Computes today in local TZ, drains SyncQueue, fetches the board, stores rows + step + calorie goals.
+- `apps/mobile/app/(tabs)/leaderboard.tsx` — NEW. Full screen with header + last-synced + Refresh button, error banner with Retry, highlighted "my row" card with YOU badge, ranked friends list, empty state ("No friends on the board yet").
+- `apps/mobile/app/(tabs)/_layout.tsx` — MODIFIED. Added Leaderboard as a 5th tab between Fitness and Notifications. Trophy icon.
+- `apps/mobile/__tests__/useLeaderboardData.test.ts` — NEW. 7 tests covering todayLocalDateString (2), skipInitialRefresh, drain-then-fetch order, drain failure non-fatal, fetch failure surfaces, refresh() re-runs cycle.
+- `apps/mobile/__tests__/leaderboard.test.tsx` — NEW. 6 tests covering loading state, empty state, my-row YOU badge, friends list ranks/steps, refresh button, error banner + Retry.
+
+Verification:
+- `npx tsc --noEmit -p apps/mobile/tsconfig.json` — exit 0
+- `npm test` from `apps/mobile/` — 67 tests passing, 0 failing (was 54 before this work; 13 new)
+- Real-device smoke test deferred (same as Dashboard + bg-fetch)
+
+Same drain-on-mount + manual Refresh pattern as Step 7 Dashboard. Built per the mobile `DESIGN.md` — no chart libraries, plain Views.
+
+---
+
 ## [2026-05-29] doc | Doc hygiene from markdown audit — CONTEXT.md retired, AGENTS.md DESIGN.md companion line
 
 Two-file doc-hygiene pass driven by `Genoly/Genoly-Vault/_scratch/markdown-audit-2026-05-29.md`:
