@@ -13,6 +13,35 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-07-09] merge | Step 8 leaderboard salvage — cherry-picked into Activity tab, no new tab
+
+Cherry-picked `e630ba3` (`origin/feat/step-8-leaderboard`, predates SDK 56 + the
+member-app 5-tab redesign) per `vault/mobile-audit.md` §2 and
+`vault/handoff-mobile-e2e-2026-06-11.md` §7 item 2.
+
+**Conflicts resolved:**
+- `apps/mobile/app/(tabs)/_layout.tsx` — rejected the branch's 5th tab; today's
+  IA is fixed at 5 tabs (Home/Tree/Challenges/Activity/Settings). No entry added here.
+- `memory-bank/log.md` — this entry replaces the branch's stale 2026-05-29 note
+  (which described pre-fixup file locations no longer accurate).
+
+**IA decision:** the leaderboard is a pushed screen (`apps/mobile/app/leaderboard.tsx`,
+mirrors the existing `challenge/[challengeId].tsx` / `person/[personId]` top-level-route
+pattern) reached via a "Friends leaderboard" row on the Activity tab — not a tab.
+It inherits the same auth + Pro gate as every other top-level route (`_layout.tsx`
+`AuthGate` redirects any non-`(auth)`/`(gated)` segment to the paywall when
+`useHasProTenantAccess()` is false).
+
+**Mechanical fixups applied** (per audit §2): `@expo/vector-icons` →
+`@react-native-vector-icons/fontawesome`, restyled off inlined hex onto
+theme tokens (`useTheme`/`useThemedStyles`), reused `Banner`/`EmptyState` from
+`components/ui` instead of hand-rolled markup, adapted both test files to the
+current jest-expo 56 setup and mock conventions (`../utils/api`, hook mock).
+`getLeaderboard({ date })` in `packages/api-client/src/client.ts` cherry-picked cleanly
+(no conflict).
+
+---
+
 ## [2026-06-10] decision | graphifyy 0.8.36 upgrade + AGENTS.md graph-tooling cleanup
 
 Workspace-wide `graphifyy` CLI (code knowledge graph; binary `graphify`) bumped
