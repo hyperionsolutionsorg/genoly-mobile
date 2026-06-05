@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "org.hyperionsolutions.genoly",
+      "deploymentTarget": "16.4",
       "infoPlist": {
         "UIBackgroundModes": [
           "fetch",
@@ -40,7 +41,10 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-font",
       "expo-router",
+      "expo-splash-screen",
+      "expo-status-bar",
       [
         "react-native-health",
         {

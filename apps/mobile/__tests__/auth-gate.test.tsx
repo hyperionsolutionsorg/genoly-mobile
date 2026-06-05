@@ -53,13 +53,13 @@ jest.mock('expo-splash-screen', () => ({
   hideAsync: jest.fn(),
 }));
 
-jest.mock('@expo/vector-icons/FontAwesome', () => ({
+jest.mock('@react-native-vector-icons/fontawesome', () => ({
   __esModule: true,
   default: () => null,
   font: {},
 }));
 
-jest.mock('@react-navigation/native', () => ({
+jest.mock('expo-router/react-navigation', () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
   DefaultTheme: {},
   DarkTheme: {},

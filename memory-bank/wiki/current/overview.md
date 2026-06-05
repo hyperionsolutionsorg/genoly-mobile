@@ -9,12 +9,12 @@ status: active
 
 `genoly-mobile` is the Expo mobile app + cross-platform packages for the Genoly Fitness product. Mobile is payment-neutral (no in-app purchases) — web (genoly.org/billing) is the sole subscription surface.
 
-**Where things stand (2026-05-29):**
+**Where things stand (2026-06-05):**
 
 - **Phase 0 is COMPLETE** as of 2026-05-08. Signed APK runs on a real Android phone; CI auto-triggers EAS builds on every `main` push.
-- **Phase 1 (mobile sync + leaderboard) is IN PROGRESS.** Steps 1, 2, 3 merged (`75d6e1a`, `d2e3a35`). **Steps 4 + 12 + 5 + 11 + 6 + mobile DESIGN.md** MERGED via PR #5 (squash `10f6f03`) + **infra setup** (native deps + app.json plugin config + UIBackgroundModes + RECEIVE_BOOT_COMPLETED) MERGED via PR #6 (squash `f2463a8`) + **jest-green & cascade** via PR #7 (squash `df7d22c`) on 2026-05-29. CI green. The mobile app now has: health adapters, permissions flow, SQLite-backed offline outbox + drainer, full Settings screen with sign-out, background-fetch wiring to call `SyncQueue.drain()`, and a repo-level `DESIGN.md` design-system contract. **Step 7 (Dashboard) implementation complete in working tree (54 tests passing); PR pending. Step 8 (Leaderboard) next.**
+- **Phase 1 (mobile sync + leaderboard) is IN PROGRESS.** Steps 1, 2, 3, 4, 5, 6, 7, 11, 12 merged. Step 8 (Leaderboard) is next.
+- **Expo SDK 55 → 56 upgrade COMPLETE** (2026-06-05) — branch `chore/expo-sdk-56-upgrade`, PR pending merge. expo-router codemod applied, vector-icons migrated to `@react-native-vector-icons/fontawesome`, iOS 16.4 deployment target set, TypeScript 6 compat. Task #299 CLOSED; task #300 (real-device smoke) deferred to Shankar.
 - **Server side (genoly-family-web/convex/fitness/) is COMPLETE.** 20 endpoints live on dev (`robust-oyster-899`). All curl smoke tests pass. Mobile just needs to consume them.
-
 
 **Key cross-references:**
 
@@ -27,6 +27,6 @@ status: active
 - History: [`../../log.md`](../../log.md)
 - Index: [`../../index.md`](../../index.md)
 
-**Tech stack snapshot:** Expo SDK 55 + React Native 0.83.6 + React 19.2 + Expo Router ~55.0.16 + Hermes. Native modules: `expo-secure-store` (auth), `expo-sqlite` (offline queue), `expo-background-fetch` (sync), `react-native-health` (HealthKit), `expo-health-connect` (Health Connect). State: Zustand 5.x (planned). Forms: react-hook-form + zod. CI: EAS Build (Hobby tier). SDK 56 upgrade deferred to #299 (expo-router/react-navigation breaking change).
+**Tech stack snapshot:** Expo SDK 56 + React Native 0.85.3 + React 19.2.3 + Expo Router ~56.2.9 + Hermes. Native modules: `expo-secure-store` (auth), `expo-sqlite` (offline queue), `expo-background-fetch` (sync), `react-native-health` (HealthKit), `react-native-health-connect` (Health Connect). State: Zustand 5.x (planned). Forms: react-hook-form + zod. CI: EAS Build (Hobby tier). Icons: `@react-native-vector-icons/fontawesome` (migrated from `@expo/vector-icons` in SDK 56).
 
 **The four `wiki/current/` files** are cascade-redundant projections per Rule #0. They stay coherent because every state change updates all four in the same commit. Each is ≤200 lines — older content archives to `wiki/phases/` or `wiki/decisions/`.

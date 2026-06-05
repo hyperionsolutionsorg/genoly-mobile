@@ -1,5 +1,5 @@
 import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import FontAwesome from "@react-native-vector-icons/fontawesome";
 import { Tabs } from 'expo-router';
 
 import Colors from '@/constants/Colors';
@@ -29,28 +29,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Family',
-          tabBarIcon: ({ color }) => <TabBarIcon name="sitemap" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="sitemap" color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="fitness"
         options={{
           title: 'Fitness',
-          tabBarIcon: ({ color }) => <TabBarIcon name="heartbeat" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="heartbeat" color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="notifications"
         options={{
           title: 'Notifications',
-          tabBarIcon: ({ color }) => <TabBarIcon name="bell" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="bell" color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Settings',
-          tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color} />,
+          tabBarIcon: ({ color }) => <TabBarIcon name="cog" color={color as string} />,
         }}
       />
     </Tabs>

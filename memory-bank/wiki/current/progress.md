@@ -30,10 +30,16 @@ status: active
 
 | Date | Commit | Subject |
 |---|---|---|
-| 2026-06-05 | PR #11 (commit `dfc73bb`) merged to main | chore(mobile): Expo SDK 54 → 55 upgrade (merged earlier) |
-| 2026-06-05 | **PENDING** | chore(mobile): verify SDK 55 completeness, fix test regressions, sync dep dashboard |
+| 2026-06-05 | PR #12 (commit `fa5cc27`) merged to main | chore(mobile): verify SDK 55 completeness, fix test regressions, sync dep dashboard |
+| 2026-06-05 | PR #11 (commit `dfc73bb`) merged to main | chore(mobile): Expo SDK 54 → 55 upgrade |
+| 2026-06-05 | `d931e42` (branch `chore/expo-sdk-56-upgrade`) | chore(mobile): bump to Expo SDK 56 — expo + sister packages |
+| 2026-06-05 | `c427e64` | chore(mobile): apply expo-router SDK 56 codemod |
+| 2026-06-05 | `5402c02` | chore(mobile): bump jest-expo to ^56 to match SDK major |
+| 2026-06-05 | `4085f9f` | chore(mobile): bump iOS deployment target to 16.4 for SDK 56 |
+| 2026-06-05 | `7e98553` | chore(mobile): SDK 56 breaking-change audit — vector-icons codemod, app.json plugins |
+| 2026-06-05 | `01a7d56` | chore(mobile): SDK 56 verify — cleanup, TypeScript 6 compat, dedupe |
 
-SDK 56 deferred to issue #299 — blocker: expo-router dropped @react-navigation/native in SDK 56, requiring code migration.
+**SDK 56 upgrade task #299 CLOSED.** Task #300 (real-device smoke test) assigned to Shankar — see session-handoff.md.
 
 ## Phase 1 commits (reference)
 

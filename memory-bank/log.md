@@ -13,6 +13,33 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-06-05] merge | SDK 56 upgrade + expo-router codemod
+
+Branch: `chore/expo-sdk-56-upgrade` (worktree `genoly-mobile-wt-sdk56/`). Upgraded Expo SDK 55 → 56. PR pending.
+
+**Commits:**
+- `d931e42` — bump to Expo SDK 56 — expo + sister packages (RN 0.83.6 → 0.85.3, React 19.2.0 → 19.2.3, expo-router 55 → 56.2.9, 15 other packages)
+- `c427e64` — apply expo-router SDK 56 codemod — `@react-navigation/native` → `expo-router/react-navigation` in `_layout.tsx` + test mock updated
+- `5402c02` — bump jest-expo to ^56 to match SDK major (semver range change `~56.0.4` → `^56.0.4`)
+- `4085f9f` — bump iOS deployment target to 16.4 for SDK 56 (via `app.json` `deploymentTarget`)
+- `7e98553` — breaking-change audit: `@expo/vector-icons` codemod (→ `@react-native-vector-icons/fontawesome`), add `expo-font`/`expo-splash-screen`/`expo-status-bar` to `app.json` plugins, test mock updates
+- `01a7d56` — SDK 56 verify: remove `@react-navigation/native` + `expo-modules-core` direct deps (expo-doctor), fix `react-test-renderer@19.2.3`, add `@types/jest` to tsconfig, vector-icons type fixes (`color as string` cast, remove `FontAwesome.font`), npm dedupe for `@expo/dom-webview`/`@expo/log-box` duplicates, install `@react-native/jest-preset`
+
+**Breaking-change audit findings:**
+- **expo-file-system copy()/move()**: NOT used in codebase — no action needed.
+- **expo/fetch**: Codebase uses native `fetch` via `FetchApiClient` wrapper — no non-standard fetch patterns found.
+- **@expo/dom-webview default WebView**: `react-native-webview` is NOT used — no action needed.
+- **@expo/vector-icons deprecated**: FOUND in 2 files. Codemod applied: `@expo/vector-icons/FontAwesome` → `@react-native-vector-icons/fontawesome`. `FontAwesome.font` removed (new library handles fonts via app plugin). `color as string` cast added to satisfy updated types.
+- **TypeScript 6.0.3 upgrade**: Required adding `"types": ["jest"]` to `apps/mobile/tsconfig.json` and `@types/jest` to devDependencies. All source-file types clean.
+
+**expo-doctor:** 21/21 checks pass (all clean).
+
+**Test state:** 56 tests, 54 pass, 2 pre-existing failures (SyncQueue MAX_ATTEMPTS + concurrency race, tracked #294). 4 UI suites still in testPathIgnorePatterns (Dimensions.set TurboModule issue persists in jest-expo 56; real-device smoke is authoritative gate).
+
+**Task #299 CLOSED** — SDK 56 upgrade complete. **Task #300** (real-device smoke test) deferred to Shankar.
+
+---
+
 ## [2026-06-05] merge | Expo SDK 54 → 55 upgrade — completed, dashboard synced, SDK 56 deferred
 
 Branch: `chore/expo-sdk-55-upgrade`. PR #11 had already bumped expo from SDK 54 → 55 at the root level, but apps/mobile/package.json still carried SDK 54-era package versions (expo-constants@18.x, expo-router@6.x, react-native@0.81.5, etc.), causing duplicate native modules. This session closed out that gap and fixed related test regressions.
