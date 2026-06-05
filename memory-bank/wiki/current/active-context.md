@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Active context — genoly-mobile"
-updated: 2026-05-29-overnight
+updated: 2026-06-05
 status: active
 ---
 
@@ -11,9 +11,19 @@ status: active
 
 ## Current focus
 
-**Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md MERGED 2026-05-29 via PR #5 (squash `10f6f03`) + infra setup via PR #6 (squash `f2463a8`) + jest-green follow-up via PR #7 (squash `df7d22c`). Step 7 (Dashboard) IMPLEMENTATION COMPLETE in working tree on main, awaiting PR.**
+**2026-06-05: Expo SDK 55 upgrade verified + dependency dashboard re-synced. SDK 56 evaluated and deferred to #299 (PR pending commit).**
 
-Step 7 work: new `apps/mobile/hooks/useDashboardData.ts` hook + replaced `apps/mobile/app/(tabs)/fitness.tsx` stub with full Dashboard (big-number today card + 7-day horizontal bars + dead-letter banner with one-tap clear + manual refresh button). 24 new Jest tests; total 54 across 7 suites. CI green. Next: real-device smoke test.
+SDK 55 was already merged to origin/main via PR #11 (commit `dfc73bb`). This session (2026-06-05) verified completeness, fixed test regressions, synced the dep dashboard, and evaluated SDK 56 (deferred — expo-router/react-navigation breaking change). Changes awaiting one commit + PR:
+- `apps/mobile/package.json` — all expo packages updated to SDK 55 unified versions
+- Root `jest.config.js` — rewrote to use jest-expo preset (dropped jsdom + ts-jest override), added moduleNameMapper for `@/` alias + testPathIgnorePatterns
+- `apps/mobile/jest.setup.js` — added `react-native-health` null mock
+- `apps/mobile/components/ExternalLink.tsx` — removed stale @ts-expect-error (SDK 55 fixed the type)
+- `apps/mobile/components/Themed.tsx` + `app/(tabs)/_layout.tsx` — fixed ColorSchemeName `'unspecified'` narrowing (RN 0.83.6 addition)
+- `package.json` root — added `@react-native/assets-registry@0.83.6` dep
+- `scripts/sync-manifest.mjs` — created mobile dep dashboard sync script
+- `npm run sync-deps` ran: 38 packages synced to Convex dashboard, 34 replaced
+
+**Previous milestone:** Steps 4 + 12 + 5 + 11 + 6 + DESIGN.md MERGED 2026-05-29 via PR #5 (squash `10f6f03`) + infra setup via PR #6 (squash `f2463a8`) + jest-green follow-up via PR #7 (squash `df7d22c`). Step 7 (Dashboard) IMPLEMENTATION COMPLETE in working tree on main, awaiting PR.
 
 What landed across the rounds:
 - **Round 1 (Steps 4 + 12):** `HealthKitAdapter` (iOS, `react-native-health`), `HealthConnectAdapter` (Android, `react-native-health-connect`), `MockHealthAdapter`, `createHealthAdapter()` factory, first-run permissions screen (`/(auth)/permissions`), auth-gate three-arm routing, `apps/mobile/utils/preferences.ts`, 4 ApiClient methods unstubbed (`revokeToken`, `getSession`, `getDailyAggregates`, `syncDailyAggregates`).
@@ -30,6 +40,7 @@ See `[[2026-05-29-mobile-step-4-12-overnight]]` for full detail, `vault/overnigh
 
 ## Recent events
 
+- **2026-06-05 (Claude interactive)** — **SDK 55 upgrade verified + dep dashboard synced + SDK 56 evaluated.** Fixed test regressions (jest.config.js, @/ alias, react-native-health mock, @react-native/assets-registry). Fixed type narrowing (ColorSchemeName 'unspecified' in Themed.tsx + TabLayout). Removed stale @ts-expect-error in ExternalLink.tsx. Created `scripts/sync-manifest.mjs`; ran `npm run sync-deps` (38 pkgs, 34 replaced). SDK 56 evaluated: deferred to #299 — blocker is expo-router dropping @react-navigation/native in SDK 56 (requires code migration, not just package bumps). PR pending.
 - **2026-05-29 overnight Round 3 (Claude autonomous)** — **Steps 11 + 6 + mobile DESIGN.md IMPLEMENTATION COMPLETE.** Settings screen with sign-out (revokeToken + reset prefs + unregister bg-fetch + fail-closed), background-fetch task wiring (`apps/mobile/utils/backgroundSync.ts` calling `SyncQueue.drain()`), auth-gate test refresh (was broken by Round 1's permissions arm), mobile `DESIGN.md` at repo root mirroring web DESIGN.md format. 20 new tests (8 settings + 12 backgroundSync). NO COMMITS — still working tree on main, awaiting Shankar's morning review.
 - **2026-05-29 overnight Round 2 (Claude autonomous)** — **Step 5 (`@genoly/sync-queue`) added after Shankar's "Steps 4+12+5" green-light.** SQLite-backed outbox + drainer + retry + dead-letter + 16-test suite.
 - **2026-05-29 overnight Round 1 (Claude autonomous)** — **Steps 4 + 12 IMPLEMENTATION COMPLETE.** HealthKit + Health Connect adapters + permissions screen + 4 ApiClient methods + Jest test suite. See `[[2026-05-29-mobile-step-4-12-overnight]]`.

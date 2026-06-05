@@ -13,6 +13,30 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-06-05] merge | Expo SDK 54 → 55 upgrade — completed, dashboard synced, SDK 56 deferred
+
+Branch: `chore/expo-sdk-55-upgrade`. PR #11 had already bumped expo from SDK 54 → 55 at the root level, but apps/mobile/package.json still carried SDK 54-era package versions (expo-constants@18.x, expo-router@6.x, react-native@0.81.5, etc.), causing duplicate native modules. This session closed out that gap and fixed related test regressions.
+
+**Changes landed:**
+- `apps/mobile/package.json` — all expo packages updated to SDK 55 unified versions via `expo install --fix` (expo-constants@~55.0.16, expo-router@~55.0.16, react-native@0.83.6, etc.)
+- Root `jest.config.js` — replaced broken jsdom+ts-jest config with correct jest-expo preset (no jsdom, no ts-jest override, `setupFiles`, `moduleNameMapper` for `@/` paths, `testPathIgnorePatterns` for 4 still-skipped suites)
+- `apps/mobile/jest.setup.js` — added `jest.mock('react-native-health', () => null)` to restore "module not loadable" behavior under jest-expo's babel transform
+- `apps/mobile/components/ExternalLink.tsx` — removed unused `@ts-expect-error` (SDK 55 fixed the external-URL type)
+- `apps/mobile/components/Themed.tsx`, `app/(tabs)/_layout.tsx` — fixed `ColorSchemeName 'unspecified'` narrowing (RN 0.83 added this value)
+- Root `package.json` — added `@react-native/assets-registry@^0.83.6` (needed for jest-expo 55 module resolution; nested inside react-native's own deps, not hoisted)
+- `scripts/sync-manifest.mjs` — created (ported from genoly-family-web, REPO="mobile"), reads apps/mobile/package.json and posts to Convex dependency dashboard
+- `AGENTS.md` tech stack — SDK 54 / RN 0.81 → SDK 55 / RN 0.83.6
+
+**Test state:** 54/56 passing. 2 pre-existing SyncQueue failures (MAX_ATTEMPTS retry test + concurrency race), 1 pre-existing token-store "no test" suite. 4 UI suites still in testPathIgnorePatterns.
+
+**expo-doctor (from apps/mobile):** 2 accepted warnings — `@expo/fingerprint` duplicate (in react-native-health's own node_modules, can't fix without forking) + react-native-health untested on New Architecture (pre-existing).
+
+**Dependency dashboard:** `npm run sync-deps` ran successfully — 38 packages from apps/mobile synced to Convex (34 replaced). Dashboard HIGH count should now reflect SDK 55 versions.
+
+**SDK 56 evaluation:** DEFERRED (#299). Blocker: SDK 56 expo-router dropped direct `@react-navigation/native` compatibility — migration to expo-router navigation APIs required. Also RN 0.83.6 → 0.85.3 jump. Not a simple package bump; needs its own PR.
+
+---
+
 ## [2026-05-29] doc | Doc hygiene from markdown audit — CONTEXT.md retired, AGENTS.md DESIGN.md companion line
 
 Two-file doc-hygiene pass driven by `Genoly/Genoly-Vault/_scratch/markdown-audit-2026-05-29.md`:

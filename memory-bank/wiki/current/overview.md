@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Overview — genoly-mobile"
-updated: 2026-05-29
+updated: 2026-06-05
 status: active
 ---
 
@@ -27,6 +27,6 @@ status: active
 - History: [`../../log.md`](../../log.md)
 - Index: [`../../index.md`](../../index.md)
 
-**Tech stack snapshot:** Expo SDK 54 + React Native 0.81 + React 19 + Expo Router 6 + Hermes. Native modules: `expo-secure-store` (auth), `expo-sqlite` (offline queue), `expo-background-fetch` (sync), `react-native-health` (HealthKit), `expo-health-connect` (Health Connect). State: Zustand 5.x (planned). Forms: react-hook-form + zod. CI: EAS Build (Hobby tier).
+**Tech stack snapshot:** Expo SDK 55 + React Native 0.83.6 + React 19.2 + Expo Router ~55.0.16 + Hermes. Native modules: `expo-secure-store` (auth), `expo-sqlite` (offline queue), `expo-background-fetch` (sync), `react-native-health` (HealthKit), `expo-health-connect` (Health Connect). State: Zustand 5.x (planned). Forms: react-hook-form + zod. CI: EAS Build (Hobby tier). SDK 56 upgrade deferred to #299 (expo-router/react-navigation breaking change).
 
 **The four `wiki/current/` files** are cascade-redundant projections per Rule #0. They stay coherent because every state change updates all four in the same commit. Each is ≤200 lines — older content archives to `wiki/phases/` or `wiki/decisions/`.

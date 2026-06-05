@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Progress — genoly-mobile"
-updated: 2026-05-29
+updated: 2026-06-05
 status: active
 ---
 
@@ -25,6 +25,15 @@ status: active
 | `b0260446` (EAS) | First manual signed APK build — runs on real Android |
 | `03e5a73` | GitHub Actions for build-android.yml |
 | `89183f18` (EAS) | First CI-triggered EAS build |
+
+## SDK upgrade commits (reference)
+
+| Date | Commit | Subject |
+|---|---|---|
+| 2026-06-05 | PR #11 (commit `dfc73bb`) merged to main | chore(mobile): Expo SDK 54 → 55 upgrade (merged earlier) |
+| 2026-06-05 | **PENDING** | chore(mobile): verify SDK 55 completeness, fix test regressions, sync dep dashboard |
+
+SDK 56 deferred to issue #299 — blocker: expo-router dropped @react-navigation/native in SDK 56, requiring code migration.
 
 ## Phase 1 commits (reference)
 
