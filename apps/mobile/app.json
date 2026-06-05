@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "org.hyperionsolutions.genoly",
+      "deploymentTarget": "16.4",
       "infoPlist": {
         "UIBackgroundModes": [
           "fetch",
