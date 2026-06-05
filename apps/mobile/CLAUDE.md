@@ -48,12 +48,17 @@ remove `describe.skip` wrappers, run `npm test`, re-enable if green.
 
 ## Native module rules
 
-`react-native-health` (HealthKit/iOS) and `expo-health-connect`
+`react-native-health` (HealthKit/iOS) and `react-native-health-connect`
 (Health Connect/Android) are **NOT standard Expo modules**.
+
+The Android package is `react-native-health-connect` — the architecture
+doc originally mentioned `expo-health-connect` but production maturity
+favoured `react-native-health-connect`. Decision logged in
+`vault/overnight-questions.md`; see `packages/health-sync/src/HealthConnectAdapter.ts:9-11`.
 
 Before any React Native major bump:
 1. Check `react-native-health` peer-deps manually (it lags RN by 1-2 majors).
-2. Check `expo-health-connect` compatibility matrix.
+2. Check `react-native-health-connect` compatibility matrix.
 3. These are the only packages that may require `--legacy-peer-deps` on
    install even outside a major upgrade window.
 
@@ -64,7 +69,13 @@ Screens never import HealthKit or Health Connect directly.
 
 No in-app purchases. No pricing tables. No "Upgrade" buttons.
 Allowed: tier badge, renewal date, feature limits, link to genoly.org/billing.
-`useSubscription` hook throws if the server returns `isPaymentNeutral: false`.
+
+The server contract (`GET /api/fitness/subscription`) returns
+`isPaymentNeutral: true` as a tripwire. Any code that surfaces
+subscription UI **must** check this field and hard-fail if it is ever
+`false` — a silent pass risks App Store rejection.
+(`useSubscription` hook spec: `docs/mobile-sync-architecture.md §11` —
+not yet implemented; build it when subscription UI lands.)
 
 ## npm install flag
 
