@@ -1,5 +1,5 @@
 import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import FontAwesome from "@react-native-vector-icons/fontawesome";
 import { Tabs } from 'expo-router';
 
 import Colors from '@/constants/Colors';

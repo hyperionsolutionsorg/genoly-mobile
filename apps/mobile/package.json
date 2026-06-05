@@ -13,7 +13,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@expo/vector-icons": "^15.0.3",
+    "@react-native-vector-icons/fontawesome": "^13.1.2",
     "@genoly/api-client": "*",
     "@genoly/health-sync": "*",
     "@genoly/sync-queue": "*",

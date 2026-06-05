@@ -28,7 +28,6 @@
     "zod": "^3.22.4"
   },
   "dependencies": {
-    "@expo/vector-icons": "^15.0.3",
     "@genoly/api-client": "*",
     "@genoly/health-sync": "*",
     "@genoly/types": "*",
@@ -50,6 +49,7 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.8.3"
+    "react-native-worklets": "0.8.3",
+    "@react-native-vector-icons/fontawesome": "^13.1.2"
   }
 }

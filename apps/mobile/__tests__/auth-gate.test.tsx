@@ -53,7 +53,7 @@ jest.mock('expo-splash-screen', () => ({
   hideAsync: jest.fn(),
 }));
 
-jest.mock('@expo/vector-icons/FontAwesome', () => ({
+jest.mock('@react-native-vector-icons/fontawesome', () => ({
   __esModule: true,
   default: () => null,
   font: {},

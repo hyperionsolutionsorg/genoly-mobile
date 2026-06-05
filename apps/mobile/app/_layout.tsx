@@ -1,5 +1,5 @@
 // apps/mobile/app/_layout.tsx
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import FontAwesome from "@react-native-vector-icons/fontawesome";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, type Href } from 'expo-router';
