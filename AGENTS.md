@@ -29,10 +29,10 @@ This file is the repo-specific operating manual. Read it AFTER the workspace `AG
 
 | Layer | Technology | Notes |
 |---|---|---|
-| Mobile framework | Expo SDK 55 | New Architecture enabled |
-| Native runtime | React Native 0.83.6 | Hermes engine |
+| Mobile framework | Expo SDK 56 | New Architecture enabled |
+| Native runtime | React Native 0.85.3 | Hermes engine |
 | React | 19.1.0 | Same major as web |
-| Router | Expo Router 6 | File-based routing |
+| Router | Expo Router ~56.2.9 | File-based routing |
 | Package manager | npm workspaces | `apps/*`, `packages/*` |
 | Native modules | Expo modules only | NO bare workflow |
 | Health (iOS) | `react-native-health` (Expo config plugin) | HealthKit wrapper |

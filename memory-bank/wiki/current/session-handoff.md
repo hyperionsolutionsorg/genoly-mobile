@@ -11,10 +11,12 @@ status: active
 
 ## State right now
 
-**Main branch (origin):** `dfc73bb` — PR #11 merged SDK 55 (earlier). Local working tree on `chore/expo-sdk-55-upgrade` branch (worktree at `genoly-mobile-wt-sdk55/`) has uncommitted changes fixing SDK 55 test regressions + dep dashboard sync. PR pending.
-**SDK baseline:** Expo SDK 55 + React Native 0.83.6. SDK 56 evaluated 2026-06-05 and deferred to issue #299 (expo-router breaking change requires code migration, not just package bumps).
-**Dep dashboard:** Synced 2026-06-05 — 38 packages, 34 replaced, reflecting SDK 55 versions.
-**Jest state:** 2 known failing suites (SyncQueue dead-letter + concurrency race; token-store "no test" error) — tracked in issue #294. 4 UI suites skipped (login, settings, auth-gate, fitness) — re-enable when SDK 56 ships.
+**Main branch (origin):** `fa5cc27` — PR #12 merged SDK 55 verification. Branch `chore/expo-sdk-56-upgrade` in worktree `genoly-mobile-wt-sdk56/` has completed SDK 56 upgrade — **PR pending merge**.
+**SDK baseline:** Expo SDK 56 + React Native 0.85.3 (in `chore/expo-sdk-56-upgrade`). Main is still SDK 55.
+**Dep dashboard:** Synced 2026-06-05 (SDK 55 versions). After PR merge, re-run `npm run sync-deps` with Convex URL configured.
+**Jest state:** 54/56 pass. 2 known failing suites (SyncQueue dead-letter + concurrency race, #294). 1 pre-existing "no test" error (token-store). 4 UI suites skipped (Dimensions.set TurboModule crash persists in jest-expo 56).
+**TypeScript:** 0 errors (`npx tsc --noEmit -p apps/mobile/tsconfig.json`).
+**expo-doctor:** 21/21 checks pass.
 
 **Previous milestone:** Step 7 (Dashboard) IMPLEMENTATION COMPLETE in working tree on main, PR pending. 4 new files: `hooks/useDashboardData.ts`, replaced `(tabs)/fitness.tsx`, two test files. 24 new Jest tests; 54 total in suite. Real-device smoke pending.
 
@@ -26,7 +28,8 @@ status: active
 
 ## What's done (recent)
 
-- ✅ SDK 55 verification + test regressions fixed + dep dashboard synced 2026-06-05. PR pending on `chore/expo-sdk-55-upgrade`. SDK 56 evaluated + deferred (#299).
+- ✅ **SDK 55 → 56 upgrade COMPLETE** 2026-06-05. Branch `chore/expo-sdk-56-upgrade`, 6 commits. expo-router codemod, vector-icons codemod, iOS 16.4 target, @react-navigation/native removed, TypeScript 6 compat, expo-doctor 21/21. **PR pending merge**. Task #299 CLOSED.
+- ✅ SDK 55 verification + test regressions fixed + dep dashboard synced 2026-06-05. PR #12 merged.
 - ✅ Phase 1 Steps 11 + 6 + mobile `DESIGN.md` complete 2026-05-29 overnight Round 3.
 - ✅ Phase 1 Step 5 (`@genoly/sync-queue`) complete 2026-05-29 overnight Round 2.
 - ✅ Phase 1 Steps 4 + 12 complete 2026-05-29 overnight Round 1.
@@ -39,13 +42,12 @@ status: active
 
 ## What's next
 
-0. **Merge the SDK 55 verification PR** (branch `chore/expo-sdk-55-upgrade` in worktree `genoly-mobile-wt-sdk55/`). Commit all the changes from the 2026-06-05 session, push, open PR, merge.
-1. **Open + merge the Step 7 Dashboard PR.**
-2. **Real-device smoke test** — iOS simulator + Android emulator. Background-fetch needs a real device (simulator doesn't wake on 15-min cadence). Dashboard's drain-on-mount + Refresh button can be smoke-tested in the simulator.
-3. **Step 8** — Leaderboard screen. Reads from `apiClient.getLeaderboard({ date })` (currently stubbed). Friends list (Step 9) is a soft prerequisite but not strict — leaderboard can ship with just self + accepted friends.
-4. **Steps 9, 10, 13** per `mobile-sync-architecture.md` §15.
-5. **Theme module migration** — Lift inlined hex literals from screens into a `theme/colors.ts`. Mechanical PR once dark palette is decided. Tracked in `DESIGN.md` §10.
-6. **Workspace test runner gap** — Make Jest see the 32 tests in `packages/health-sync` + `packages/sync-queue`. Currently `npm test` from `apps/mobile/` only sees `apps/mobile/__tests__/`.
+0. **[Shankar] Merge the SDK 56 PR** — push `chore/expo-sdk-56-upgrade` to origin, open PR titled `chore(mobile): Expo SDK 55→56 upgrade with expo-router codemod`, merge.
+1. **[Shankar] Task #300 — Real-device smoke test** — iOS simulator + Android emulator (EAS build). Background-fetch needs a real device (simulator doesn't wake on 15-min cadence). Dashboard drain-on-mount + Refresh can be smoke-tested in simulator.
+2. **Step 8** — Leaderboard screen. Reads from `apiClient.getLeaderboard({ date })` (currently stubbed).
+3. **Steps 9, 10, 13** per `mobile-sync-architecture.md` §15.
+4. **Theme module migration** — Lift inlined hex literals from screens into a `theme/colors.ts`.
+5. **Workspace test runner gap** — Make Jest see tests in `packages/health-sync` + `packages/sync-queue`.
 
 
 ## Reading order for the next agent
