@@ -59,7 +59,7 @@ jest.mock('@expo/vector-icons/FontAwesome', () => ({
   font: {},
 }));
 
-jest.mock('@react-navigation/native', () => ({
+jest.mock('expo-router/react-navigation', () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
   DefaultTheme: {},
   DarkTheme: {},
