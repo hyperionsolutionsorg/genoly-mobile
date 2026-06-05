@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Session handoff — genoly-mobile"
-updated: 2026-05-29
+updated: 2026-06-05
 status: active
 ---
 
@@ -11,8 +11,12 @@ status: active
 
 ## State right now
 
-**Main branch:** `df7d22c` — PR #5 (`10f6f03`) overnight bundle + PR #6 (`f2463a8`) infra setup + PR #7 (`df7d22c`) jest-green & cascade all merged. Origin synced. CI green.
-**Active state:** Step 7 (Dashboard) IMPLEMENTATION COMPLETE in working tree on main, PR pending. 4 new files: `hooks/useDashboardData.ts`, replaced `(tabs)/fitness.tsx`, two test files. 24 new Jest tests; 54 total in suite. Real-device smoke pending.
+**Main branch (origin):** `dfc73bb` — PR #11 merged SDK 55 (earlier). Local working tree on `chore/expo-sdk-55-upgrade` branch (worktree at `genoly-mobile-wt-sdk55/`) has uncommitted changes fixing SDK 55 test regressions + dep dashboard sync. PR pending.
+**SDK baseline:** Expo SDK 55 + React Native 0.83.6. SDK 56 evaluated 2026-06-05 and deferred to issue #299 (expo-router breaking change requires code migration, not just package bumps).
+**Dep dashboard:** Synced 2026-06-05 — 38 packages, 34 replaced, reflecting SDK 55 versions.
+**Jest state:** 2 known failing suites (SyncQueue dead-letter + concurrency race; token-store "no test" error) — tracked in issue #294. 4 UI suites skipped (login, settings, auth-gate, fitness) — re-enable when SDK 56 ships.
+
+**Previous milestone:** Step 7 (Dashboard) IMPLEMENTATION COMPLETE in working tree on main, PR pending. 4 new files: `hooks/useDashboardData.ts`, replaced `(tabs)/fitness.tsx`, two test files. 24 new Jest tests; 54 total in suite. Real-device smoke pending.
 
 **Code state by step:**
 - Steps 1, 2, 3 — MERGED to main (PRs #3, #4).
@@ -22,6 +26,7 @@ status: active
 
 ## What's done (recent)
 
+- ✅ SDK 55 verification + test regressions fixed + dep dashboard synced 2026-06-05. PR pending on `chore/expo-sdk-55-upgrade`. SDK 56 evaluated + deferred (#299).
 - ✅ Phase 1 Steps 11 + 6 + mobile `DESIGN.md` complete 2026-05-29 overnight Round 3.
 - ✅ Phase 1 Step 5 (`@genoly/sync-queue`) complete 2026-05-29 overnight Round 2.
 - ✅ Phase 1 Steps 4 + 12 complete 2026-05-29 overnight Round 1.
@@ -34,6 +39,7 @@ status: active
 
 ## What's next
 
+0. **Merge the SDK 55 verification PR** (branch `chore/expo-sdk-55-upgrade` in worktree `genoly-mobile-wt-sdk55/`). Commit all the changes from the 2026-06-05 session, push, open PR, merge.
 1. **Open + merge the Step 7 Dashboard PR.**
 2. **Real-device smoke test** — iOS simulator + Android emulator. Background-fetch needs a real device (simulator doesn't wake on 15-min cadence). Dashboard's drain-on-mount + Refresh button can be smoke-tested in the simulator.
 3. **Step 8** — Leaderboard screen. Reads from `apiClient.getLeaderboard({ date })` (currently stubbed). Friends list (Step 9) is a soft prerequisite but not strict — leaderboard can ship with just self + accepted friends.

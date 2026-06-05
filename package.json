@@ -32,6 +32,7 @@
     "@genoly/api-client": "*",
     "@genoly/health-sync": "*",
     "@genoly/types": "*",
+    "@react-native/assets-registry": "^0.83.6",
     "@react-navigation/native": "^7.1.8",
     "expo": "^55.0.26",
     "expo-constants": "~55.0.16",

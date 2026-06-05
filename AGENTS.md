@@ -29,8 +29,8 @@ This file is the repo-specific operating manual. Read it AFTER the workspace `AG
 
 | Layer | Technology | Notes |
 |---|---|---|
-| Mobile framework | Expo SDK 54 | New Architecture enabled |
-| Native runtime | React Native 0.81 | Hermes engine |
+| Mobile framework | Expo SDK 55 | New Architecture enabled |
+| Native runtime | React Native 0.83.6 | Hermes engine |
 | React | 19.1.0 | Same major as web |
 | Router | Expo Router 6 | File-based routing |
 | Package manager | npm workspaces | `apps/*`, `packages/*` |

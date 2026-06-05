@@ -26,6 +26,14 @@
 // Remove this file when jest-expo ships proper TurboModule mocks
 // (track upstream: https://github.com/expo/expo/tree/main/packages/jest-expo).
 
+// react-native-health ships a JS index file that resolves in jest-expo's
+// babel transform (previously threw in the old ts-jest environment). The
+// HealthKitAdapter wraps the require() in try/catch and treats a null
+// return as "native module not available". Mocking to null preserves
+// that semantic: isAvailable() → false, reads → [], permissions → denied.
+// Production code uses the real native module via Expo config plugin.
+jest.mock("react-native-health", () => null);
+
 jest.mock("react-native/Libraries/TurboModule/TurboModuleRegistry", () => {
   // Recursive permissive Proxy: every property access returns a callable
   // that also acts as another Proxy. Handles all common shapes:

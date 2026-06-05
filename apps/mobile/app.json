@@ -17,7 +17,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "org.hyperionsolutions.genoly",
       "infoPlist": {
-        "UIBackgroundModes": ["fetch", "processing"]
+        "UIBackgroundModes": [
+          "fetch",
+          "processing"
+        ]
       }
     },
     "android": {
@@ -47,7 +50,8 @@
         }
       ],
       "react-native-health-connect",
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
