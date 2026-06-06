@@ -11,10 +11,10 @@ status: active
 
 ## State right now
 
-**Main branch (origin):** `fa5cc27` — PR #12 merged SDK 55 verification. Branch `chore/expo-sdk-56-upgrade` in worktree `genoly-mobile-wt-sdk56/` has completed SDK 56 upgrade — **PR pending merge**.
-**SDK baseline:** Expo SDK 56 + React Native 0.85.3 (in `chore/expo-sdk-56-upgrade`). Main is still SDK 55.
-**Dep dashboard:** Synced 2026-06-05 (SDK 55 versions). After PR merge, re-run `npm run sync-deps` with Convex URL configured.
-**Jest state:** 54/56 pass. 2 known failing suites (SyncQueue dead-letter + concurrency race, #294). 1 pre-existing "no test" error (token-store). 4 UI suites skipped (Dimensions.set TurboModule crash persists in jest-expo 56).
+**Main branch (origin):** `7919a04` (workspace) — SDK 56 PR #13+#14 merged. Branch `chore/mobile-test-debt-cluster` in worktree `genoly-mobile-wt-test-debt/` has test-debt fixes — **PR pending merge**.
+**SDK baseline:** Expo SDK 56 + React Native 0.85.3 on main.
+**Dep dashboard:** Synced 2026-06-05.
+**Jest state:** 60/60 pass, exit code 0. #293 + #294 + #295 CLOSED. 4 UI suites remain skipped (expo-router TurboModule chain not mocked by jest-expo 56 — real-device gate).
 **TypeScript:** 0 errors (`npx tsc --noEmit -p apps/mobile/tsconfig.json`).
 **expo-doctor:** 21/21 checks pass.
 
@@ -28,7 +28,8 @@ status: active
 
 ## What's done (recent)
 
-- ✅ **SDK 55 → 56 upgrade COMPLETE** 2026-06-05. Branch `chore/expo-sdk-56-upgrade`, 6 commits. expo-router codemod, vector-icons codemod, iOS 16.4 target, @react-navigation/native removed, TypeScript 6 compat, expo-doctor 21/21. **PR pending merge**. Task #299 CLOSED.
+- ✅ **Mobile test debt cluster CLOSED** 2026-06-05. Branch `chore/mobile-test-debt-cluster`. #293 (ts-jest regression — already resolved by SDK 56), #295 (root .tsx compile — already resolved by SDK 56), #294 (3 pre-existing failures — all fixed). `npm test` 60/60 green, exit code 0. PR pending merge.
+- ✅ **SDK 55 → 56 upgrade COMPLETE** 2026-06-05. PR #13+#14 merged. Task #299 CLOSED.
 - ✅ SDK 55 verification + test regressions fixed + dep dashboard synced 2026-06-05. PR #12 merged.
 - ✅ Phase 1 Steps 11 + 6 + mobile `DESIGN.md` complete 2026-05-29 overnight Round 3.
 - ✅ Phase 1 Step 5 (`@genoly/sync-queue`) complete 2026-05-29 overnight Round 2.
@@ -42,7 +43,7 @@ status: active
 
 ## What's next
 
-0. **[Shankar] Merge the SDK 56 PR** — push `chore/expo-sdk-56-upgrade` to origin, open PR titled `chore(mobile): Expo SDK 55→56 upgrade with expo-router codemod`, merge.
+0. **[Shankar] Merge the mobile test debt PR** — merge `chore/mobile-test-debt-cluster`.
 1. **[Shankar] Task #300 — Real-device smoke test** — iOS simulator + Android emulator (EAS build). Background-fetch needs a real device (simulator doesn't wake on 15-min cadence). Dashboard drain-on-mount + Refresh can be smoke-tested in simulator.
 2. **Step 8** — Leaderboard screen. Reads from `apiClient.getLeaderboard({ date })` (currently stubbed).
 3. **Steps 9, 10, 13** per `mobile-sync-architecture.md` §15.

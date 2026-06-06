@@ -1,55 +1,36 @@
 import { MemoryTokenStore } from './token-store';
 
-async function runTests() {
-  console.log('Running MemoryTokenStore tests...');
+describe('MemoryTokenStore', () => {
+  it('starts in an expired/empty state', async () => {
+    const store = new MemoryTokenStore();
+    expect(await store.isExpired()).toBe(true);
+    expect(await store.getToken()).toBeNull();
+  });
 
-  const store = new MemoryTokenStore();
+  it('stores and retrieves a valid token', async () => {
+    const store = new MemoryTokenStore();
+    const expiry = Date.now() + 10_000;
+    await store.setToken('test_token_123', expiry);
 
-  // Test initial state
-  if (!(await store.isExpired())) {
-    throw new Error('Initial store should be expired/empty');
-  }
-  if ((await store.getToken()) !== null) {
-    throw new Error('Initial token should be null');
-  }
+    expect(await store.isExpired()).toBe(false);
+    expect(await store.getToken()).toBe('test_token_123');
+  });
 
-  // Test set and get
-  const expiry = Date.now() + 10000; // 10 seconds from now
-  await store.setToken('test_token_123', expiry);
+  it('reports expired and returns null when token expiry is in the past', async () => {
+    const store = new MemoryTokenStore();
+    const pastExpiry = Date.now() - 1_000;
+    await store.setToken('expired_token', pastExpiry);
 
-  if (await store.isExpired()) {
-    throw new Error('Store should not be expired yet');
-  }
-  if ((await store.getToken()) !== 'test_token_123') {
-    throw new Error('Retrieved token does not match set token');
-  }
+    expect(await store.isExpired()).toBe(true);
+    expect(await store.getToken()).toBeNull();
+  });
 
-  // Test expiry
-  const pastExpiry = Date.now() - 1000; // 1 second ago
-  await store.setToken('expired_token', pastExpiry);
+  it('clears token — isExpired returns true and getToken returns null', async () => {
+    const store = new MemoryTokenStore();
+    await store.setToken('another_token', Date.now() + 10_000);
+    await store.clearToken();
 
-  if (!(await store.isExpired())) {
-    throw new Error('Store should be expired');
-  }
-  if ((await store.getToken()) !== null) {
-    throw new Error('Expired token should return null');
-  }
-
-  // Test clear
-  await store.setToken('another_token', Date.now() + 10000);
-  await store.clearToken();
-
-  if (!(await store.isExpired())) {
-    throw new Error('Store should be expired after clearing');
-  }
-  if ((await store.getToken()) !== null) {
-    throw new Error('Token should be null after clearing');
-  }
-
-  console.log('All MemoryTokenStore tests passed successfully!');
-}
-
-runTests().catch((err: unknown) => {
-  console.error('Test suite failed:', err);
-  process.exit(1);
+    expect(await store.isExpired()).toBe(true);
+    expect(await store.getToken()).toBeNull();
+  });
 });

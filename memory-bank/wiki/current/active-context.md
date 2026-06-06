@@ -11,7 +11,9 @@ status: active
 
 ## Current focus
 
-**2026-06-05: Expo SDK 55 → 56 upgrade COMPLETE. PR pending merge on `chore/expo-sdk-56-upgrade` (worktree `genoly-mobile-wt-sdk56/`). Task #299 CLOSED. Task #300 (real-device smoke) deferred to Shankar.**
+**2026-06-05: Mobile test debt cluster COMPLETE. PR pending on `chore/mobile-test-debt-cluster`. #293 + #294 + #295 all closed. `npm test` → 60/60 green, exit code 0.**
+
+**Previous focus: Expo SDK 55 → 56 upgrade COMPLETE. PR #13+#14 merged. Task #299 CLOSED. Task #300 (real-device smoke) deferred to Shankar.**
 
 SDK 56 upgrade complete in worktree on `chore/expo-sdk-56-upgrade`. Key changes:
 - `expo` 55 → 56, `react-native` 0.83.6 → 0.85.3, `react` 19.2.0 → 19.2.3
@@ -24,7 +26,7 @@ SDK 56 upgrade complete in worktree on `chore/expo-sdk-56-upgrade`. Key changes:
 - `apps/mobile/tsconfig.json` — `"types": ["jest"]` for TypeScript 6.0.3
 - `apps/mobile/package.json` — `@types/jest`, `@react-native/jest-preset`, `react-test-renderer@19.2.3`
 
-**expo-doctor**: 21/21 pass. **TypeScript**: 0 errors. **Tests**: 54/56 pass; 2 pre-existing failures (#294).
+**expo-doctor**: 21/21 pass. **TypeScript**: 0 errors. **Tests**: 60/60 pass, exit code 0. #293 + #294 + #295 CLOSED.
 
 **Previous milestone:** SDK 55 upgrade MERGED 2026-06-05 via PR #12. Step 7 (Dashboard) MERGED via PR #8.
 
@@ -32,6 +34,7 @@ All Phase 1 steps 1-7, 11, 12 are MERGED. Step 8 (Leaderboard) is next. See `[[2
 
 ## Recent events
 
+- **2026-06-05 (Claude autonomous)** — **Mobile test debt cluster CLOSED.** #293/#294/#295. `npm test` 60/60 green. token-store.test.ts rewritten as proper Jest suite; queue.ts handleError double-increment fixed; SyncQueue concurrency test microtask flush added; StyledText-test.js wrapped in act() + snapshot updated from null to real tree. PR on `chore/mobile-test-debt-cluster`.
 - **2026-06-05 (Claude autonomous)** — **SDK 55 → 56 upgrade COMPLETE.** Expo SDK 55 → 56. 6 commits on `chore/expo-sdk-56-upgrade`. expo-router codemod, vector-icons codemod, iOS 16.4 target, @react-navigation/native removed, TypeScript 6 compat. expo-doctor 21/21 pass. PR pending merge. Task #299 CLOSED; #300 (real-device smoke) deferred to Shankar. See `[[2026-06-05-expo-sdk-56-upgrade]]`.
 - **2026-06-05 (Claude interactive)** — **SDK 55 upgrade verified + dep dashboard synced.** PR #12 merged. SDK 56 evaluated, deferred to #299.
 - **2026-05-29 overnight Round 3 (Claude autonomous)** — **Steps 11 + 6 + mobile DESIGN.md IMPLEMENTATION COMPLETE.** Settings screen with sign-out (revokeToken + reset prefs + unregister bg-fetch + fail-closed), background-fetch task wiring (`apps/mobile/utils/backgroundSync.ts` calling `SyncQueue.drain()`), auth-gate test refresh (was broken by Round 1's permissions arm), mobile `DESIGN.md` at repo root mirroring web DESIGN.md format. 20 new tests (8 settings + 12 backgroundSync). NO COMMITS — still working tree on main, awaiting Shankar's morning review.
@@ -95,4 +98,4 @@ Server contract: [`../genoly-family-web/docs/fitness-api-contract.md`](../../../
 | `apps/mobile/app/_layout.tsx` | Step 3 SHIPPED — cold-start auth gate. Two-arm redirect (no-token OR expired-token → login). Fail-closed on storage errors. |
 | `apps/mobile/app/(auth)/login.tsx` | Step 2 SHIPPED — login screen with react-hook-form + zod + Controller-wired inputs + ApiClientError → friendly message mapping. |
 | `apps/mobile/app/(tabs)/` | 4-tab scaffold unchanged (per Decision 6). Auth gate now gates access; tabs themselves still placeholders. Real content in Step 5+. |
-| `apps/mobile/__tests__/` | Jest + React Native Testing Library wired. login.test.tsx + auth-gate.test.tsx (4 cases) + token-store.test.ts. |
+| `apps/mobile/__tests__/` | Jest + React Native Testing Library wired. login.test.tsx + auth-gate.test.tsx (4 cases) — those UI suites skipped. token-store.test.ts rewritten as proper Jest suite (4 tests). |

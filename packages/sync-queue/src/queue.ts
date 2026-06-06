@@ -235,15 +235,16 @@ export class SyncQueue {
 
     // Retryable → bump attempts, dead-letter rows that hit MAX_ATTEMPTS.
     const ids = batch.map((r) => r.id);
+    // Capture attempts BEFORE recordAttempt() so in-memory stores that
+    // mutate the same objects in-place don't corrupt the exhaustion check.
+    const attemptsBefore = new Map(batch.map((r) => [r.id, r.attempts]));
     await this.store.recordAttempt(ids, now);
 
-    // Recompute after the increment.
+    // Recompute after the increment using the saved before-values.
     const exhaustedIds: string[] = [];
     const stillPendingIds: string[] = [];
     for (const row of batch) {
-      // row.attempts is the BEFORE value; recordAttempt() increments
-      // by 1 in storage. So a row at attempts=4 just became attempts=5.
-      const newAttempts = row.attempts + 1;
+      const newAttempts = (attemptsBefore.get(row.id) ?? 0) + 1;
       if (newAttempts >= this.maxAttempts) {
         exhaustedIds.push(row.id);
       } else {
