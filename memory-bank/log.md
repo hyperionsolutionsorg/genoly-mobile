@@ -393,6 +393,29 @@ Mobile builds automatically on `main` push. EAS account `@hyperionsolutionsorg` 
 
 Page: [[2026-05-08-phase-0-complete]]
 
+## [2026-06-05] merge | Mobile test debt cluster — #293, #294, #295 CLOSED
+
+Branch `chore/mobile-test-debt-cluster` (worktree `genoly-mobile-wt-test-debt/`).
+
+**Investigation findings:**
+- **#293** (ts-jest 29.4 tsconfig discovery regression): ALREADY RESOLVED by SDK 56 upgrade. ts-jest is installed but not configured as a transformer — rebuilt `jest.config.js` uses `preset: 'jest-expo'` (babel). No code changes needed.
+- **#295** (workspace-root npm test fails .tsx compile): ALREADY RESOLVED by SDK 56 upgrade. Multiple `.ts`/`.tsx` suites compile and pass cleanly under the new root config. No code changes needed.
+- **#294** (3 pre-existing Jest failures): Still open — all 3 fixed in this PR.
+
+**Fixes landed:**
+
+1. `packages/api-client/src/token-store.test.ts` — rewritten from vanilla `async function runTests()` (no Jest primitives → "no tests found") to proper `describe`/`it`/`expect` suite. 4 tests now pass.
+
+2. `packages/sync-queue/src/queue.ts` — `handleError()` was double-counting attempts. `MemoryStore.fetchBatch()` returns object references; `recordAttempt()` mutates them in-place. Code then added 1 to the already-incremented value → premature dead-lettering after 2 attempts instead of `maxAttempts`. Fix: capture `attemptsBefore` Map before calling `recordAttempt()`.
+
+3. `packages/sync-queue/src/SyncQueue.test.ts` — concurrency test called `resolveServer!({...})` before `drain1` had advanced past `fetchBatch` (microtask boundary). Fix: add `await Promise.resolve()` to flush the microtask queue before calling the resolver.
+
+4. `apps/mobile/components/__tests__/StyledText-test.js` — snapshot test used `renderer.create()` outside `act()`. React 19's async scheduler tried to flush updates after the Jest environment was torn down → `ReferenceError: import after environment torn down` → exit code 1. Fix: wrap in `await act(async () => {...})` and update snapshot from `null` to the actual rendered `<Text>` tree.
+
+5. `packages/sync-queue/src/SyncQueue.test.ts` — `makeEntry()` was missing `dateUtcStart` (required by `HealthEntryUpload` since it was added to the type). Added `dateUtcStart: 0`.
+
+**Result:** `npm test` — 60/60 tests pass, exit code 0. All 6 suites green. 4 previously skipped UI suites remain skipped (expo-router TurboModule chain not mocked by jest-expo 56).
+
 ---
 
 *Earlier history: see legacy `memory-bank/activeContext.md` and `memory-bank/progress.md` (being phased out). For authoritative chronological record: `git log`.*

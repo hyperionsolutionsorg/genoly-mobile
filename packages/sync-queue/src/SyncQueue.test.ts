@@ -21,6 +21,7 @@ import type { HealthEntryUpload } from '@genoly/types';
 function makeEntry(date: string, steps: number): HealthEntryUpload {
   return {
     date,
+    dateUtcStart: 0,
     steps,
     caloriesActive: 100,
     source: 'healthkit',
@@ -302,6 +303,10 @@ describe('SyncQueue', () => {
       // Start two drains in parallel.
       const drain1 = queue.drain();
       const drain2 = queue.drain();
+
+      // Yield to the microtask queue so drain1 advances past fetchBatch
+      // and calls syncDailyAggregates, which sets resolveServer.
+      await Promise.resolve();
 
       // Resolve the in-flight server call.
       resolveServer!({ accepted: 1, rejected: [], serverTime: 0 });

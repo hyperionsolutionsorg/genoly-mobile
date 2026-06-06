@@ -41,6 +41,8 @@ status: active
 
 **SDK 56 upgrade task #299 CLOSED.** Task #300 (real-device smoke test) assigned to Shankar — see session-handoff.md.
 
+**Test debt cluster:** #293 CLOSED (already resolved by SDK 56 upgrade — ts-jest not configured). #294 CLOSED (3 pre-existing failures fixed). #295 CLOSED (already resolved by SDK 56 upgrade — .tsx compilation working). `npm test` → 60/60 green, exit code 0.
+
 ## Phase 1 commits (reference)
 
 | Date | Commit | Subject |
