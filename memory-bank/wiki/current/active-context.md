@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Active context — genoly-mobile"
-updated: 2026-06-05
+updated: 2026-06-10 (graphifyy 0.8.36 upgrade + AGENTS.md §10.1 graph-tooling cleanup; prior: 2026-06-05)
 status: active
 ---
 
@@ -10,6 +10,8 @@ status: active
 **What's being worked on right now.** Keep this file under 200 lines.
 
 ## Current focus
+
+**2026-06-10 — Graphify Labs version bump + AGENTS.md graph-tooling cleanup (pre-commit; Shankar commits).** Workspace-wide `graphifyy` CLI bumped 0.8.20 → **0.8.36** (`pipx upgrade`; it was always the correct package — a brief's "wrong-package/typosquat/v2.1.0-via-uv" framing was incorrect and not acted on). Regenerated mobile `graphify-out/` via `graphify update .` (AST-only, no key): **841 nodes / 967 edges / 67 communities**, now emitting the force-directed `graph.html` (vis-network, dark theme). Updated `genoly-mobile/AGENTS.md` §10.1 / "Code knowledge graph report": corrected the `graph.html` label (it's vis-network force-directed, not "D3"), refreshed the node count (425 → 841), added the pipx install cmd + `graphify affected` + `graphify watch`, and split structural (`graphify-out/`) vs curated-narrative (`docs/GRAPH_REPORT.md`). **Mobile change is AGENTS.md only.** ⚠️ `npm run typecheck` has **3 PRE-EXISTING errors** (missing `@react-native-vector-icons/fontawesome` — node_modules gap from the SDK-56 codemod below — + `expo-router/react-navigation` + an ExternalLink typed-route), unrelated to this work. Full story in web's [[graph-report-regen-2026-06-09]] (2026-06-10 update).
 
 **2026-06-05: Mobile test debt cluster COMPLETE. PR pending on `chore/mobile-test-debt-cluster`. #293 + #294 + #295 all closed. `npm test` → 60/60 green, exit code 0.**
 

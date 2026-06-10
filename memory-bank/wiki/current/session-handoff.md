@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Session handoff — genoly-mobile"
-updated: 2026-06-05
+updated: 2026-06-10 (graphifyy 0.8.36 upgrade + AGENTS.md §10.1 cleanup; prior: 2026-06-05)
 status: active
 ---
 
@@ -10,6 +10,8 @@ status: active
 **For the next agent or session picking up this repo.**
 
 ## State right now
+
+**2026-06-10 — Graphify Labs version bump + AGENTS.md graph-tooling cleanup (pre-commit; Shankar commits).** Workspace `graphifyy` CLI 0.8.20 → **0.8.36** (`pipx upgrade`; it was always the correct package — a brief's "wrong-package/typosquat/v2.1.0-via-uv" framing was incorrect and not acted on, verified against PyPI + README). Mobile `graphify-out/` regenerated via `graphify update .` (AST-only, **no key**): **841 nodes / 967 edges / 67 communities**, now force-directed `graph.html` (vis-network). Only committed change here is `genoly-mobile/AGENTS.md` §10.1 / graph-report section (corrected "D3"→vis-network, node count 425→841, pipx install cmd, `affected`/`watch`, structural-vs-narrative split). **Known intentional state for the next agent:** `graphify` AST extraction (`graphify update .`) needs NO key; bare `graphify .`/`graphify extract` need an LLM key (none set) and WILL error — expected. **Pre-existing, NOT a regression:** `npm run typecheck` reports 3 errors (missing `@react-native-vector-icons/fontawesome` — node_modules gap from the SDK-56 codemod — + `expo-router/react-navigation` + an ExternalLink typed-route); mobile has no `lint` script (use `npm run typecheck`). Also pre-existing-uncommitted before this session (not mine): `.gitignore` + `docs/GRAPH_REPORT.md` working-tree edits. Full story: web [[graph-report-regen-2026-06-09]] (2026-06-10 update).
 
 **Main branch (origin):** `7919a04` (workspace) — SDK 56 PR #13+#14 merged. Branch `chore/mobile-test-debt-cluster` in worktree `genoly-mobile-wt-test-debt/` has test-debt fixes — **PR pending merge**.
 **SDK baseline:** Expo SDK 56 + React Native 0.85.3 on main.

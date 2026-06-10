@@ -1,11 +1,13 @@
 ---
 type: current
 name: "Progress — genoly-mobile"
-updated: 2026-06-05
+updated: 2026-06-10 (graphifyy 0.8.36 upgrade + AGENTS.md §10.1 cleanup; prior: 2026-06-05)
 status: active
 ---
 
 # Progress
+
+> **2026-06-10 — Graphify Labs version bump + AGENTS.md graph-tooling cleanup (pre-commit; Shankar commits).** Workspace `graphifyy` CLI 0.8.20 → **0.8.36** (`pipx upgrade`; always the correct package — brief's typosquat/v2.1.0 framing was wrong, verified, not acted on). Mobile `graphify-out/` regenerated via `graphify update .` (AST-only, no key): **841 nodes / 67 communities**, force-directed `graph.html`. `genoly-mobile/AGENTS.md` §10.1 corrected (vis-network not "D3", node count 425→841, pipx install + `affected`/`watch`, structural-vs-narrative split). Mobile change is AGENTS.md only. ⚠️ `npm run typecheck` has 3 PRE-EXISTING errors (missing `@react-native-vector-icons` dep + Expo-Router typed-routes), unrelated. See web [[graph-report-regen-2026-06-09]] (2026-06-10 update).
 
 ## High-level status
 

@@ -13,6 +13,35 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-06-10] decision | graphifyy 0.8.36 upgrade + AGENTS.md graph-tooling cleanup
+
+Workspace-wide `graphifyy` CLI (code knowledge graph; binary `graphify`) bumped
+0.8.20 → **0.8.36** via `pipx upgrade`. A migration brief framed this as a
+typosquat fix — uninstall a "wrong graphify", install a separate "Graphify Labs
+v2.1.0+" via `uv`. **Verification (PyPI, upstream README, `pipx list`) showed the
+premise was false:** `graphifyy` was already installed and IS the correct package
+(Graphify Labs / safishamsi, AST-only, MIT); there is no v2.x (latest 0.8.36). So
+it was just stale. The destructive uninstall/reinstall was NOT run.
+
+Mobile-side actions:
+- Regenerated `graphify-out/` via `graphify update .` (AST-only, **no key**):
+  **841 nodes / 967 edges / 67 communities**. Now emits force-directed `graph.html`
+  (vis-network, dark theme) — the older versions emitted a `GRAPH_TREE.html` D3 tree.
+- `genoly-mobile/AGENTS.md` §10.1 / "Code knowledge graph report" updated: corrected
+  the `graph.html` label (vis-network force-directed, not "D3"), node count 425 → 841,
+  added pipx install cmd + `graphify affected` + `graphify watch`, split structural
+  (`graphify-out/`) from curated-narrative (`docs/GRAPH_REPORT.md`). Mobile committed
+  change is AGENTS.md only.
+
+Verification: `npm run typecheck` has **3 PRE-EXISTING errors** (missing
+`@react-native-vector-icons/fontawesome` dep — node_modules gap from the SDK-56
+codemod — + `expo-router/react-navigation` + an ExternalLink typed-route). NOT caused
+by this change; mobile has no `lint` script. Full cross-repo story in
+genoly-family-web `decisions/graph-report-regen-2026-06-09.md` (2026-06-10 append).
+Shankar commits (no AI attribution).
+
+---
+
 ## [2026-06-05] merge | SDK 56 upgrade + expo-router codemod
 
 Branch: `chore/expo-sdk-56-upgrade` (worktree `genoly-mobile-wt-sdk56/`). Upgraded Expo SDK 55 → 56. PR pending.
