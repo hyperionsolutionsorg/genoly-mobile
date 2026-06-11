@@ -53,6 +53,11 @@ import {
   listTreeChallenges,
   listMyActiveChallenges,
   getChallengeLeaderboard,
+  kbListPublishedArticles,
+  kbGetArticleBySlug,
+  kbSearchArticles,
+  submitContact,
+  updateProfile,
   isDemoEmail,
   isAdminRole,
 } from '../lib/genolyApi';
@@ -104,6 +109,11 @@ describe('function reference names', () => {
     [listTreeChallenges, 'walkingChallenges:listTreeChallenges'],
     [listMyActiveChallenges, 'walkingChallenges:listMyActiveChallenges'],
     [getChallengeLeaderboard, 'walkingChallenges:getChallengeLeaderboard'],
+    [kbListPublishedArticles, 'kb:listPublishedArticles'],
+    [kbGetArticleBySlug, 'kb:getArticleBySlug'],
+    [kbSearchArticles, 'kb:searchArticles'],
+    [submitContact, 'contactSubmissions:submitContact'],
+    [updateProfile, 'users:updateProfile'],
   ])('reference resolves to %s', (ref, expected) => {
     expect(getFunctionName(ref)).toBe(expected);
   });

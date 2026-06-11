@@ -31,8 +31,11 @@ import {
 } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { useAuthActions } from '@convex-dev/auth/react';
+import { useConvex, useQuery } from 'convex/react';
 import { apiClient, tokenStore } from '../../utils/api';
 import { useMe } from '../../hooks/useMe';
+import { getMfaStatus, updateProfile } from '../../lib/genolyApi';
+import { toast } from '../../components/ui';
 import {
   getHealthSyncEnabled,
   setHasRequestedHealthPermissions,
@@ -50,12 +53,15 @@ import {
   type Theme,
   type ThemePreference,
 } from '../../theme';
-import { Button, Section } from '../../components/ui';
+import { Button, Section, TextField } from '../../components/ui';
 
 const LOGIN_ROUTE = '/(auth)/login' as unknown as Href;
 const PERMISSIONS_ROUTE = '/(auth)/permissions' as unknown as Href;
+const SUPPORT_ROUTE = '/support' as unknown as Href;
 
 const SUBSCRIPTION_URL = 'https://genoly.org/account';
+const SECURITY_URL = 'https://genoly.org/settings';
+const PRIVACY_URL = 'https://genoly.org/settings';
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -70,7 +76,12 @@ export default function SettingsScreen() {
   const styles = useThemedStyles(createStyles);
   const { preference, setPreference } = useThemePreference();
   const { signOut } = useAuthActions();
-  const { me } = useMe();
+  const { me, isDemo } = useMe();
+  const convex = useConvex();
+  const mfa = useQuery(getMfaStatus, me ? {} : ('skip' as const));
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+  const [savingName, setSavingName] = useState(false);
   const [email, setEmail] = useState<string | null>(null);
   const [healthEnabled, setHealthEnabled] = useState<boolean>(false);
   const [notifEnabled, setNotifEnabled] = useState<boolean>(true);
@@ -185,12 +196,113 @@ export default function SettingsScreen() {
             <Text style={styles.valueText}>{me?.email ?? email ?? 'Signed in'}</Text>
           )}
         </Row>
+        {editingName ? (
+          <>
+            <TextField
+              label="Name"
+              value={nameDraft}
+              onChangeText={setNameDraft}
+              editable={!savingName}
+            />
+            <View style={styles.nameEditRow}>
+              <Button
+                label="Save"
+                loading={savingName}
+                onPress={async () => {
+                  if (!nameDraft.trim()) {
+                    toast.error('A name is required.');
+                    return;
+                  }
+                  setSavingName(true);
+                  try {
+                    await convex.mutation(updateProfile, { fullName: nameDraft.trim() });
+                    toast.success('Name updated.');
+                    setEditingName(false);
+                  } catch {
+                    toast.error('Could not save right now.');
+                  } finally {
+                    setSavingName(false);
+                  }
+                }}
+                style={styles.nameEditButton}
+              />
+              <Button
+                variant="secondary"
+                label="Cancel"
+                onPress={() => setEditingName(false)}
+                style={styles.nameEditButton}
+              />
+            </View>
+          </>
+        ) : (
+          <Row styles={styles} label="Name">
+            <View style={styles.nameValueRow}>
+              <Text style={styles.valueText}>{me?.fullName ?? '—'}</Text>
+              <Button
+                variant="link"
+                label="Edit"
+                onPress={() => {
+                  setNameDraft(me?.fullName ?? '');
+                  setEditingName(true);
+                }}
+              />
+            </View>
+          </Row>
+        )}
         <Button
           variant="destructive"
           label="Sign out"
           onPress={onSignOutPressed}
           loading={signingOut}
           style={styles.sectionButton}
+        />
+      </Section>
+
+      {/* Security & alerts */}
+      <Section label="Security">
+        <Row styles={styles} label="Two-factor (TOTP)">
+          <Text style={[styles.valueText, mfa?.enabled ? styles.statusOn : undefined]}>
+            {mfa === undefined ? '…' : mfa.enabled ? 'Enabled' : 'Off'}
+          </Text>
+        </Row>
+        {mfa?.enabled ? (
+          <Row styles={styles} label="Backup codes left">
+            <Text style={styles.valueText}>{mfa.backupCodesRemaining ?? '—'}</Text>
+          </Row>
+        ) : null}
+        <Text style={styles.bodyText}>
+          Enrollment, backup codes, and security alerts are managed on the web.
+        </Text>
+        <Button
+          variant="secondary"
+          label="Manage security on genoly.org"
+          onPress={() => Linking.openURL(SECURITY_URL).catch(() => {})}
+          style={styles.sectionButton}
+        />
+      </Section>
+
+      {/* Privacy & data */}
+      <Section label="Privacy & data">
+        <Text style={styles.bodyText}>
+          Export everything you've added (including walking-challenge activity) or delete your
+          account — both live on the web, protected by an email confirmation.
+          {isDemo ? ' Demo accounts reset automatically and have nothing to export.' : ''}
+        </Text>
+        <Button
+          variant="secondary"
+          label="Privacy & data on genoly.org"
+          onPress={() => Linking.openURL(PRIVACY_URL).catch(() => {})}
+          style={styles.sectionButton}
+        />
+      </Section>
+
+      {/* Support */}
+      <Section label="Support">
+        <Button
+          variant="secondary"
+          label="Help & contact"
+          accessibilityLabel="Open support"
+          onPress={() => router.push(SUPPORT_ROUTE)}
         />
       </Section>
 
@@ -365,6 +477,18 @@ function createStyles(t: Theme) {
     },
     sectionButton: {
       marginTop: t.spacing.sm,
+    },
+    nameEditRow: {
+      flexDirection: 'row',
+      marginTop: t.spacing.xs,
+    },
+    nameEditButton: {
+      flex: 1,
+      marginRight: t.spacing.sm,
+    },
+    nameValueRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     themeRow: {
       flexDirection: 'row',

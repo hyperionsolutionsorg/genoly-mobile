@@ -593,6 +593,47 @@ export const getChallengeLeaderboard = makeFunctionReference<
   ChallengeLeaderboard
 >('walkingChallenges:getChallengeLeaderboard');
 
+// ── Support / knowledge base + contact (wave G) ───────────────────────
+
+export interface KbArticleSummary {
+  _id: string;
+  title: string;
+  slug: string;
+  category?: string;
+  tags?: string[];
+  publishedAt?: number;
+}
+
+export const kbListPublishedArticles = makeFunctionReference<
+  'query',
+  Record<string, never>,
+  (KbArticleSummary & { viewCount?: number })[]
+>('kb:listPublishedArticles');
+
+export const kbGetArticleBySlug = makeFunctionReference<
+  'query',
+  { slug: string },
+  (KbArticleSummary & { body: string }) | null
+>('kb:getArticleBySlug');
+
+export const kbSearchArticles = makeFunctionReference<
+  'query',
+  { query: string },
+  KbArticleSummary[]
+>('kb:searchArticles');
+
+export const submitContact = makeFunctionReference<
+  'mutation',
+  { name: string; email: string; subject: string; body: string; userAgent?: string },
+  unknown
+>('contactSubmissions:submitContact');
+
+export const updateProfile = makeFunctionReference<
+  'mutation',
+  { fullName?: string; gender?: Gender; bio?: string; phone?: string },
+  unknown
+>('users:updateProfile');
+
 // ── Demo detection (mirror of web src/App.tsx + convex/lib/demoUsers.ts) ──
 
 export const DEMO_USER_EMAILS = new Set(['demo-admin@genoly.org', 'demo-viewer@genoly.org']);
