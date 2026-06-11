@@ -1,9 +1,8 @@
 import React from 'react';
-import FontAwesome from "@react-native-vector-icons/fontawesome";
+import FontAwesome from '@react-native-vector-icons/fontawesome';
 import { Tabs } from 'expo-router';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
+import { useTheme } from '../../theme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
 // Browse FontAwesome 5 icon names at https://icons.expo.fyi/Index?q=fa5
@@ -14,36 +13,58 @@ function TabBarIcon(props: {
   return <FontAwesome size={26} style={{ marginBottom: -3 }} {...props} />;
 }
 
+/**
+ * Member-app navigation (C1 rework):
+ *   Home       — member dashboard (streaks, today's pick, anniversaries…)
+ *   Tree       — family-tree exploration hub
+ *   Challenges — family walking challenges
+ *   Activity   — your steps/calories/distance (the former Fitness tab)
+ *   Settings   — account, themes, privacy, health sources
+ *
+ * The old Notifications tab is gone — notification preferences live in
+ * Settings; there is no feed surface in the member app (matches web).
+ */
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const t = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme === 'dark' ? 'dark' : 'light'].tint,
-        // Disable the static render of the header on web to prevent a hydration error in
-        // React Navigation v6.
+        tabBarActiveTintColor: t.colors.primary,
+        tabBarInactiveTintColor: t.colors.textMuted,
+        tabBarStyle: { backgroundColor: t.colors.bgElevated, borderTopColor: t.colors.border },
+        headerStyle: { backgroundColor: t.colors.bgElevated },
+        headerTintColor: t.colors.text,
+        // Disable the static render of the header on web to prevent a
+        // hydration error in React Navigation.
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Family',
+          title: 'Home',
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color as string} />,
+        }}
+      />
+      <Tabs.Screen
+        name="tree"
+        options={{
+          title: 'Tree',
           tabBarIcon: ({ color }) => <TabBarIcon name="sitemap" color={color as string} />,
         }}
       />
       <Tabs.Screen
-        name="fitness"
+        name="challenges"
         options={{
-          title: 'Fitness',
-          tabBarIcon: ({ color }) => <TabBarIcon name="heartbeat" color={color as string} />,
+          title: 'Challenges',
+          tabBarIcon: ({ color }) => <TabBarIcon name="trophy" color={color as string} />,
         }}
       />
       <Tabs.Screen
-        name="notifications"
+        name="activity"
         options={{
-          title: 'Notifications',
-          tabBarIcon: ({ color }) => <TabBarIcon name="bell" color={color as string} />,
+          title: 'Activity',
+          tabBarIcon: ({ color }) => <TabBarIcon name="heartbeat" color={color as string} />,
         }}
       />
       <Tabs.Screen

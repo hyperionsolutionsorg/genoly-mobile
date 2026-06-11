@@ -13,12 +13,12 @@
 
 ## 1. Visual Theme & Atmosphere
 
-The Genoly mobile app is a **lightweight companion** to the web product. It is **not** a feature-equivalent rebuild — it does one job well: passive health-data sync + read-only viewing of leaderboards, goals, and friends.
+The Genoly mobile app is the **daily-touch companion** to the web product: the member-side family experience (dashboard, tree, photos, games, walking challenges) plus passive health-data sync. The web remains the place for heavy work (tree editing depth, admin, billing). Mobile is **delightful, daily, social, healthy** — lightweight screens, fast glances, family warmth.
 
 Visual language matches the web app's "warm, considered, human" mood, but adapted to native conventions:
 
 - **Native primitives over custom widgets.** Use `TouchableOpacity` / `Pressable`, system fonts, native `Alert.alert()` for confirmations. Avoid recreating the web's CSS modal pattern on mobile — the platform already has one.
-- **Single-density throughout.** Web has light/dark/classic. Mobile starts light-only. Dark mode follows `useColorScheme()` from Expo but the palette below is the **light** palette; dark-mode tokens are deferred until Phase 1.5.
+- **Three themes, one module.** Light / Dark / Classic mirror the web's themes via `apps/mobile/theme/` (see §2). `system` preference follows the OS light/dark setting.
 - **Reachable buttons.** Primary CTAs sit in the bottom half of the screen where the thumb naturally rests. Don't put a "Sign out" button at the top of a long scroll view.
 - **No splashy animations.** The mobile app should feel quick and predictable. Use the native spring animations from React Navigation; don't add custom transitions on top.
 
@@ -30,27 +30,54 @@ Visual language matches the web app's "warm, considered, human" mood, but adapte
 
 ## 2. Color Palette & Roles
 
-### Current state (Phase 1)
+### Current state (since C1 foundation, 2026-06-11)
 
-The mobile app currently uses **inlined hex literals** in `StyleSheet.create()` blocks across screens. This is a known transitional state — the palette below is the de-facto standard pulled from the web `DESIGN.md`, but there is **no shared theme module yet**.
+The palette lives in **`apps/mobile/theme/colors.ts`** as three complete semantic palettes (light / dark / classic), surfaced through `ThemeProvider` + `useTheme()` + `useThemedStyles()` in `apps/mobile/theme/`. **Do not inline hex literals in screens** — consume tokens:
 
-A future task ([Phase 1.5 — mobile theme module](#9-agent-prompt-guide)) will lift these into a `theme/colors.ts` module mirroring the web's CSS-variable approach. Until then, **copy values from this table directly** when adding new screens. **Do not introduce new colors** — pick the closest match and reuse it.
+```ts
+import { useThemedStyles, type Theme } from '../../theme';
 
-### Light palette (the only palette for now)
+const styles = useThemedStyles(createStyles);   // inside the component
+
+function createStyles(t: Theme) {               // module scope
+  return StyleSheet.create({
+    container: { backgroundColor: t.colors.bg, padding: t.spacing.xl },
+  });
+}
+```
+
+Theme selection is a Settings → Appearance chip row (`System / Light / Dark / Classic`), persisted via `utils/preferences.ts` (`genoly.themePreference`). `system` follows the OS light/dark setting. Classic mirrors the web's heirloom serif theme — `theme/typography.ts` swaps body + titles onto the platform serif (Georgia / serif).
+
+`__tests__/theme.test.ts` enforces token completeness + WCAG AA contrast for the load-bearing pairs on every palette. **Do not introduce new colors** — pick the closest token; if a token is genuinely missing, add it to all three palettes + the test.
+
+### Light palette (default)
 
 | Token | Hex | Role |
 |---|---|---|
 | `primary` | `#0066ff` | Primary action — filled buttons, links, focus accents |
 | `primaryHover` | `#0052cc` | Pressed state on primary buttons (use `activeOpacity={0.85}` instead in most cases) |
+| `onPrimary` | `#ffffff` | Text/icon ON primary surfaces — never hardcode `#fff` |
 | `bg` | `#fefefe` | Screen background (one tick off white to reduce LCD glare) |
 | `surface` | `#f9fafb` | Card / section background — the "raised" layer |
+| `surfaceMuted` | `#f3f4f6` | De-emphasized blocks: skeletons, disabled chips, bar tracks |
+| `bgElevated` | `#ffffff` | Floating overlays: toasts, secondary buttons, tab bar |
 | `text` | `#111827` | Default body text |
 | `textMuted` | `#6b7280` | Secondary text, hints, breadcrumb separators |
 | `border` | `#e5e7eb` | Hairline borders, dividers, input outlines |
-| `error` | `#dc2626` | Sign out button, error text, destructive accents |
+| `danger` | `#dc2626` | Sign out button, error text, destructive accents |
+| `dangerSurface` | `#fef2f2` | Soft background behind error banners |
 | `success` | `#15803d` | "Enabled", "Synced", positive status pills |
 | `warning` | `#a16207` | "Disabled", "Pending grant", neutral-negative status |
+| `info` | `#0369a1` | Informational accents |
 | `link` | `#0066ff` | Inline links inside body text |
+
+### Dark palette
+
+Derived from the web `[data-theme="dark"]` tokens: bg `#0f172a`, surface `#1e293b`, surfaceMuted/bgElevated `#273449`, text `#f1f5f9`, textMuted `#94a3b8`, border `#334155`, primary `#60a5fa` with **onPrimary `#0f172a`** (dark slate on light blue — 7.02:1, per the web's 2026-06-10 semantic-token decision), danger `#f87171` on dangerSurface `#2d1414`, success `#34d399`, warning `#fbbf24`, info `#38bdf8`.
+
+### Classic palette
+
+Derived from the web `[data-theme="classic"]` heirloom tokens: warm parchment bg `#f5f0e8`, surface `#faf7f2`, surfaceMuted `#ede4d3`, bgElevated `#fffdf8`, sepia text `#3c2a1a` / muted `#7a6652`, border `#d4c5aa`, leather primary `#8b5e3c` (onPrimary `#ffffff`), danger `#a83232`, success `#556b2f`, warning `#92400e`, info `#31597c`. Typography swaps to the platform serif (see §3).
 
 ### Gender accents (constants, theme-independent)
 
@@ -447,8 +474,8 @@ Female accent    #ec4899
 
 These are explicitly NOT covered yet. Surface a separate task before building them.
 
-- **Dark mode palette.** `useColorScheme()` reads the system preference but no dark tokens are defined. Lock the dark palette before any new screen ships in dark mode.
-- **Centralized `theme/colors.ts` module.** Will replace inline hex values across all screens. Migration is mechanical; do it in one PR.
+- ~~**Dark mode palette.**~~ DONE 2026-06-11 (C1 foundation) — `theme/colors.ts` locks dark + classic; Settings → Appearance picks the theme.
+- ~~**Centralized `theme/colors.ts` module.**~~ DONE 2026-06-11 (C1 foundation) — all screens migrated; new screens must consume tokens.
 - **Tablet / landscape layouts.** Out of scope for Phase 1.
 - **Custom fonts.** SpaceMono is loaded but not used in body text. If a future spec calls for serif heirloom typography (matching the web's classic theme), surface as a task — don't import a third-party font in a content PR.
 - **Pull-to-refresh.** Add when the dashboard screen ships.
@@ -464,4 +491,4 @@ These are explicitly NOT covered yet. Surface a separate task before building th
 - [`../genoly-family-web/DESIGN.md`](../genoly-family-web/DESIGN.md) — the brand-level design system (the source-of-truth for color + typography decisions; this file specializes those for React Native)
 - [`../genoly-family-web/docs/mobile-sync-architecture.md`](../genoly-family-web/docs/mobile-sync-architecture.md) — the 13-step Phase 1 architecture
 
-**Last updated:** 2026-05-29. Bump this when meaningful design decisions land — adopting a dark palette, introducing a new component pattern, retiring an old one, etc.
+**Last updated:** 2026-06-11 (C1 foundation: theme module with light/dark/classic palettes, `components/ui/` kit — Button / Screen / Section / Card / TextField / Banner / EmptyState / Toast / Skeleton, member-app 5-tab navigation). Bump this when meaningful design decisions land — introducing a new component pattern, retiring an old one, etc.

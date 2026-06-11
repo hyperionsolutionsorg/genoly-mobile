@@ -5,7 +5,7 @@
 // Real-device smoke is the authoritative gate during this window.
 
 /**
- * fitness.test.tsx — Step 7 Dashboard screen coverage.
+ * activity.test.tsx — Step 7 Dashboard screen coverage (screen renamed fitness → activity in C1).
  *
  * The hook's logic is tested in useDashboardData.test.ts. This file
  * tests the SCREEN's rendering of the hook output:
@@ -52,7 +52,7 @@ jest.mock('../hooks/useDashboardData', () => {
   };
 });
 
-import FitnessScreen from '../app/(tabs)/fitness';
+import ActivityScreen from '../app/(tabs)/activity';
 import { useDashboardData } from '../hooks/useDashboardData';
 
 // ── Test helpers ─────────────────────────────────────────────────────
@@ -100,7 +100,7 @@ function makeEntry(date: string, steps: number) {
 
 // ── Tests ────────────────────────────────────────────────────────────
 
-describe.skip('FitnessScreen — Dashboard', () => {
+describe.skip('ActivityScreen — Dashboard', () => {
   beforeEach(() => {
     mockRefresh.mockReset();
     mockClearDeadLetters.mockReset();
@@ -109,13 +109,13 @@ describe.skip('FitnessScreen — Dashboard', () => {
 
   it('shows loading spinner when initialLoading is true', () => {
     setHook({ initialLoading: true });
-    const { getByText } = render(<FitnessScreen />);
+    const { getByText } = render(<ActivityScreen />);
     expect(getByText(/Loading your activity/)).toBeTruthy();
   });
 
   it('shows empty state when there is no data and no error', () => {
     setHook({ last7Days: [], lastSyncedAt: Date.now() });
-    const { getByText } = render(<FitnessScreen />);
+    const { getByText } = render(<ActivityScreen />);
     expect(getByText('No activity yet')).toBeTruthy();
   });
 
@@ -130,7 +130,7 @@ describe.skip('FitnessScreen — Dashboard', () => {
       last7Days: [today],
       lastSyncedAt: Date.now(),
     });
-    const { getByText, getAllByText } = render(<FitnessScreen />);
+    const { getByText, getAllByText } = render(<ActivityScreen />);
     expect(getByText('Steps')).toBeTruthy();
     // Two matches expected: 1) the big-number card, 2) the 7-day bar value.
     expect(getAllByText('8,765')).toHaveLength(2);
@@ -146,7 +146,7 @@ describe.skip('FitnessScreen — Dashboard', () => {
       last7Days: [makeEntry('2026-05-28', 5000)],
       lastSyncedAt: Date.now(),
     });
-    const { getAllByText } = render(<FitnessScreen />);
+    const { getAllByText } = render(<ActivityScreen />);
     // Three rows, each renders '—' for value when empty.
     expect(getAllByText('—').length).toBeGreaterThanOrEqual(3);
   });
@@ -162,7 +162,7 @@ describe.skip('FitnessScreen — Dashboard', () => {
       range: { from: '2026-05-23', to: '2026-05-29' },
       lastSyncedAt: Date.now(),
     });
-    const { getByText, getAllByText } = render(<FitnessScreen />);
+    const { getByText, getAllByText } = render(<ActivityScreen />);
     expect(getByText('Last 7 days')).toBeTruthy();
     // "Today" appears twice: the screen title at the top + the bar's
     // date label for today. Both renders are correct.
@@ -177,7 +177,7 @@ describe.skip('FitnessScreen — Dashboard', () => {
 
   it('refresh button triggers data.refresh()', () => {
     setHook({ today: makeEntry('2026-05-29', 100), lastSyncedAt: Date.now() });
-    const { getByLabelText } = render(<FitnessScreen />);
+    const { getByLabelText } = render(<ActivityScreen />);
 
     fireEvent.press(getByLabelText('Refresh dashboard'));
 
@@ -186,7 +186,7 @@ describe.skip('FitnessScreen — Dashboard', () => {
 
   it('hides dead-letter banner when deadLetterDepth is 0', () => {
     setHook({ today: makeEntry('2026-05-29', 100), deadLetterDepth: 0, lastSyncedAt: Date.now() });
-    const { queryByText } = render(<FitnessScreen />);
+    const { queryByText } = render(<ActivityScreen />);
     expect(queryByText(/failed to sync/)).toBeNull();
   });
 
@@ -196,7 +196,7 @@ describe.skip('FitnessScreen — Dashboard', () => {
       deadLetterDepth: 3,
       lastSyncedAt: Date.now(),
     });
-    const { getByText } = render(<FitnessScreen />);
+    const { getByText } = render(<ActivityScreen />);
     expect(getByText(/3 entries failed to sync/)).toBeTruthy();
   });
 
@@ -206,7 +206,7 @@ describe.skip('FitnessScreen — Dashboard', () => {
       deadLetterDepth: 1,
       lastSyncedAt: Date.now(),
     });
-    const { getByText } = render(<FitnessScreen />);
+    const { getByText } = render(<ActivityScreen />);
     expect(getByText(/1 entry failed to sync/)).toBeTruthy();
   });
 
@@ -224,7 +224,7 @@ describe.skip('FitnessScreen — Dashboard', () => {
         confirm?.onPress?.();
       });
 
-    const { getByLabelText } = render(<FitnessScreen />);
+    const { getByLabelText } = render(<ActivityScreen />);
     fireEvent.press(getByLabelText('Clear failed syncs'));
 
     await waitFor(() => {
@@ -248,7 +248,7 @@ describe.skip('FitnessScreen — Dashboard', () => {
         cancel?.onPress?.();
       });
 
-    const { getByLabelText } = render(<FitnessScreen />);
+    const { getByLabelText } = render(<ActivityScreen />);
     fireEvent.press(getByLabelText('Clear failed syncs'));
 
     expect(mockClearDeadLetters).not.toHaveBeenCalled();
@@ -262,7 +262,7 @@ describe.skip('FitnessScreen — Dashboard', () => {
       error: 'Network down',
       lastSyncedAt: Date.now(),
     });
-    const { getByText, getByLabelText } = render(<FitnessScreen />);
+    const { getByText, getByLabelText } = render(<ActivityScreen />);
     expect(getByText('Network down')).toBeTruthy();
 
     fireEvent.press(getByLabelText('Retry refresh'));

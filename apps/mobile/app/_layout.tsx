@@ -1,12 +1,13 @@
 // apps/mobile/app/_layout.tsx
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
+import { DarkTheme, DefaultTheme, ThemeProvider as NavThemeProvider } from "expo-router/react-navigation";
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, type Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { ThemeProvider, useTheme } from '../theme';
+import { ToastHost } from '../components/ui';
 import { tokenStore } from '../utils/api';
 import { getHasRequestedHealthPermissions } from '../utils/preferences';
 
@@ -20,7 +21,6 @@ const PERMISSIONS_ROUTE = '/(auth)/permissions' as unknown as Href;
 export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
 
@@ -93,14 +93,40 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  return (
+    <ThemeProvider>
+      <ThemedNavigation />
+    </ThemeProvider>
+  );
+}
+
+/**
+ * Bridges the app theme (light/dark/classic — see theme/) into
+ * react-navigation's theme object so headers, tab bars, and transitions
+ * pick up the same palette as our screens.
+ */
+function ThemedNavigation() {
+  const t = useTheme();
+  const base = t.name === 'dark' ? DarkTheme : DefaultTheme;
+  const navTheme = {
+    ...base,
+    colors: {
+      ...base.colors,
+      primary: t.colors.primary,
+      background: t.colors.bg,
+      card: t.colors.bgElevated,
+      text: t.colors.text,
+      border: t.colors.border,
+      notification: t.colors.danger,
+    },
+  };
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <NavThemeProvider value={navTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
-    </ThemeProvider>
+      <ToastHost />
+    </NavThemeProvider>
   );
 }

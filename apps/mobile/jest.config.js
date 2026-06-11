@@ -38,7 +38,7 @@ module.exports = {
     '__tests__/login.test.tsx',
     '__tests__/settings.test.tsx',
     '__tests__/auth-gate.test.tsx',
-    '__tests__/fitness.test.tsx',
+    '__tests__/activity.test.tsx',
   ],
   verbose: true,
 };

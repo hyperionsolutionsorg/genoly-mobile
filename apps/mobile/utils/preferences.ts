@@ -53,6 +53,7 @@ function getStorage(): AsyncStorageModule {
 
 const KEY_HAS_REQUESTED_HEALTH_PERMISSIONS = 'genoly.hasRequestedHealthPermissions';
 const KEY_HEALTH_SYNC_ENABLED = 'genoly.healthSyncEnabled';
+const KEY_THEME_PREFERENCE = 'genoly.themePreference';
 
 // ── Getters + setters ─────────────────────────────────────────────────
 
@@ -87,6 +88,26 @@ export async function getHealthSyncEnabled(): Promise<boolean> {
 
 export async function setHealthSyncEnabled(value: boolean): Promise<void> {
   await getStorage().setItem(KEY_HEALTH_SYNC_ENABLED, value ? 'true' : 'false');
+}
+
+/**
+ * Theme preference: 'system' follows the OS light/dark setting; 'light',
+ * 'dark', and 'classic' pin a specific palette (mirrors the web's three
+ * themes). Consumed by ThemeProvider in `theme/index.tsx`.
+ */
+export type ThemePreference = 'system' | 'light' | 'dark' | 'classic';
+
+const THEME_PREFERENCE_VALUES: readonly ThemePreference[] = ['system', 'light', 'dark', 'classic'];
+
+export async function getThemePreference(): Promise<ThemePreference> {
+  const raw = await getStorage().getItem(KEY_THEME_PREFERENCE);
+  return THEME_PREFERENCE_VALUES.includes(raw as ThemePreference)
+    ? (raw as ThemePreference)
+    : 'system';
+}
+
+export async function setThemePreference(value: ThemePreference): Promise<void> {
+  await getStorage().setItem(KEY_THEME_PREFERENCE, value);
 }
 
 // ── Test helpers ──────────────────────────────────────────────────────
