@@ -473,3 +473,7 @@ Member-side auth foundation per [[2026-06-11-member-side-convex-client]]. Convex
 ## [2026-06-11] merge | C3 welcome wizard — 5-step onboarding mirror (PR #18, `75bc9dc`)
 
 app/welcome.tsx mirrors web /welcome: welcome → name tree → add yourself (completeOnboardingFirstTree atomic commit) → optional parent (createPerson + addChildToPerson) → pedigree style pick; Finish/Skip stamp onboardingCompletedAt; short path for already-membered users. Home gates to /welcome while unstamped (demo exempt). preferences gained pedigreeTheme / lastVisitedTreeSlug / visit-day gate. genolyApi facade extended with the full C4 dashboard surface + name-pinning tests (21 pins). 131 tests pass; tsc 0 errors.
+
+## [2026-06-11] merge | C4 member dashboard (PR #19, `d84b9fd`)
+
+Home is now the real member dashboard: streaks tile (🔥/👋), rewards summary w/ top-quest progress, Today's Pick (client-side day-of-year rotation, web parity, zero server reads), Top 3 this week (treeLeaderboardCache), anniversaries (14-day window), welcome-back banner (visit ≥ 3), no-tree empty state → wizard. New hooks useActiveTree (lastVisitedTree mirror) + useRecordVisit (once-per-UTC-day visit credit). lib/gameRegistry mirrors the web two-axis model. Tests 139 pass; tsc 0 errors. Phase C (auth + onboarding + dashboard) COMPLETE.
