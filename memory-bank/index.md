@@ -12,6 +12,8 @@
 
 ## Phases (chronological, most-recent first)
 
+> Run handoffs live in `vault/`: latest `vault/handoff-mobile-e2e-2026-06-11.md` (member app + walking challenges run, PRs #16-#23 + web #128).
+
 - [[2026-06-11-mobile-e2e-plan]] — Mobile e2e run (member parity + walking challenges): Phase A audit + Phase B plan + execution waves C1→K. Companion vault docs: mobile-audit.md, mobile-improvement-plan.md.
 - [[2026-06-05-expo-sdk-56-upgrade]] — Expo SDK 55 → 56 upgrade: expo-router codemod, vector-icons codemod, iOS 16.4 target, TypeScript 6 compat. 6 commits, PR pending. Task #299 closed.
 - [[2026-05-29-mobile-step-7-dashboard]] — Phase 1, Step 7 (interactive session): Dashboard screen replacing the fitness-tab stub. New `useDashboardData` hook (drain+fetch on mount, local-TZ date math, queue/dead-letter depth reads). Today big-number card + 7-day horizontal bars + dead-letter banner with one-tap clear + manual Refresh button + error/empty/loading states. 24 new Jest tests; 54 total in suite. Merged via PR #8.

@@ -489,3 +489,7 @@ The unique-to-mobile pillar, on the Genoly-side backend (web PR #128 `b73d2c6`; 
 ## [2026-06-11] merge | G settings depth + support (PR #22, `8033d3b`)
 
 /support on mobile: KB browse (category groups) + debounced one-shot search + article view (markdown-lite, no new dep) + contact form into contactSubmissions. Settings depth: profile name edit (users:updateProfile), Security section (live getMfaStatus + backup codes remaining; enroll on web), Privacy & data signposts (export/deletion on web; demo variant), Support entry. Tests 170 pass; tsc clean.
+
+## [2026-06-11] note | MOBILE E2E RUN CLOSED — handoff at vault/handoff-mobile-e2e-2026-06-11.md
+
+Run summary: 8 mobile PRs (#16-#23) + 1 web PR (#128) merged same day. Member-side app shipped: theme module (3 palettes, WCAG-tested) + UI kit + 5-tab nav (C1); Convex Auth member sessions w/ signup/reset/MFA + dual-session teardown (C2); welcome wizard (C3); member dashboard (C4); tree hub + person profiles/edit/add + events + R2 photo upload (D1); Family Walking Challenges end-to-end — Genoly-side backend + web /challenges page + mobile hub/create/detail + health-store step sync + notification scaffold + DEV mock toggle (H); settings depth + /support KB (G); store-submission checklist + metadata drafts (J). Mobile tests 60 → 170 pass, tsc 3 → 0 errors; web convex-tests 226/226; zero live-Convex suite runs (one schema deploy). P1 backlog (pedigree/rewards/games/chat/blog/analytics + step-8 salvage + device screenshot pass) documented in handoff §7. Operator review list in handoff §8.

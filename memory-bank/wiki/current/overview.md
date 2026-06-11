@@ -11,7 +11,7 @@ status: active
 
 **Where things stand (2026-06-11):**
 
-- **Mobile e2e run IN FLIGHT** (Claude autonomous): member-side parity + Family Walking Challenges + deployment readiness. Plan: `vault/mobile-improvement-plan.md`; audit: `vault/mobile-audit.md`; phase page [[2026-06-11-mobile-e2e-plan]].
+- **Mobile e2e run CLOSED 2026-06-11** (Claude autonomous): member-side app shipped (auth/wizard/dashboard/tree/photos/settings/support) + Family Walking Challenges end-to-end (web PR #128 + mobile PRs #16-#23) + store-readiness docs. Handoff: `vault/handoff-mobile-e2e-2026-06-11.md`; P1 backlog in handoff §7.
 
 **Where things stood before the run (2026-06-05):**
 
