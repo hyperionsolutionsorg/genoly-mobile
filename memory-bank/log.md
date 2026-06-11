@@ -481,3 +481,7 @@ Home is now the real member dashboard: streaks tile (🔥/👋), rewards summary
 ## [2026-06-11] merge | D1 tree essentials (PR #20, `0bfca9d`)
 
 Tree tab = exploration hub (multi-tree picker chips + lastVisitedTree persistence, debounced one-shot search, person directory, add-person CTA). Person profile route (app/person/[personId]/) with avatar/life dates/summary/immediate family (relationship graph)/events/photo grid; edit person; add event (createEventForPerson parity); add photo (expo-image-picker → presigned R2 PUT → createMediaMetadata + linkMedia, optional avatar); add person w/ optional parent-child link. useSignedUrl hook (one-shot getDownloadUrl + 10-min TTL cache). Deps added: expo-image, expo-image-picker, expo-haptics. Tests 153 pass; tsc clean.
+
+## [2026-06-11] merge | H2 walking challenges mobile (PR #21, `3e7457d`)
+
+The unique-to-mobile pillar, on the Genoly-side backend (web PR #128 `b73d2c6`; fitness contract untouched). Challenges hub (my challenges across trees + tree active/past + join/create), create screen (team-goal vs race, 3 windows, invite-only), detail screen (live leaderboard, cooperative progress bar, Sync now, join/leave, creator cancel, hide-my-activity). lib/challengeSync (health-store window reads → idempotent syncMySteps; 15-min throttle; DEV deterministic mock source). lib/notifications scaffold (real gating: master toggle + quiet hours 22-07 + 3/day/category caps; __DEV__ log transport until push credentials); Settings gains Notifications + DEV mock toggles. Tests 170 pass; tsc clean.
