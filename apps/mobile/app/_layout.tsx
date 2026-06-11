@@ -1,14 +1,16 @@
 // apps/mobile/app/_layout.tsx
-import { DarkTheme, DefaultTheme, ThemeProvider as NavThemeProvider } from "expo-router/react-navigation";
+import { DarkTheme, DefaultTheme, ThemeProvider as NavThemeProvider } from 'expo-router/react-navigation';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, type Href } from 'expo-router';
+import { Stack, useRouter, useSegments, type Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { ConvexAuthProvider } from '@convex-dev/auth/react';
+import { useConvexAuth } from 'convex/react';
 
 import { ThemeProvider, useTheme } from '../theme';
 import { ToastHost } from '../components/ui';
-import { tokenStore } from '../utils/api';
+import { getConvexClient, convexAuthStorage } from '../utils/convex';
 import { getHasRequestedHealthPermissions } from '../utils/preferences';
 
 // Cast once at module scope — Expo Router's Href type is generated from
@@ -28,76 +30,93 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const router = useRouter();
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
-  const [authChecked, setAuthChecked] = useState(false);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
-  // Hide splash when fonts loaded.
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  // Check authentication status + first-run permissions on mount.
-  //
-  // Per the Phase 1 sync architecture (§13), the cold-start gate is a
-  // local-only check: "I have a non-expired local token = I'm signed in."
-  // The server-side getSession() validation is a later step.
-  //
-  // Three-arm routing:
-  //   1. No token OR expired token → /(auth)/login
-  //   2. Token valid + permissions not yet requested → /(auth)/permissions
-  //   3. Token valid + permissions resolved → render (tabs)
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const token = await tokenStore.getToken();
-        const expired = await tokenStore.isExpired();
-        if (!token || expired) {
-          router.replace(LOGIN_ROUTE);
-          return;
-        }
-        // Step 4 — first-run permissions screen.
-        const hasRequested = await getHasRequestedHealthPermissions();
-        if (!hasRequested) {
-          router.replace(PERMISSIONS_ROUTE);
-          return;
-        }
-        // Otherwise: signed in + permissions resolved → fall through to
-        // the Stack render below.
-      } catch {
-        // On any storage error, fail closed: redirect to login.
-        router.replace(LOGIN_ROUTE);
-      } finally {
-        setAuthChecked(true);
-      }
-    }
-    if (loaded) {
-      checkAuth();
-    }
-  }, [loaded, router]);
-
-  if (!loaded || !authChecked) {
+  if (!loaded) {
     return null; // splash handled via SplashScreen
   }
 
-  return <RootLayoutNav />;
+  return (
+    <ConvexAuthProvider client={getConvexClient()} storage={convexAuthStorage}>
+      <ThemeProvider>
+        <AuthGate />
+      </ThemeProvider>
+    </ConvexAuthProvider>
+  );
 }
 
-function RootLayoutNav() {
-  return (
-    <ThemeProvider>
-      <ThemedNavigation />
-    </ThemeProvider>
-  );
+/**
+ * Cold-start auth gate (C2 rework — decision 2026-06-11-member-side-convex-client).
+ *
+ * The MEMBER session (Convex Auth JWT) is now the primary gate; the
+ * fitness bearer token is a secondary credential used only by health
+ * sync (acquired alongside member sign-in, degraded gracefully if absent).
+ *
+ * Arms:
+ *   1. Member session loading → keep splash.
+ *   2. No member session + outside the (auth) group → /(auth)/login.
+ *   3. Session valid + health permissions never requested → /(auth)/permissions.
+ *   4. Otherwise → render the app.
+ *
+ * Forward navigation after an explicit sign-in (MFA challenge, permissions,
+ * tabs) stays in the screens themselves — the gate only guards entry.
+ */
+function AuthGate() {
+  const { isLoading, isAuthenticated } = useConvexAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  // Cast: the generated typed-routes union lags new route groups until
+  // `expo start` regenerates .expo/types (same reason as the Href casts).
+  const inAuthGroup = (segments[0] as string) === '(auth)';
+
+  // Hide the splash once the session check resolves.
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!isAuthenticated) {
+      if (!inAuthGroup) {
+        router.replace(LOGIN_ROUTE);
+      }
+      return;
+    }
+    if (!inAuthGroup) {
+      // Cold start with a valid session — make sure the first-run
+      // permissions prompt has been resolved (grant OR skip).
+      let cancelled = false;
+      getHasRequestedHealthPermissions()
+        .then((hasRequested) => {
+          if (!cancelled && !hasRequested) {
+            router.replace(PERMISSIONS_ROUTE);
+          }
+        })
+        .catch(() => {
+          // Storage error — leave the user where they are; the
+          // permissions screen stays reachable from Settings.
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [isLoading, isAuthenticated, inAuthGroup, router]);
+
+  if (isLoading) {
+    return null; // splash still visible
+  }
+
+  return <ThemedNavigation />;
 }
 
 /**

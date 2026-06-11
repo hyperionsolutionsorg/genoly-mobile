@@ -29,7 +29,9 @@ import {
   Linking,
 } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
+import { useAuthActions } from '@convex-dev/auth/react';
 import { apiClient, tokenStore } from '../../utils/api';
+import { useMe } from '../../hooks/useMe';
 import {
   getHealthSyncEnabled,
   setHasRequestedHealthPermissions,
@@ -62,6 +64,8 @@ export default function SettingsScreen() {
   const t = useTheme();
   const styles = useThemedStyles(createStyles);
   const { preference, setPreference } = useThemePreference();
+  const { signOut } = useAuthActions();
+  const { me } = useMe();
   const [email, setEmail] = useState<string | null>(null);
   const [healthEnabled, setHealthEnabled] = useState<boolean>(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -106,8 +110,16 @@ export default function SettingsScreen() {
   const performSignOut = async () => {
     setSigningOut(true);
     try {
-      // Try the server-side revoke. If offline / errors, we still
-      // clear local state below — fail-closed semantics.
+      // Dual-session teardown (decision 2026-06-11-member-side-convex-client):
+      // both the member (Convex Auth) session and the fitness bearer token
+      // go, each best-effort and fail-closed.
+      try {
+        await signOut();
+      } catch {
+        // The auth gate keys off the member session; if the server call
+        // failed offline, the local Convex Auth state is still cleared
+        // by signOut's storage teardown on next attempt.
+      }
       try {
         await apiClient.revokeToken({ scope: 'this_device' });
       } catch {
@@ -152,10 +164,10 @@ export default function SettingsScreen() {
       {/* Account section */}
       <Section label="Account">
         <Row styles={styles} label="Email">
-          {loading ? (
+          {loading && !me ? (
             <ActivityIndicator color={t.colors.textMuted} />
           ) : (
-            <Text style={styles.valueText}>{email ?? 'Signed in'}</Text>
+            <Text style={styles.valueText}>{me?.email ?? email ?? 'Signed in'}</Text>
           )}
         </Row>
         <Button
