@@ -1,55 +1,67 @@
 // apps/mobile/app/(auth)/login.tsx
-import { View, Text, StyleSheet, Alert, Platform } from 'react-native';
+//
+// C2 rework: signing in acquires BOTH sessions —
+//   1. the MEMBER session via Convex Auth (primary; gates the app), and
+//   2. the FITNESS bearer token via the HTTP contract (secondary; powers
+//      health sync — best-effort, the app works without it).
+// After sign-in: MFA challenge if the account has TOTP enabled and the
+// session isn't verified yet; else the first-run permissions arm; else tabs.
+
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import Constants from 'expo-constants';
+import { useAuthActions } from '@convex-dev/auth/react';
+import { useConvex } from 'convex/react';
+
 import { apiClient } from '../../utils/api';
-import { ApiClientError } from '@genoly/api-client';
+import { getHasRequestedHealthPermissions } from '../../utils/preferences';
+import { loginSchema, mapMemberAuthError, type LoginForm } from '../../lib/authSchemas';
+import { isCurrentSessionMfaVerified, recordLoginAttempt } from '../../lib/genolyApi';
 import { useThemedStyles, type Theme } from '../../theme';
-import { Button, TextField } from '../../components/ui';
+import { Button, TextField, Banner, toast } from '../../components/ui';
 
-const schema = z.object({
-  email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
-});
-
-type FormData = z.infer<typeof schema>;
-
-function mapLoginError(e: unknown): string {
-  if (e instanceof ApiClientError) {
-    switch (e.code) {
-      case 'unauthenticated':
-        return 'Wrong email or password. Try again.';
-      case 'bad_request':
-        return 'Please check your email and password.';
-      case 'rate_limited':
-        return 'Too many sign-in attempts. Wait a minute and try again.';
-      case 'token_expired':
-        return 'Your session expired. Please sign in again.';
-      case 'internal':
-        return 'Something went wrong on our end. Please try again.';
-      default:
-        return 'Something went wrong. Please try again.';
-    }
-  }
-  return 'An unexpected error occurred.';
-}
+const TABS_ROUTE = '/(tabs)' as unknown as Href;
+const PERMISSIONS_ROUTE = '/(auth)/permissions' as unknown as Href;
+const MFA_ROUTE = '/(auth)/mfa-challenge' as unknown as Href;
+const SIGNUP_ROUTE = '/(auth)/signup' as unknown as Href;
+const FORGOT_ROUTE = '/(auth)/forgot-password' as unknown as Href;
 
 export default function LoginScreen() {
   const router = useRouter();
   const styles = useThemedStyles(createStyles);
+  const { signIn } = useAuthActions();
+  const convex = useConvex();
+  const [formError, setFormError] = useState<string | null>(null);
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: LoginForm) => {
+    setFormError(null);
+
+    // 1. Member session (primary).
+    try {
+      await signIn('password', {
+        flow: 'signIn',
+        email: data.email,
+        password: data.password,
+      });
+    } catch (e: unknown) {
+      convex.mutation(recordLoginAttempt, { email: data.email, success: false }).catch(() => {});
+      setFormError(mapMemberAuthError(e, 'signIn'));
+      return;
+    }
+    convex.mutation(recordLoginAttempt, { email: data.email, success: true }).catch(() => {});
+
+    // 2. Fitness bearer token (secondary, best-effort) — same credentials.
     try {
       await apiClient.issueToken({
         email: data.email,
@@ -59,18 +71,38 @@ export default function LoginScreen() {
           appVersion: Constants.expoConfig?.version,
         },
       });
-      router.replace('/(tabs)');
-    } catch (e: unknown) {
-      const message = mapLoginError(e);
-      Alert.alert('Login error', message);
+    } catch {
+      // Member session is what matters; health sync can re-auth later
+      // from Settings → Health sync.
+      toast.info('Signed in — health sync will connect when you open Activity.');
     }
+
+    // 3. MFA challenge if enrolled and this session isn't verified.
+    try {
+      const mfa = await convex.query(isCurrentSessionMfaVerified, {});
+      if (mfa.mfaEnabled && !mfa.verified) {
+        router.replace(MFA_ROUTE);
+        return;
+      }
+    } catch {
+      // Status check failed (offline blip) — proceed; admin surfaces
+      // don't exist on mobile, so the challenge is parity, not a gate.
+    }
+
+    // 4. First-run permissions arm, then tabs.
+    const hasRequested = await getHasRequestedHealthPermissions().catch(() => true);
+    router.replace(hasRequested ? TABS_ROUTE : PERMISSIONS_ROUTE);
   };
 
   return (
     <View style={styles.container}>
       <Text accessibilityRole="header" style={styles.title}>
-        Log in
+        Welcome back
       </Text>
+      <Text style={styles.subtitle}>Sign in to your Genoly family</Text>
+
+      {formError ? <Banner variant="error" message={formError} /> : null}
+
       <View style={styles.fieldContainer}>
         <Controller
           control={control}
@@ -109,19 +141,25 @@ export default function LoginScreen() {
         />
       </View>
       <Button
-        label="Log in"
+        label="Sign in"
         onPress={handleSubmit(onSubmit)}
         loading={isSubmitting}
-        accessibilityLabel="Log in"
+        accessibilityLabel="Sign in"
       />
       <Button
         variant="link"
         label="Forgot password?"
-        onPress={() =>
-          Alert.alert('Forgot password', 'Please visit https://genoly.org/forgot-password')
-        }
-        style={styles.forgot}
+        onPress={() => router.push(FORGOT_ROUTE)}
+        style={styles.linkButton}
       />
+      <View style={styles.signupRow}>
+        <Text style={styles.signupHint}>New to Genoly?</Text>
+        <Button
+          variant="link"
+          label="Create an account"
+          onPress={() => router.push(SIGNUP_ROUTE)}
+        />
+      </View>
     </View>
   );
 }
@@ -137,15 +175,32 @@ function createStyles(t: Theme) {
     title: {
       ...t.typography.screenTitle,
       color: t.colors.text,
-      marginBottom: t.spacing.xl,
       textAlign: 'center',
+    },
+    subtitle: {
+      ...t.typography.subtitle,
+      color: t.colors.textMuted,
+      textAlign: 'center',
+      marginTop: t.spacing.xs,
+      marginBottom: t.spacing.xl,
     },
     fieldContainer: {
       marginBottom: t.spacing.lg,
     },
-    forgot: {
+    linkButton: {
       marginTop: t.spacing.md,
       alignSelf: 'center',
+    },
+    signupRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: t.spacing.lg,
+    },
+    signupHint: {
+      ...t.typography.body,
+      color: t.colors.textMuted,
+      marginRight: t.spacing.xs,
     },
   });
 }
