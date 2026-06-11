@@ -1,9 +1,13 @@
 import { Linking } from 'react-native';
+import { useEffect } from 'react';
+import { useRouter, type Href } from 'expo-router';
 import { useConvex } from 'convex/react';
 
 import { Screen, EmptyState, Banner, Skeleton, toast } from '../../components/ui';
 import { useMe } from '../../hooks/useMe';
 import { sendVerificationEmailToMe } from '../../lib/genolyApi';
+
+const WELCOME_ROUTE = '/welcome' as unknown as Href;
 
 /**
  * Home — the member dashboard. Real widgets (streaks, achievements,
@@ -13,7 +17,16 @@ import { sendVerificationEmailToMe } from '../../lib/genolyApi';
  */
 export default function HomeScreen() {
   const convex = useConvex();
+  const router = useRouter();
   const { me, isLoading, isDemo, isAdminOnMobile, emailUnverified } = useMe();
+
+  // First-run onboarding mirror of web: dashboard hands brand-new members
+  // to the /welcome wizard until users.onboardingCompletedAt is stamped.
+  useEffect(() => {
+    if (me && !me.onboardingCompletedAt && !isDemo) {
+      router.replace(WELCOME_ROUTE);
+    }
+  }, [me, isDemo, router]);
 
   const firstName = me?.fullName?.trim().split(/\s+/)[0];
 
