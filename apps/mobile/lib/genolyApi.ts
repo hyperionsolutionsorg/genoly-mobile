@@ -166,6 +166,225 @@ export const addChildToPerson = makeFunctionReference<
   unknown
 >('families:addChildToPerson');
 
+// ── Persons + events + media (wave D tree essentials) ────────────────
+
+export interface PersonDoc {
+  _id: string;
+  treeId: string;
+  slug?: string | null;
+  preferredName: string;
+  givenName?: string;
+  middleName?: string;
+  surname?: string;
+  suffix?: string;
+  prefix?: string;
+  nickname?: string;
+  gender?: Gender | null;
+  isLiving: boolean;
+  summary?: string;
+  timezone?: string;
+  avatarPhotoKey?: string;
+  tags?: string[];
+}
+
+export const listAllPersonsByTree = makeFunctionReference<
+  'query',
+  { treeId: string },
+  PersonDoc[]
+>('persons:listAllPersonsByTree');
+
+export interface PersonSearchResult {
+  _id: string;
+  slug: string | null;
+  preferredName: string;
+  surname: string | null;
+  nickname: string | null;
+  gender: string | null;
+  isLiving: boolean;
+}
+
+export const searchPersonsAutocomplete = makeFunctionReference<
+  'query',
+  { treeId: string; query: string; limit?: number },
+  PersonSearchResult[]
+>('personSearch:searchPersonsAutocomplete');
+
+export interface PersonDetail {
+  person: PersonDoc;
+  altNames: { name: string }[];
+  noteLinks: unknown[];
+  mediaLinks: unknown[];
+  adultFamilies: { familyId: string; personId: string }[];
+  childFamilies: { familyId: string; childPersonId?: string; personId?: string }[];
+}
+
+export const getPerson = makeFunctionReference<
+  'query',
+  { personId: string },
+  PersonDetail | null
+>('persons:getPerson');
+
+export const getPersonBySlugOrId = makeFunctionReference<
+  'query',
+  { treeId: string; ref: string },
+  PersonDoc | null
+>('persons:getPersonBySlugOrId');
+
+export const updatePerson = makeFunctionReference<
+  'mutation',
+  {
+    personId: string;
+    preferredName?: string;
+    givenName?: string;
+    surname?: string;
+    nickname?: string;
+    summary?: string;
+    isLiving?: boolean;
+    gender?: Gender;
+  },
+  string
+>('persons:updatePerson');
+
+export type EventType =
+  | 'birth'
+  | 'death'
+  | 'marriage'
+  | 'divorce'
+  | 'residence'
+  | 'education'
+  | 'occupation'
+  | 'military'
+  | 'immigration'
+  | 'custom';
+
+export type DatePrecision = 'exact' | 'approximate' | 'before' | 'after' | 'range' | 'unknown';
+
+export interface PersonEvent {
+  _id: string;
+  type: string;
+  title?: string | null;
+  description?: string | null;
+  dateOriginal?: string | null;
+  dateStart?: number | null;
+  datePrecision?: string | null;
+  participantRole: string;
+  placeName: string | null;
+}
+
+export const listEventsByPerson = makeFunctionReference<
+  'query',
+  { personId: string },
+  PersonEvent[]
+>('events:listEventsByPerson');
+
+/** Creates the event AND links the person as participant in one call
+ *  (the same mutation web AddEvent.tsx uses). */
+export const createEventForPerson = makeFunctionReference<
+  'mutation',
+  {
+    treeId: string;
+    personId: string;
+    type: string;
+    title?: string;
+    description?: string;
+    dateOriginal?: string;
+    dateStart?: number;
+    dateEnd?: number;
+    datePrecision?: DatePrecision;
+    locationText?: string;
+    isPrivate?: boolean;
+  },
+  string
+>('events:createEventForPerson');
+
+export interface MediaForTarget {
+  _id: string;
+  objectKey: string;
+  originalFileName?: string;
+  mimeType: string;
+  width?: number;
+  height?: number;
+  visibility: 'public' | 'members' | 'private';
+  isPrimary?: boolean;
+  useType: string;
+  title?: string;
+  caption?: string;
+}
+
+export const getMediaForTarget = makeFunctionReference<
+  'query',
+  { treeId: string; targetType: string; targetId: string },
+  MediaForTarget[]
+>('media:getMediaForTarget');
+
+export const getDownloadUrl = makeFunctionReference<
+  'query',
+  { objectKey: string },
+  string
+>('r2:getDownloadUrl');
+
+export const getUploadUrl = makeFunctionReference<
+  'action',
+  { fileName: string; contentType: string; treeId: string; tenantId?: string },
+  { uploadUrl: string; objectKey: string }
+>('r2:getUploadUrl');
+
+export const createMediaMetadata = makeFunctionReference<
+  'mutation',
+  {
+    treeId: string;
+    objectKey: string;
+    originalFileName: string;
+    mimeType: string;
+    fileSizeBytes: number;
+    title?: string;
+    caption?: string;
+    width?: number;
+    height?: number;
+    visibility: 'public' | 'members' | 'private';
+    isPrimary: boolean;
+  },
+  string
+>('media:createMediaMetadata');
+
+export const linkMedia = makeFunctionReference<
+  'mutation',
+  {
+    treeId: string;
+    mediaId: string;
+    targetType: string;
+    targetId: string;
+    useType: 'avatar' | 'cover' | 'photo' | 'document';
+    sortOrder?: number;
+  },
+  string
+>('media:linkMedia');
+
+export interface RelationshipGraph {
+  persons: { _id: string; preferredName: string; surname?: string; gender?: string; isLiving: boolean }[];
+  parents: Record<string, string[]>;
+  children: Record<string, string[]>;
+  spouses: Record<string, string[]>;
+}
+
+export const getRelationshipGraph = makeFunctionReference<
+  'query',
+  { treeId: string },
+  RelationshipGraph
+>('games:getRelationshipGraph');
+
+export const createFamily = makeFunctionReference<
+  'mutation',
+  {
+    treeId: string;
+    familyType: 'married' | 'unmarried' | 'partnered' | 'unknown';
+    status: 'active' | 'ended' | 'unknown';
+    primaryParent1PersonId?: string;
+    primaryParent2PersonId?: string;
+  },
+  string
+>('families:createFamily');
+
 // ── Dashboard widgets (wave C4) ───────────────────────────────────────
 
 export interface RewardsSummary {

@@ -55,7 +55,15 @@
       ],
       "react-native-health-connect",
       "expo-sqlite",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Genoly uses your photo library so you can add family photos to your tree.",
+          "cameraPermission": "Genoly uses your camera so you can capture family moments and add them to your tree."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
