@@ -110,6 +110,56 @@ export async function setThemePreference(value: ThemePreference): Promise<void> 
   await getStorage().setItem(KEY_THEME_PREFERENCE, value);
 }
 
+/**
+ * Pedigree chart theme — mirrors the web's localStorage key
+ * `genoly.pedigree.theme` (4 chart styles, NOT the app color theme).
+ * Picked in the welcome wizard's final step; consumed by the pedigree
+ * screen (wave D).
+ */
+export type PedigreeTheme = 'classic' | 'heritage' | 'bubble' | 'matrix';
+
+const KEY_PEDIGREE_THEME = 'genoly.pedigree.theme';
+const PEDIGREE_THEMES: readonly PedigreeTheme[] = ['classic', 'heritage', 'bubble', 'matrix'];
+
+export async function getPedigreeTheme(): Promise<PedigreeTheme> {
+  const raw = await getStorage().getItem(KEY_PEDIGREE_THEME);
+  return PEDIGREE_THEMES.includes(raw as PedigreeTheme) ? (raw as PedigreeTheme) : 'classic';
+}
+
+export async function setPedigreeTheme(value: PedigreeTheme): Promise<void> {
+  await getStorage().setItem(KEY_PEDIGREE_THEME, value);
+}
+
+/**
+ * Most-recently-visited tree slug — mirrors web's
+ * `genoly:lastVisitedTreeSlug` localStorage pattern. The dashboard's
+ * tree-scoped widgets default to this tree.
+ */
+const KEY_LAST_VISITED_TREE = 'genoly.lastVisitedTreeSlug';
+
+export async function getLastVisitedTreeSlug(): Promise<string | null> {
+  return getStorage().getItem(KEY_LAST_VISITED_TREE);
+}
+
+export async function setLastVisitedTreeSlug(slug: string): Promise<void> {
+  await getStorage().setItem(KEY_LAST_VISITED_TREE, slug);
+}
+
+/**
+ * Visit-streak local gate — mirrors web's once-per-UTC-day localStorage
+ * flag before calling users:recordVisitToday (the server is idempotent;
+ * this just avoids a needless mutation per app foreground).
+ */
+const KEY_VISIT_RECORDED_DAY = 'genoly.visitRecordedDayUTC';
+
+export async function getVisitRecordedDayUTC(): Promise<string | null> {
+  return getStorage().getItem(KEY_VISIT_RECORDED_DAY);
+}
+
+export async function setVisitRecordedDayUTC(dayUtc: string): Promise<void> {
+  await getStorage().setItem(KEY_VISIT_RECORDED_DAY, dayUtc);
+}
+
 // ── Test helpers ──────────────────────────────────────────────────────
 
 /** Clears the in-memory shim. ONLY use from Jest setup. */

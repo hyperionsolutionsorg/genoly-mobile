@@ -100,6 +100,168 @@ export const getMyVerificationStatus = makeFunctionReference<
   { verified: boolean; email?: string; lastSentAt?: number | null; tokenExpiresAt?: number | null }
 >('emailVerification:getMyVerificationStatus');
 
+// ── Onboarding (convex/onboarding.ts — web /welcome wizard) ───────────
+
+export type Gender = 'male' | 'female' | 'nonbinary' | 'other' | 'prefer_not_to_say';
+
+export const completeOnboardingFirstTree = makeFunctionReference<
+  'mutation',
+  {
+    treeName: string;
+    treeSlug?: string;
+    rootPersonName: string;
+    rootGender?: Gender;
+    rootBirthYear?: number;
+  },
+  { treeId: string; treeSlug: string; personId: string; personSlug: string }
+>('onboarding:completeOnboardingFirstTree');
+
+export const completeOnboarding = makeFunctionReference<
+  'mutation',
+  Record<string, never>,
+  unknown
+>('onboarding:completeOnboarding');
+
+// ── Trees + persons (member-side basics) ─────────────────────────────
+
+export interface MyTree {
+  _id: string;
+  name: string;
+  slug?: string;
+  tenantId?: string;
+  membershipRole: string;
+}
+
+export const listMyTrees = makeFunctionReference<
+  'query',
+  { tenantId?: string },
+  MyTree[]
+>('trees:listMyTrees');
+
+export const getTreeBySlug = makeFunctionReference<
+  'query',
+  { slug: string },
+  ({ _id: string; name: string; slug?: string } & Record<string, unknown>) | null
+>('trees:getTreeBySlug');
+
+export const createPerson = makeFunctionReference<
+  'mutation',
+  {
+    treeId: string;
+    preferredName: string;
+    gender?: Gender;
+    isLiving: boolean;
+  },
+  { personId: string } & Record<string, unknown>
+>('persons:createPerson');
+
+export const addChildToPerson = makeFunctionReference<
+  'mutation',
+  {
+    treeId: string;
+    parentPersonId: string;
+    childPersonId: string;
+    relationshipType: 'biological' | 'adopted' | 'step' | 'foster';
+  },
+  unknown
+>('families:addChildToPerson');
+
+// ── Dashboard widgets (wave C4) ───────────────────────────────────────
+
+export interface RewardsSummary {
+  earnedBadges: number;
+  totalBadges: number;
+  contributionStreak: number;
+  visitStreak: number;
+  activeQuestCount: number;
+  activeQuestMax: number;
+  topQuest: { name: string; progress: number; target: number } | null;
+}
+
+export const getMyRewardsSummary = makeFunctionReference<
+  'query',
+  { treeId: string },
+  RewardsSummary
+>('rewards:getMyRewardsSummary');
+
+export interface LeaderboardEntry {
+  userId: string;
+  displayName: string;
+  avatarKey?: string;
+  personSlug?: string;
+  score: number;
+  rank: number;
+}
+
+export interface TreeLeaderboard {
+  computedAt: number;
+  topQuestsAllTime: LeaderboardEntry[];
+  topQuestsThisWeek: LeaderboardEntry[];
+  topAchievements: LeaderboardEntry[];
+  topStreaks: LeaderboardEntry[];
+}
+
+export const getTreeLeaderboard = makeFunctionReference<
+  'query',
+  { treeId: string },
+  TreeLeaderboard | null
+>('treeLeaderboards:getTreeLeaderboard');
+
+export const recordVisitToday = makeFunctionReference<
+  'mutation',
+  Record<string, never>,
+  { visitDays: number; visitLastDayUTC: string | null; visitBestDays: number } | null
+>('users:recordVisitToday');
+
+export interface AnniversaryItem {
+  kind: 'birthday' | 'marriage' | 'death_anniversary';
+  occursOn: string;
+  daysFromNow: number;
+  yearsSince: number;
+  personId?: string;
+  familyId?: string;
+  personName?: string;
+  partnerNames?: { p1: string; p2: string };
+  originalDate: string;
+}
+
+export const getUpcomingAnniversaries = makeFunctionReference<
+  'query',
+  { treeId: string; windowDays?: number },
+  AnniversaryItem[]
+>('anniversaries:getUpcomingAnniversaries');
+
+export interface GamesContext {
+  totalPersons: number;
+  placedPersons: number;
+  parentChildLinks: number;
+  nameLengths: number[];
+  personsWithYearCount: number;
+}
+
+export const getGamesContext = makeFunctionReference<
+  'query',
+  { treeId: string },
+  GamesContext
+>('games:getGamesContext');
+
+export const recordDailyCompletion = makeFunctionReference<
+  'mutation',
+  {
+    treeId: string;
+    gameKey: 'family-connections' | 'timeline-tap';
+    score: number;
+    perfect: boolean;
+  },
+  { recorded: boolean; dayUTC: string }
+>('gameCompletions:recordDailyCompletion');
+
+export const getDailySocialStats = makeFunctionReference<
+  'query',
+  { treeId: string; gameKey: string; dayUTC: string },
+  { treeCompletions: number; myRankByScore: number | null }
+>('gameCompletions:getDailySocialStats');
+
 // ── Demo detection (mirror of web src/App.tsx + convex/lib/demoUsers.ts) ──
 
 export const DEMO_USER_EMAILS = new Set(['demo-admin@genoly.org', 'demo-viewer@genoly.org']);
