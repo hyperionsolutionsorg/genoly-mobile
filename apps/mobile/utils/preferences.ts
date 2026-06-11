@@ -160,6 +160,77 @@ export async function setVisitRecordedDayUTC(dayUtc: string): Promise<void> {
   await getStorage().setItem(KEY_VISIT_RECORDED_DAY, dayUtc);
 }
 
+/**
+ * DEV-ONLY: serve deterministic synthetic step data instead of the real
+ * HealthKit/Health Connect store (mobile brief §7.3 — simulators expose
+ * no health data). The Settings toggle that writes this is rendered only
+ * in __DEV__ builds; production code paths ignore it unless __DEV__.
+ */
+const KEY_USE_MOCK_HEALTH_DATA = 'genoly.useMockHealthData';
+
+export async function getUseMockHealthData(): Promise<boolean> {
+  const raw = await getStorage().getItem(KEY_USE_MOCK_HEALTH_DATA);
+  return raw === 'true';
+}
+
+export async function setUseMockHealthData(value: boolean): Promise<void> {
+  await getStorage().setItem(KEY_USE_MOCK_HEALTH_DATA, value ? 'true' : 'false');
+}
+
+/**
+ * Master toggle for challenge notifications (scaffolding — local log
+ * transport until push credentials exist; brief §6.6). Default ON.
+ */
+const KEY_NOTIFICATIONS_ENABLED = 'genoly.notificationsEnabled';
+
+export async function getNotificationsEnabled(): Promise<boolean> {
+  const raw = await getStorage().getItem(KEY_NOTIFICATIONS_ENABLED);
+  return raw !== 'false';
+}
+
+export async function setNotificationsEnabled(value: boolean): Promise<void> {
+  await getStorage().setItem(KEY_NOTIFICATIONS_ENABLED, value ? 'true' : 'false');
+}
+
+/**
+ * Per-challenge sync throttle — last successful step-sync epoch ms.
+ * Keeps foreground syncs to at most one per challenge per 15 minutes.
+ */
+const KEY_CHALLENGE_SYNCED_AT_PREFIX = 'genoly.challengeSyncedAt.';
+
+export async function getChallengeSyncedAt(challengeId: string): Promise<number | null> {
+  const raw = await getStorage().getItem(KEY_CHALLENGE_SYNCED_AT_PREFIX + challengeId);
+  const parsed = raw ? Number(raw) : NaN;
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export async function setChallengeSyncedAt(challengeId: string, at: number): Promise<void> {
+  await getStorage().setItem(KEY_CHALLENGE_SYNCED_AT_PREFIX + challengeId, String(at));
+}
+
+/**
+ * Notification frequency-cap counters: "<count>@<YYYY-MM-DD>" per category.
+ */
+const KEY_NOTIFICATION_COUNT_PREFIX = 'genoly.notifCount.';
+
+export async function getNotificationCount(
+  category: string,
+  dayUtc: string,
+): Promise<number> {
+  const raw = await getStorage().getItem(KEY_NOTIFICATION_COUNT_PREFIX + category);
+  if (!raw) return 0;
+  const [count, day] = raw.split('@');
+  return day === dayUtc ? Number(count) || 0 : 0;
+}
+
+export async function setNotificationCount(
+  category: string,
+  dayUtc: string,
+  count: number,
+): Promise<void> {
+  await getStorage().setItem(KEY_NOTIFICATION_COUNT_PREFIX + category, `${count}@${dayUtc}`);
+}
+
 // ── Test helpers ──────────────────────────────────────────────────────
 
 /** Clears the in-memory shim. ONLY use from Jest setup. */

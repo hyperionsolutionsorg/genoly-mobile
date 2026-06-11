@@ -43,6 +43,16 @@ import {
   getGamesContext,
   recordDailyCompletion,
   getDailySocialStats,
+  challengeCreate,
+  challengeJoin,
+  challengeLeave,
+  challengeCancel,
+  challengeAddParticipant,
+  challengeSetMyVisibility,
+  challengeSyncMySteps,
+  listTreeChallenges,
+  listMyActiveChallenges,
+  getChallengeLeaderboard,
   isDemoEmail,
   isAdminRole,
 } from '../lib/genolyApi';
@@ -84,6 +94,16 @@ describe('function reference names', () => {
     [getGamesContext, 'games:getGamesContext'],
     [recordDailyCompletion, 'gameCompletions:recordDailyCompletion'],
     [getDailySocialStats, 'gameCompletions:getDailySocialStats'],
+    [challengeCreate, 'walkingChallenges:create'],
+    [challengeJoin, 'walkingChallenges:join'],
+    [challengeLeave, 'walkingChallenges:leave'],
+    [challengeCancel, 'walkingChallenges:cancel'],
+    [challengeAddParticipant, 'walkingChallenges:addParticipant'],
+    [challengeSetMyVisibility, 'walkingChallenges:setMyVisibility'],
+    [challengeSyncMySteps, 'walkingChallenges:syncMySteps'],
+    [listTreeChallenges, 'walkingChallenges:listTreeChallenges'],
+    [listMyActiveChallenges, 'walkingChallenges:listMyActiveChallenges'],
+    [getChallengeLeaderboard, 'walkingChallenges:getChallengeLeaderboard'],
   ])('reference resolves to %s', (ref, expected) => {
     expect(getFunctionName(ref)).toBe(expected);
   });

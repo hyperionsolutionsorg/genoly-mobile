@@ -481,6 +481,118 @@ export const getDailySocialStats = makeFunctionReference<
   { treeCompletions: number; myRankByScore: number | null }
 >('gameCompletions:getDailySocialStats');
 
+// ── Family Walking Challenges (wave H — Genoly-side module) ───────────
+
+export type ChallengeType = 'cooperative' | 'individual';
+export type ChallengeWindow = 'daily' | 'weekly' | 'monthly';
+export type ChallengeStatus = 'active' | 'completed' | 'cancelled';
+
+export interface ChallengeSummary {
+  _id: string;
+  treeId: string;
+  createdByUserId: string;
+  name: string;
+  type: ChallengeType;
+  windowType: ChallengeWindow;
+  startAt: number;
+  endAt: number;
+  goal: number | null;
+  inviteOnly: boolean;
+  status: ChallengeStatus;
+}
+
+export const challengeCreate = makeFunctionReference<
+  'mutation',
+  {
+    treeId: string;
+    name: string;
+    type: ChallengeType;
+    windowType: ChallengeWindow;
+    goal?: number;
+    inviteOnly?: boolean;
+  },
+  { challengeId: string }
+>('walkingChallenges:create');
+
+export const challengeJoin = makeFunctionReference<
+  'mutation',
+  { challengeId: string },
+  { joined: boolean; already?: boolean; rejoined?: boolean }
+>('walkingChallenges:join');
+
+export const challengeLeave = makeFunctionReference<
+  'mutation',
+  { challengeId: string },
+  { left: boolean }
+>('walkingChallenges:leave');
+
+export const challengeCancel = makeFunctionReference<
+  'mutation',
+  { challengeId: string },
+  { cancelled: boolean; already?: boolean }
+>('walkingChallenges:cancel');
+
+export const challengeAddParticipant = makeFunctionReference<
+  'mutation',
+  { challengeId: string; userId: string },
+  { added: boolean; already?: boolean; rejoined?: boolean }
+>('walkingChallenges:addParticipant');
+
+export const challengeSetMyVisibility = makeFunctionReference<
+  'mutation',
+  { challengeId: string; hideActivity: boolean },
+  { hideActivity: boolean }
+>('walkingChallenges:setMyVisibility');
+
+export const challengeSyncMySteps = makeFunctionReference<
+  'mutation',
+  { challengeId: string; days: { date: string; steps: number }[] },
+  { accepted: number; currentSteps: number; serverTime: number }
+>('walkingChallenges:syncMySteps');
+
+export const listTreeChallenges = makeFunctionReference<
+  'query',
+  { treeId: string },
+  (ChallengeSummary & { joined: boolean; mySteps: number })[]
+>('walkingChallenges:listTreeChallenges');
+
+export const listMyActiveChallenges = makeFunctionReference<
+  'query',
+  Record<string, never>,
+  (ChallengeSummary & { treeName: string; mySteps: number; lastSyncedAt: number | null })[]
+>('walkingChallenges:listMyActiveChallenges');
+
+export interface ChallengeLeaderboardEntry {
+  userId: string;
+  displayName: string;
+  steps: number;
+  left: boolean;
+  lastSyncedAt: number | null;
+  isMe: boolean;
+  rank: number;
+}
+
+export interface ChallengeLeaderboard {
+  challenge: ChallengeSummary;
+  participantCount: number;
+  teamTotal: number;
+  goalProgressPct: number | null;
+  entries: ChallengeLeaderboardEntry[];
+  me: {
+    joined: boolean;
+    steps: number;
+    hideActivity: boolean;
+    lastSyncedAt: number | null;
+  } | null;
+  serverTime: number;
+}
+
+export const getChallengeLeaderboard = makeFunctionReference<
+  'query',
+  { challengeId: string },
+  ChallengeLeaderboard
+>('walkingChallenges:getChallengeLeaderboard');
+
 // ── Demo detection (mirror of web src/App.tsx + convex/lib/demoUsers.ts) ──
 
 export const DEMO_USER_EMAILS = new Set(['demo-admin@genoly.org', 'demo-viewer@genoly.org']);

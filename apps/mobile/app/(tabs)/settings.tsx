@@ -27,6 +27,7 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
+  Switch,
 } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { useAuthActions } from '@convex-dev/auth/react';
@@ -36,6 +37,10 @@ import {
   getHealthSyncEnabled,
   setHasRequestedHealthPermissions,
   setHealthSyncEnabled,
+  getNotificationsEnabled,
+  setNotificationsEnabled,
+  getUseMockHealthData,
+  setUseMockHealthData,
 } from '../../utils/preferences';
 import { unregisterBackgroundSync } from '../../utils/backgroundSync';
 import {
@@ -68,6 +73,8 @@ export default function SettingsScreen() {
   const { me } = useMe();
   const [email, setEmail] = useState<string | null>(null);
   const [healthEnabled, setHealthEnabled] = useState<boolean>(false);
+  const [notifEnabled, setNotifEnabled] = useState<boolean>(true);
+  const [mockHealth, setMockHealth] = useState<boolean>(false);
   const [signingOut, setSigningOut] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -76,9 +83,11 @@ export default function SettingsScreen() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const [sessionResult, healthResult] = await Promise.allSettled([
+      const [sessionResult, healthResult, notifResult, mockResult] = await Promise.allSettled([
         apiClient.getSession(),
         getHealthSyncEnabled(),
+        getNotificationsEnabled(),
+        getUseMockHealthData(),
       ]);
       if (cancelled) return;
       if (sessionResult.status === 'fulfilled' && sessionResult.value?.user?.email) {
@@ -86,6 +95,12 @@ export default function SettingsScreen() {
       }
       if (healthResult.status === 'fulfilled') {
         setHealthEnabled(healthResult.value);
+      }
+      if (notifResult.status === 'fulfilled') {
+        setNotifEnabled(notifResult.value);
+      }
+      if (mockResult.status === 'fulfilled') {
+        setMockHealth(mockResult.value);
       }
       setLoading(false);
     }
@@ -220,6 +235,44 @@ export default function SettingsScreen() {
           Classic brings the heirloom serif look from the web to your phone.
         </Text>
       </Section>
+
+      {/* Notifications (challenge nudges — local scaffold until push credentials) */}
+      <Section label="Notifications">
+        <Row styles={styles} label="Challenge nudges">
+          <Switch
+            value={notifEnabled}
+            onValueChange={(value) => {
+              setNotifEnabled(value);
+              setNotificationsEnabled(value).catch(() => {});
+            }}
+            accessibilityLabel="Challenge nudges"
+          />
+        </Row>
+        <Text style={styles.bodyText}>
+          Friendly nudges about your walking challenges — quiet hours (10pm–7am) are always
+          respected, capped at a few per day.
+        </Text>
+      </Section>
+
+      {/* DEV ONLY: synthetic health data for simulators (brief §7.3) */}
+      {__DEV__ ? (
+        <Section label="Developer">
+          <Row styles={styles} label="Use mock health data">
+            <Switch
+              value={mockHealth}
+              onValueChange={(value) => {
+                setMockHealth(value);
+                setUseMockHealthData(value).catch(() => {});
+              }}
+              accessibilityLabel="Use mock health data"
+            />
+          </Row>
+          <Text style={styles.bodyText}>
+            Serves deterministic synthetic step counts instead of HealthKit / Health Connect.
+            Dev builds only — production ignores this flag.
+          </Text>
+        </Section>
+      ) : null}
 
       {/* Subscription section — payment-neutral disclosure */}
       <Section label="Subscription">
