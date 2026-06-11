@@ -477,3 +477,7 @@ app/welcome.tsx mirrors web /welcome: welcome → name tree → add yourself (co
 ## [2026-06-11] merge | C4 member dashboard (PR #19, `d84b9fd`)
 
 Home is now the real member dashboard: streaks tile (🔥/👋), rewards summary w/ top-quest progress, Today's Pick (client-side day-of-year rotation, web parity, zero server reads), Top 3 this week (treeLeaderboardCache), anniversaries (14-day window), welcome-back banner (visit ≥ 3), no-tree empty state → wizard. New hooks useActiveTree (lastVisitedTree mirror) + useRecordVisit (once-per-UTC-day visit credit). lib/gameRegistry mirrors the web two-axis model. Tests 139 pass; tsc 0 errors. Phase C (auth + onboarding + dashboard) COMPLETE.
+
+## [2026-06-11] merge | D1 tree essentials (PR #20, `0bfca9d`)
+
+Tree tab = exploration hub (multi-tree picker chips + lastVisitedTree persistence, debounced one-shot search, person directory, add-person CTA). Person profile route (app/person/[personId]/) with avatar/life dates/summary/immediate family (relationship graph)/events/photo grid; edit person; add event (createEventForPerson parity); add photo (expo-image-picker → presigned R2 PUT → createMediaMetadata + linkMedia, optional avatar); add person w/ optional parent-child link. useSignedUrl hook (one-shot getDownloadUrl + 10-min TTL cache). Deps added: expo-image, expo-image-picker, expo-haptics. Tests 153 pass; tsc clean.
