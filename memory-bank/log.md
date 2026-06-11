@@ -485,3 +485,7 @@ Tree tab = exploration hub (multi-tree picker chips + lastVisitedTree persistenc
 ## [2026-06-11] merge | H2 walking challenges mobile (PR #21, `3e7457d`)
 
 The unique-to-mobile pillar, on the Genoly-side backend (web PR #128 `b73d2c6`; fitness contract untouched). Challenges hub (my challenges across trees + tree active/past + join/create), create screen (team-goal vs race, 3 windows, invite-only), detail screen (live leaderboard, cooperative progress bar, Sync now, join/leave, creator cancel, hide-my-activity). lib/challengeSync (health-store window reads → idempotent syncMySteps; 15-min throttle; DEV deterministic mock source). lib/notifications scaffold (real gating: master toggle + quiet hours 22-07 + 3/day/category caps; __DEV__ log transport until push credentials); Settings gains Notifications + DEV mock toggles. Tests 170 pass; tsc clean.
+
+## [2026-06-11] merge | G settings depth + support (PR #22, `8033d3b`)
+
+/support on mobile: KB browse (category groups) + debounced one-shot search + article view (markdown-lite, no new dep) + contact form into contactSubmissions. Settings depth: profile name edit (users:updateProfile), Security section (live getMfaStatus + backup codes remaining; enroll on web), Privacy & data signposts (export/deletion on web; demo variant), Support entry. Tests 170 pass; tsc clean.
