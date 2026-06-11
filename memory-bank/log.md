@@ -448,3 +448,16 @@ Branch `chore/mobile-test-debt-cluster` (worktree `genoly-mobile-wt-test-debt/`)
 ---
 
 *Earlier history: see legacy `memory-bank/activeContext.md` and `memory-bank/progress.md` (being phased out). For authoritative chronological record: `git log`.*
+
+## [2026-06-11] doc | Mobile e2e run — Phase A audit + Phase B plan (autonomous)
+
+Autonomous mobile end-to-end run dispatched via `_mobile-e2e-brief.md` (member-side parity + Family Walking Challenges, deployment-ready).
+
+**Phase A (discovery, no code changes):** verified Phase 1 reality — Steps 1-7, 11, 12 merged; Step 8 Leaderboard UNMERGED on `origin/feat/step-8-leaderboard` (`e630ba3`, pre-SDK-56; disposition: cherry-pick + fixups when new nav lands). Fitness contract verified 20/20 endpoints implemented server-side, zero drift; challenges greenfield. `npm test` 60/60 green (brief's jest-debt premise stale — closed by PR #15). 3 pre-existing typecheck errors confirmed (P0). ApiClient 5/20 methods implemented. Full audit: `vault/mobile-audit.md`; acknowledgment: `vault/mobile-e2e-start-2026-06-11.md`.
+
+**Phase B (plan + decisions):** `vault/mobile-improvement-plan.md` + phase page [[2026-06-11-mobile-e2e-plan]]. Three decisions locked:
+1. [[2026-06-11-member-side-convex-client]] — member side rides Convex reactive client + @convex-dev/auth (RN TokenStorage on expo-secure-store); fitness HTTP contract untouched; dual-session teardown rules.
+2. [[2026-06-11-walking-challenges-schema-placement]] — challenge tables are Genoly-side tree-scoped (`walkingChallenges`, `challengeParticipants` w/ denormalized currentSteps); zero fitness-contract changes; privacy invariants (opt-in only, leave-anytime, hideActivity, GDPR export).
+3. [[2026-06-11-mobile-styling-approach]] — theme module + UI kit on RN StyleSheet; Tamagui/NativeWind rejected; dark + classic palettes to be locked in foundation PR.
+
+Execution waves: C1 foundation → C2 auth → C3 wizard → C4 dashboard → D tree ×6 → F engagement → G settings/support → H walking challenges → I polish → J deployment → K handoff.

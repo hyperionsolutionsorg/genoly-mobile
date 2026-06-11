@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Active context — genoly-mobile"
-updated: 2026-06-10 (graphifyy 0.8.36 upgrade + AGENTS.md §10.1 graph-tooling cleanup; prior: 2026-06-05)
+updated: 2026-06-11 (mobile e2e run Phase A+B; prior: 2026-06-10 graphify bump)
 status: active
 ---
 
@@ -10,6 +10,10 @@ status: active
 **What's being worked on right now.** Keep this file under 200 lines.
 
 ## Current focus
+
+**2026-06-11 — MOBILE E2E RUN IN FLIGHT (Claude autonomous, brief `_mobile-e2e-brief.md`).** Mission: member-side parity with web + Family Walking Challenges, deployment-ready. Phase A audit done (`vault/mobile-audit.md`): Steps 1-7/11/12 merged verified; **Step 8 Leaderboard unmerged on `origin/feat/step-8-leaderboard`** (cherry-pick + fixups later); fitness contract 20/20 server-side verified; 60/60 jest green; 3 typecheck errors = P0. Phase B plan: `vault/mobile-improvement-plan.md`. Decisions locked: [[2026-06-11-member-side-convex-client]] (member side = Convex reactive client + @convex-dev/auth RN; fitness HTTP contract untouched), [[2026-06-11-walking-challenges-schema-placement]] (challenge tables Genoly-side, tree-scoped, zero contract changes), [[2026-06-11-mobile-styling-approach]] (theme module on StyleSheet; no Tamagui/NativeWind). Executing waves C1 → K. Constraints: payment neutrality, no admin surfaces, forkability, bandwidth diet (no live-Convex suites), no eas submit, no AI attribution.
+
+## Previous focus
 
 **2026-06-10 — Graphify Labs version bump + AGENTS.md graph-tooling cleanup (pre-commit; Shankar commits).** Workspace-wide `graphifyy` CLI bumped 0.8.20 → **0.8.36** (`pipx upgrade`; it was always the correct package — a brief's "wrong-package/typosquat/v2.1.0-via-uv" framing was incorrect and not acted on). Regenerated mobile `graphify-out/` via `graphify update .` (AST-only, no key): **841 nodes / 967 edges / 67 communities**, now emitting the force-directed `graph.html` (vis-network, dark theme). Updated `genoly-mobile/AGENTS.md` §10.1 / "Code knowledge graph report": corrected the `graph.html` label (it's vis-network force-directed, not "D3"), refreshed the node count (425 → 841), added the pipx install cmd + `graphify affected` + `graphify watch`, and split structural (`graphify-out/`) vs curated-narrative (`docs/GRAPH_REPORT.md`). **Mobile change is AGENTS.md only.** ⚠️ `npm run typecheck` has **3 PRE-EXISTING errors** (missing `@react-native-vector-icons/fontawesome` — node_modules gap from the SDK-56 codemod below — + `expo-router/react-navigation` + an ExternalLink typed-route), unrelated to this work. Full story in web's [[graph-report-regen-2026-06-09]] (2026-06-10 update).
 

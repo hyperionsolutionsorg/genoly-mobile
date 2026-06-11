@@ -12,6 +12,7 @@
 
 ## Phases (chronological, most-recent first)
 
+- [[2026-06-11-mobile-e2e-plan]] — Mobile e2e run (member parity + walking challenges): Phase A audit + Phase B plan + execution waves C1→K. Companion vault docs: mobile-audit.md, mobile-improvement-plan.md.
 - [[2026-06-05-expo-sdk-56-upgrade]] — Expo SDK 55 → 56 upgrade: expo-router codemod, vector-icons codemod, iOS 16.4 target, TypeScript 6 compat. 6 commits, PR pending. Task #299 closed.
 - [[2026-05-29-mobile-step-7-dashboard]] — Phase 1, Step 7 (interactive session): Dashboard screen replacing the fitness-tab stub. New `useDashboardData` hook (drain+fetch on mount, local-TZ date math, queue/dead-letter depth reads). Today big-number card + 7-day horizontal bars + dead-letter banner with one-tap clear + manual Refresh button + error/empty/loading states. 24 new Jest tests; 54 total in suite. Merged via PR #8.
 - [[2026-05-29-mobile-step-4-12-overnight]] — Phase 1, Steps 4 + 12 + 5 + 11 + 6 + mobile `DESIGN.md` (autonomous Claude overnight, THREE rounds): HealthKitAdapter (iOS) + HealthConnectAdapter (Android) + MockHealthAdapter + factory + first-run permissions screen + AsyncStorage preferences util + auth-gate three-arm routing + 4 ApiClient methods unstubbed + NEW `@genoly/sync-queue` package (SQLite outbox + drainer + retry + dead-letter) + full Settings tab with revoke-token sign-out + `utils/backgroundSync.ts` (expo-background-fetch + expo-task-manager → `SyncQueue.drain()`) + repo-root `DESIGN.md`. 52 new tests. MERGED via PR #5 (`10f6f03`) + infra setup via PR #6 (`f2463a8`). CI green.
@@ -23,6 +24,9 @@
 
 ## Decisions (durable architectural choices)
 
+- [[2026-06-11-member-side-convex-client]] — member side rides Convex reactive client + @convex-dev/auth (RN); fitness HTTP contract untouched; dual-session rules
+- [[2026-06-11-walking-challenges-schema-placement]] — challenge tables Genoly-side, tree-scoped; zero fitness-contract changes; privacy invariants
+- [[2026-06-11-mobile-styling-approach]] — theme module + UI kit on RN StyleSheet; Tamagui/NativeWind rejected
 - [[mobile-payment-neutrality]] — no in-app purchases; web is sole subscription surface (App Store anti-steering)
 - [[native-module-strategy]] — Expo modules only, no bare workflow
 - [[bearer-token-storage]] — expo-secure-store only, never AsyncStorage

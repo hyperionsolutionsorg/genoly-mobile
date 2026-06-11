@@ -1,15 +1,19 @@
 ---
 type: current
 name: "Overview — genoly-mobile"
-updated: 2026-06-05
+updated: 2026-06-11
 status: active
 ---
 
 # Overview — the 30-second picture
 
-`genoly-mobile` is the Expo mobile app + cross-platform packages for the Genoly Fitness product. Mobile is payment-neutral (no in-app purchases) — web (genoly.org/billing) is the sole subscription surface.
+`genoly-mobile` is the Expo mobile app + cross-platform packages for the unified Genoly mobile experience: the **member-side family app** (Convex reactive client — in build-out as of 2026-06-11) and the **fitness layer** (HTTP bearer contract — Phase 1 largely shipped). Mobile is payment-neutral (no in-app purchases) — web (genoly.org/billing) is the sole subscription surface.
 
-**Where things stand (2026-06-05):**
+**Where things stand (2026-06-11):**
+
+- **Mobile e2e run IN FLIGHT** (Claude autonomous): member-side parity + Family Walking Challenges + deployment readiness. Plan: `vault/mobile-improvement-plan.md`; audit: `vault/mobile-audit.md`; phase page [[2026-06-11-mobile-e2e-plan]].
+
+**Where things stood before the run (2026-06-05):**
 
 - **Phase 0 is COMPLETE** as of 2026-05-08. Signed APK runs on a real Android phone; CI auto-triggers EAS builds on every `main` push.
 - **Phase 1 (mobile sync + leaderboard) is IN PROGRESS.** Steps 1, 2, 3, 4, 5, 6, 7, 11, 12 merged. Step 8 (Leaderboard) is next.
