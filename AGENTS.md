@@ -2,7 +2,7 @@
 
 **Repo:** genoly-mobile (Expo mobile app + cross-platform packages)
 **Operator:** Hyperion Solutions LLC
-**Last updated:** 2026-05-29 (Phase 1 Steps 1-7 shipped since 2026-05-22 — schema below is still valid; `Last updated:` bumped per doc-hygiene audit 2026-05-29)
+**Last updated:** 2026-06-11 (mobile e2e run: member-side app shipped — Convex Auth member sessions, theme module + UI kit, 5-tab nav, tree/person/photos, walking challenges, settings depth + support, store-readiness docs. See memory-bank/wiki/phases/2026-06-11-mobile-e2e-plan.md)
 **Parent schema:** `/Users/snalluri/Personal/Code/Geno/AGENTS.md` (workspace-level rules)
 **Companion file (MUST read before building UI):** [`./DESIGN.md`](./DESIGN.md) — the mobile design system contract (palette, typography, component stylings, native-vs-custom patterns, do's-and-don'ts). AI agents read this to generate UI that matches the existing visual language without inventing values. Mirror of the web `genoly-family-web/DESIGN.md` adapted for React Native.
 
@@ -16,7 +16,7 @@ This file is the repo-specific operating manual. Read it AFTER the workspace `AG
 
 | Area | Path | Notes |
 |---|---|---|
-| Mobile app (Expo Router) | `apps/mobile/` | iOS + Android via Expo SDK 54 / RN 0.81 |
+| Mobile app (Expo Router) | `apps/mobile/` | iOS + Android via Expo SDK 56 / RN 0.85 (member app + fitness layer) |
 | ApiClient package | `packages/api-client/` | TypeScript interface for the 20 fitness HTTP endpoints |
 | HealthAdapter package | `packages/health-sync/` | HealthKit (iOS) + Health Connect (Android) wrapper |
 | Types package | `packages/types/` | Shared types — mirrors `genoly-family-web/docs/fitness-api-contract.md` |
