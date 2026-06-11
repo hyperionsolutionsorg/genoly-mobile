@@ -13,18 +13,16 @@
  *     the HealthAdapter
  *   - "Maybe later" → skips with `healthSyncEnabled=false`; users can
  *     revisit from Settings (Step 11)
- *
- * Visual style: matches DESIGN.md (genoly-family-web/DESIGN.md) — but
- * the mobile app doesn't yet have a shared theme system, so colors are
- * inlined for now. A mobile-specific DESIGN.md is a future task.
  */
 
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { createHealthAdapter, type HealthMetric } from '@genoly/health-sync';
 import { setHasRequestedHealthPermissions, setHealthSyncEnabled } from '../../utils/preferences';
 import { registerBackgroundSync } from '../../utils/backgroundSync';
+import { useThemedStyles, type Theme } from '../../theme';
+import { Button } from '../../components/ui';
 
 // The minimal permission scope confirmed by Shankar on 2026-05-28:
 //   Steps + ActiveEnergyBurned + Distance.
@@ -37,6 +35,7 @@ const TABS_ROUTE = '/(tabs)' as unknown as Href;
 
 export default function PermissionsScreen() {
   const router = useRouter();
+  const styles = useThemedStyles(createStyles);
   const [requesting, setRequesting] = useState(false);
 
   const onGrantAccess = async () => {
@@ -52,7 +51,7 @@ export default function PermissionsScreen() {
         await setHealthSyncEnabled(false);
         Alert.alert(
           'Health data unavailable',
-          'Your device doesn\'t support health data syncing. You can still use Genoly to track manually.',
+          "Your device doesn't support health data syncing. You can still use Genoly to track manually.",
           [{ text: 'OK', onPress: () => router.replace(TABS_ROUTE) }],
         );
         return;
@@ -92,7 +91,9 @@ export default function PermissionsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Connect your health data</Text>
+      <Text accessibilityRole="header" style={styles.title}>
+        Connect your health data
+      </Text>
       <Text style={styles.subtitle}>
         Genoly reads your daily activity to compute leaderboards and goal progress.
         We only read what you grant; you can revoke access from Settings anytime.
@@ -100,16 +101,19 @@ export default function PermissionsScreen() {
 
       <View style={styles.metricList}>
         <MetricRow
+          styles={styles}
           icon="👟"
           label="Steps"
           description="Daily step count from Apple Health / Health Connect."
         />
         <MetricRow
+          styles={styles}
           icon="🔥"
           label="Active calories"
           description="Calories burned during exercise — used for activity goals."
         />
         <MetricRow
+          styles={styles}
           icon="📏"
           label="Distance"
           description="Walking + running distance for daily totals."
@@ -123,34 +127,42 @@ export default function PermissionsScreen() {
       </Text>
 
       <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={[styles.button, styles.primaryButton]}
+        <Button
+          label="Grant access"
           onPress={onGrantAccess}
-          disabled={requesting}
-        >
-          {requesting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.primaryButtonText}>Grant access</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, styles.secondaryButton]}
+          loading={requesting}
+          accessibilityHint="Opens the system health permissions dialog"
+        />
+        <Button
+          variant="secondary"
+          label="Maybe later"
           onPress={onSkip}
           disabled={requesting}
-        >
-          <Text style={styles.secondaryButtonText}>Maybe later</Text>
-        </TouchableOpacity>
+          style={styles.skipButton}
+        />
       </View>
     </ScrollView>
   );
 }
 
-function MetricRow({ icon, label, description }: { icon: string; label: string; description: string }) {
+type Styles = ReturnType<typeof createStyles>;
+
+function MetricRow({
+  styles,
+  icon,
+  label,
+  description,
+}: {
+  styles: Styles;
+  icon: string;
+  label: string;
+  description: string;
+}) {
   return (
     <View style={styles.metricRow}>
-      <Text style={styles.metricIcon}>{icon}</Text>
+      <Text accessibilityElementsHidden style={styles.metricIcon}>
+        {icon}
+      </Text>
       <View style={styles.metricCopy}>
         <Text style={styles.metricLabel}>{label}</Text>
         <Text style={styles.metricDescription}>{description}</Text>
@@ -159,90 +171,69 @@ function MetricRow({ icon, label, description }: { icon: string; label: string; 
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 24,
-    backgroundColor: '#fefefe',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '600',
-    marginTop: 32,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 32,
-  },
-  metricList: {
-    marginBottom: 24,
-  },
-  metricRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#f9fafb',
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  metricIcon: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  metricCopy: {
-    flex: 1,
-  },
-  metricLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  metricDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-    lineHeight: 20,
-  },
-  privacyNote: {
-    fontSize: 13,
-    color: '#6b7280',
-    textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: 32,
-  },
-  privacyLink: {
-    color: '#0066ff',
-    textDecorationLine: 'underline',
-  },
-  buttonRow: {
-    gap: 12,
-  },
-  button: {
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  primaryButton: {
-    backgroundColor: '#0066ff',
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  secondaryButtonText: {
-    color: '#374151',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-});
+function createStyles(t: Theme) {
+  return StyleSheet.create({
+    container: {
+      flexGrow: 1,
+      padding: t.spacing.xl,
+      backgroundColor: t.colors.bg,
+    },
+    title: {
+      ...t.typography.screenTitle,
+      color: t.colors.text,
+      marginTop: t.spacing.xxl,
+      marginBottom: t.spacing.md,
+      textAlign: 'center',
+    },
+    subtitle: {
+      ...t.typography.subtitle,
+      color: t.colors.textMuted,
+      textAlign: 'center',
+      marginBottom: t.spacing.xxl,
+    },
+    metricList: {
+      marginBottom: t.spacing.xl,
+    },
+    metricRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      paddingVertical: t.spacing.md,
+      paddingHorizontal: t.spacing.lg,
+      backgroundColor: t.colors.surface,
+      borderRadius: t.radius.sm,
+      marginBottom: t.spacing.sm,
+    },
+    metricIcon: {
+      fontSize: 24,
+      marginRight: t.spacing.md,
+    },
+    metricCopy: {
+      flex: 1,
+    },
+    metricLabel: {
+      ...t.typography.cardTitle,
+      color: t.colors.text,
+      marginBottom: t.spacing.xs,
+    },
+    metricDescription: {
+      ...t.typography.cardDescription,
+      color: t.colors.textMuted,
+    },
+    privacyNote: {
+      ...t.typography.helper,
+      fontSize: 13,
+      lineHeight: 18,
+      color: t.colors.textMuted,
+      textAlign: 'center',
+      marginBottom: t.spacing.xxl,
+    },
+    privacyLink: {
+      color: t.colors.link,
+      textDecorationLine: 'underline',
+    },
+    buttonRow: {},
+    skipButton: {
+      marginTop: t.spacing.md,
+    },
+  });
+}

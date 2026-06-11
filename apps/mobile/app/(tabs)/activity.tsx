@@ -1,5 +1,7 @@
 /**
- * Fitness Dashboard — Step 7 of Phase 1.
+ * Activity — your steps, calories, and distance (the fitness dashboard,
+ * Step 7 of Phase 1; relocated from the old Fitness tab in the C1
+ * navigation rework).
  *
  * Layout (top-to-bottom):
  *   1. Header: "Today" + last-synced timestamp + Refresh button
@@ -7,21 +9,11 @@
  *   3. Today's three big-number cards: Steps, Active calories, Distance
  *   4. Section: "Last 7 days" with horizontal bars
  *
- * States handled:
- *   - Initial load (skeleton placeholders)
- *   - Empty (new user, no data yet)
- *   - Error (banner with retry CTA)
- *   - Refreshing (button shows spinner)
- *
- * Per the mobile DESIGN.md:
- *   - All colors are inlined (Phase 1.5 will lift into a theme module)
- *   - Native Alert.alert for the "Clear failed syncs" confirmation
- *   - TouchableOpacity with accessibility labels on every action
+ * States handled: initial load / empty / error / refreshing.
  *
  * Per Shankar's morning Q3 ("don't show too many errors, becomes noise"):
- *   - The dead-letter banner has a one-tap Clear action inline. No need
- *     to dig into Settings. After confirming, the banner disappears
- *     immediately — no accumulated noise.
+ * the dead-letter banner has a one-tap Clear action inline; after
+ * confirming, the banner disappears immediately.
  */
 
 import { useCallback } from 'react';
@@ -36,8 +28,12 @@ import {
 } from 'react-native';
 import type { HealthEntry } from '@genoly/types';
 import { useDashboardData } from '../../hooks/useDashboardData';
+import { useThemedStyles, useTheme, type Theme } from '../../theme';
+import { Banner } from '../../components/ui';
 
-export default function FitnessScreen() {
+export default function ActivityScreen() {
+  const t = useTheme();
+  const styles = useThemedStyles(createStyles);
   const data = useDashboardData();
 
   const onRefresh = useCallback(() => {
@@ -65,7 +61,7 @@ export default function FitnessScreen() {
   if (data.initialLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0066ff" />
+        <ActivityIndicator size="large" color={t.colors.primary} />
         <Text style={styles.loadingText}>Loading your activity…</Text>
       </View>
     );
@@ -87,7 +83,7 @@ export default function FitnessScreen() {
           disabled={data.refreshing}
         >
           {data.refreshing ? (
-            <ActivityIndicator size="small" color="#0066ff" />
+            <ActivityIndicator size="small" color={t.colors.primary} />
           ) : (
             <Text style={styles.refreshButtonText}>Refresh</Text>
           )}
@@ -96,49 +92,37 @@ export default function FitnessScreen() {
 
       {/* Error banner */}
       {data.error && (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorBannerText}>{data.error}</Text>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Retry refresh"
-            onPress={onRefresh}
-          >
-            <Text style={styles.errorBannerAction}>Retry</Text>
-          </TouchableOpacity>
-        </View>
+        <Banner variant="error" message={data.error} actionLabel="Retry" onAction={onRefresh} />
       )}
 
       {/* Dead-letter banner (only when there's something to surface) */}
       {data.deadLetterDepth > 0 && (
-        <View style={styles.deadLetterBanner}>
-          <Text style={styles.deadLetterBannerText}>
-            {data.deadLetterDepth} entr{data.deadLetterDepth === 1 ? 'y' : 'ies'} failed to sync.
-          </Text>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Clear failed syncs"
-            onPress={onClearDeadLetters}
-          >
-            <Text style={styles.deadLetterBannerAction}>Clear</Text>
-          </TouchableOpacity>
-        </View>
+        <Banner
+          variant="warning"
+          message={`${data.deadLetterDepth} entr${data.deadLetterDepth === 1 ? 'y' : 'ies'} failed to sync.`}
+          actionLabel="Clear"
+          onAction={onClearDeadLetters}
+        />
       )}
 
       {/* Today's big numbers */}
       <View style={styles.todayCard}>
         <BigNumberRow
+          styles={styles}
           label="Steps"
           value={formatSteps(data.today?.steps ?? 0)}
           empty={data.today === null}
         />
         <View style={styles.todayDivider} />
         <BigNumberRow
+          styles={styles}
           label="Active calories"
           value={formatCalories(data.today?.caloriesActive ?? 0)}
           empty={data.today === null}
         />
         <View style={styles.todayDivider} />
         <BigNumberRow
+          styles={styles}
           label="Distance"
           value={formatDistance(data.today?.distanceMeters ?? null)}
           empty={data.today === null}
@@ -161,7 +145,7 @@ export default function FitnessScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Last 7 days</Text>
           <View style={styles.sectionBody}>
-            <SevenDayChart entries={data.last7Days} todayDate={data.range.to} />
+            <SevenDayChart styles={styles} entries={data.last7Days} todayDate={data.range.to} />
           </View>
         </View>
       )}
@@ -169,13 +153,17 @@ export default function FitnessScreen() {
   );
 }
 
+type Styles = ReturnType<typeof createStyles>;
+
 // ── Sub-components ───────────────────────────────────────────────────
 
 function BigNumberRow({
+  styles,
   label,
   value,
   empty,
 }: {
+  styles: Styles;
   label: string;
   value: string;
   empty: boolean;
@@ -200,9 +188,11 @@ function BigNumberRow({
  * massive day.
  */
 function SevenDayChart({
+  styles,
   entries,
   todayDate,
 }: {
+  styles: Styles;
   entries: HealthEntry[];
   todayDate: string;
 }) {
@@ -251,7 +241,7 @@ function formatDistance(meters: number | null): string {
   return `${km.toFixed(km < 10 ? 2 : 1)} km`;
 }
 
-/** "Mon", "Tue", ... — except today which gets "Today" and yesterday "Yest." */
+/** "Mon", "Tue", ... — except today which gets "Today". */
 function formatDayLabel(date: string, todayDate: string): string {
   if (date === todayDate) return 'Today';
   // YYYY-MM-DD → day of week. We construct in local TZ to avoid a UTC shift.
@@ -275,203 +265,159 @@ function formatLastSynced(lastSyncedAt: number | null): string {
 
 // ── Styles ───────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 24,
-    backgroundColor: '#fefefe',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#fefefe',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  headerTextCol: {
-    flexShrink: 1,
-  },
-  screenTitle: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#6b7280',
-    marginTop: 2,
-  },
-  refreshButton: {
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#ffffff',
-    minWidth: 84,
-    alignItems: 'center',
-  },
-  refreshButtonDisabled: {
-    opacity: 0.7,
-  },
-  refreshButtonText: {
-    color: '#0066ff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: '#fee2e2',
-    marginBottom: 16,
-  },
-  errorBannerText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#991b1b',
-    marginRight: 8,
-  },
-  errorBannerAction: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#991b1b',
-  },
-  deadLetterBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: '#fef3c7',
-    marginBottom: 16,
-  },
-  deadLetterBannerText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#92400e',
-    marginRight: 8,
-  },
-  deadLetterBannerAction: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#92400e',
-  },
-  todayCard: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 32,
-  },
-  bigNumberRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  bigNumberLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  bigNumberValue: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  bigNumberValueEmpty: {
-    color: '#9ca3af',
-    fontSize: 24,
-  },
-  todayDivider: {
-    height: 1,
-    backgroundColor: '#e5e7eb',
-    marginVertical: 4,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  sectionBody: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    padding: 16,
-  },
-  barRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  barDateLabel: {
-    width: 56,
-    fontSize: 13,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  barDateLabelToday: {
-    color: '#0066ff',
-    fontWeight: '600',
-  },
-  barTrack: {
-    flex: 1,
-    height: 16,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 4,
-    marginHorizontal: 8,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    backgroundColor: '#0066ff',
-    borderRadius: 4,
-  },
-  barFillToday: {
-    backgroundColor: '#1d4ed8',
-  },
-  barValueLabel: {
-    width: 64,
-    fontSize: 12,
-    color: '#374151',
-    textAlign: 'right',
-    fontVariant: ['tabular-nums'],
-  },
-  emptyState: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-  },
-  emptyStateTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  emptyStateBody: {
-    fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-});
+function createStyles(t: Theme) {
+  return StyleSheet.create({
+    container: {
+      flexGrow: 1,
+      padding: t.spacing.xl,
+      backgroundColor: t.colors.bg,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: t.spacing.xl,
+      backgroundColor: t.colors.bg,
+    },
+    loadingText: {
+      marginTop: t.spacing.md,
+      fontSize: 14,
+      color: t.colors.textMuted,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: t.spacing.sm,
+      marginBottom: t.spacing.xl,
+    },
+    headerTextCol: {
+      flexShrink: 1,
+    },
+    screenTitle: {
+      ...t.typography.screenTitle,
+      color: t.colors.text,
+    },
+    subtitle: {
+      fontSize: 13,
+      color: t.colors.textMuted,
+      marginTop: 2,
+    },
+    refreshButton: {
+      borderWidth: 1,
+      borderColor: t.colors.border,
+      borderRadius: t.radius.sm,
+      paddingVertical: t.spacing.sm,
+      paddingHorizontal: t.spacing.lg,
+      backgroundColor: t.colors.bgElevated,
+      minWidth: 84,
+      alignItems: 'center',
+    },
+    refreshButtonDisabled: {
+      opacity: 0.7,
+    },
+    refreshButtonText: {
+      color: t.colors.primary,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    todayCard: {
+      backgroundColor: t.colors.surface,
+      borderRadius: t.radius.md,
+      padding: t.spacing.lg,
+      marginBottom: t.spacing.xxl,
+    },
+    bigNumberRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+      paddingVertical: t.spacing.sm,
+    },
+    bigNumberLabel: {
+      fontSize: 14,
+      color: t.colors.textMuted,
+      fontWeight: '500',
+    },
+    bigNumberValue: {
+      fontSize: 28,
+      fontWeight: '600',
+      color: t.colors.text,
+    },
+    bigNumberValueEmpty: {
+      color: t.colors.textMuted,
+      fontSize: 24,
+    },
+    todayDivider: {
+      height: 1,
+      backgroundColor: t.colors.border,
+      marginVertical: t.spacing.xs,
+    },
+    section: {
+      marginBottom: t.spacing.xxl,
+    },
+    sectionTitle: {
+      ...t.typography.sectionHeader,
+      color: t.colors.textMuted,
+      marginBottom: t.spacing.sm,
+    },
+    sectionBody: {
+      backgroundColor: t.colors.surface,
+      borderRadius: t.radius.md,
+      padding: t.spacing.lg,
+    },
+    barRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 6,
+    },
+    barDateLabel: {
+      width: 56,
+      fontSize: 13,
+      color: t.colors.textMuted,
+      fontWeight: '500',
+    },
+    barDateLabelToday: {
+      color: t.colors.primary,
+      fontWeight: '600',
+    },
+    barTrack: {
+      flex: 1,
+      height: 16,
+      backgroundColor: t.colors.surfaceMuted,
+      borderRadius: 4,
+      marginHorizontal: t.spacing.sm,
+      overflow: 'hidden',
+    },
+    barFill: {
+      height: '100%',
+      backgroundColor: t.colors.primary,
+      borderRadius: 4,
+    },
+    barFillToday: {
+      backgroundColor: t.colors.primaryHover,
+    },
+    barValueLabel: {
+      width: 64,
+      fontSize: 12,
+      color: t.colors.textMuted,
+      textAlign: 'right',
+      fontVariant: ['tabular-nums'],
+    },
+    emptyState: {
+      backgroundColor: t.colors.surface,
+      borderRadius: t.radius.md,
+      padding: t.spacing.xl,
+      alignItems: 'center',
+    },
+    emptyStateTitle: {
+      ...t.typography.cardTitle,
+      color: t.colors.text,
+      marginBottom: t.spacing.sm,
+    },
+    emptyStateBody: {
+      ...t.typography.cardDescription,
+      color: t.colors.textMuted,
+      textAlign: 'center',
+    },
+  });
+}
