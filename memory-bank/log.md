@@ -461,3 +461,7 @@ Autonomous mobile end-to-end run dispatched via `_mobile-e2e-brief.md` (member-s
 3. [[2026-06-11-mobile-styling-approach]] — theme module + UI kit on RN StyleSheet; Tamagui/NativeWind rejected; dark + classic palettes to be locked in foundation PR.
 
 Execution waves: C1 foundation → C2 auth → C3 wizard → C4 dashboard → D tree ×6 → F engagement → G settings/support → H walking challenges → I polish → J deployment → K handoff.
+
+## [2026-06-11] merge | C1 foundation — theme module + UI kit + member-app navigation (PR #16, `7651701`)
+
+First execution wave of the mobile e2e run. theme/ module (light/dark/classic semantic palettes mirroring web index.css tokens incl. dark on-primary rule; classic serif swap; ThemeProvider/useTheme/useThemedStyles; persisted preference + Settings Appearance picker). components/ui kit (Button/Screen/Section/Card/TextField/Banner/EmptyState/Toast/Skeleton — toast mirrors web 2026-06-10 layer rules). Navigation reworked to member-app 5 tabs (Home / Tree / Challenges / Activity / Settings); fitness dashboard relocated to Activity; Notifications tab retired. All screens migrated off inlined hex; login/permissions inputs gained a11y labels. 3 pre-existing typecheck errors CLEARED (stale node_modules synced — expo-router 56.2.9 + vector-icons restored; unused ExternalLink deleted). Expo template leftovers removed. Tests 60 → 90 pass (theme contrast guards + UI kit behavior); tsc 0 errors.
