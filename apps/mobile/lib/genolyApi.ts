@@ -645,3 +645,39 @@ export function isDemoEmail(email: string | null | undefined): boolean {
 export function isAdminRole(role: SiteRole | undefined): boolean {
   return role === 'super_admin' || role === 'site_admin' || role === 'moderator' || role === 'support';
 }
+
+// ── Tenant plan access (mobile Pro gate) ─────────────────────────────
+
+export interface TenantRecord {
+  _id: string;
+  name: string;
+  slug: string;
+  plan: 'free' | 'starter' | 'pro';
+}
+
+/**
+ * Returns all tenants the current user can access (owned + invite-accepted).
+ * Mirrors web convex/tenants.ts:listMyTenants — keep signatures in sync.
+ */
+export const listMyTenants = makeFunctionReference<
+  'query',
+  Record<string, never>,
+  TenantRecord[]
+>('tenants:listMyTenants');
+
+/**
+ * useHasProTenantAccess — React hook that returns whether the current user
+ * has access to at least one Pro-plan tenant.  Used by _layout.tsx to gate
+ * the full app experience.
+ *
+ * Returns `null` while loading (splash is still visible), `true` for Pro
+ * access, and `false` for paywall.
+ */
+import { useQuery } from 'convex/react';
+import { hasAnyProTenant } from './planChecks';
+
+export function useHasProTenantAccess(): boolean | null {
+  const tenants = useQuery(listMyTenants);
+  if (tenants === undefined) return null; // loading
+  return hasAnyProTenant(tenants);
+}

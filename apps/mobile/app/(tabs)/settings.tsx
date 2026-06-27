@@ -18,6 +18,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { VERSION, BUILD_NUMBER } from '../../constants/version';
 import {
   View,
   Text,
@@ -399,6 +400,13 @@ export default function SettingsScreen() {
           onPress={onManageSubscription}
           style={styles.sectionButton}
         />
+      </Section>
+
+      {/* About */}
+      <Section label="About">
+        <Text style={styles.bodyText}>
+          Version {VERSION} (build {BUILD_NUMBER})
+        </Text>
       </Section>
 
       {/* Legal */}
