@@ -3,7 +3,8 @@ import { DarkTheme, DefaultTheme, ThemeProvider as NavThemeProvider } from 'expo
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments, type Href } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { View, Text } from 'react-native';
 import 'react-native-reanimated';
 import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import { useConvexAuth } from 'convex/react';
@@ -12,6 +13,8 @@ import { ThemeProvider, useTheme } from '../theme';
 import { ToastHost } from '../components/ui';
 import { getConvexClient, convexAuthStorage } from '../utils/convex';
 import { getHasRequestedHealthPermissions } from '../utils/preferences';
+import { useHasProTenantAccess } from '../lib/genolyApi';
+import { DOWNGRADE_GRACE_MS } from '../lib/planChecks';
 
 // Cast once at module scope — Expo Router's Href type is generated from
 // the file system route map, but `(auth)/login` is a group-route the
@@ -19,6 +22,7 @@ import { getHasRequestedHealthPermissions } from '../utils/preferences';
 // argument so router-object typing stays intact.
 const LOGIN_ROUTE = '/(auth)/login' as unknown as Href;
 const PERMISSIONS_ROUTE = '/(auth)/permissions' as unknown as Href;
+const PAYWALL_ROUTE = '/(gated)/paywall' as unknown as Href;
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -55,27 +59,35 @@ export default function RootLayout() {
 /**
  * Cold-start auth gate (C2 rework — decision 2026-06-11-member-side-convex-client).
  *
- * The MEMBER session (Convex Auth JWT) is now the primary gate; the
- * fitness bearer token is a secondary credential used only by health
- * sync (acquired alongside member sign-in, degraded gracefully if absent).
+ * Extended in V1.0.0 with a Pro-plan gate (mobile is Pro-only).
  *
  * Arms:
  *   1. Member session loading → keep splash.
  *   2. No member session + outside the (auth) group → /(auth)/login.
  *   3. Session valid + health permissions never requested → /(auth)/permissions.
- *   4. Otherwise → render the app.
+ *   4. Session valid + no Pro tenant → /(gated)/paywall.
+ *   5. Otherwise → render the app.
  *
- * Forward navigation after an explicit sign-in (MFA challenge, permissions,
- * tabs) stays in the screens themselves — the gate only guards entry.
+ * Downgrade path: when a user loses their last Pro tenant while in-app, a
+ * 5-minute grace banner is shown before the hard redirect fires.
  */
 function AuthGate() {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const segments = useSegments();
   const router = useRouter();
 
+  // Pro-plan gate — only queried after auth resolves to avoid a double-load.
+  const hasProAccess = useHasProTenantAccess();
+
+  // Downgrade grace: track whether the user previously had Pro access so we
+  // can detect a mid-session flip and show a warning banner before evicting.
+  const hadProRef = useRef<boolean | null>(null);
+  const [showDowngradeBanner, setShowDowngradeBanner] = useState(false);
+
   // Cast: the generated typed-routes union lags new route groups until
   // `expo start` regenerates .expo/types (same reason as the Href casts).
   const inAuthGroup = (segments[0] as string) === '(auth)';
+  const inGatedGroup = (segments[0] as string) === '(gated)';
 
   // Hide the splash once the session check resolves.
   useEffect(() => {
@@ -84,6 +96,7 @@ function AuthGate() {
     }
   }, [isLoading]);
 
+  // Auth + plan routing.
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) {
@@ -92,6 +105,31 @@ function AuthGate() {
       }
       return;
     }
+
+    // While plan is loading (null), hold — don't bounce to paywall prematurely.
+    if (hasProAccess === null) return;
+
+    if (!hasProAccess) {
+      // Downgrade detection: if the user previously had Pro in this session
+      // and just lost it, show the grace banner and delay the redirect.
+      if (hadProRef.current === true && !inGatedGroup) {
+        setShowDowngradeBanner(true);
+        const timer = setTimeout(() => {
+          setShowDowngradeBanner(false);
+          router.replace(PAYWALL_ROUTE);
+        }, DOWNGRADE_GRACE_MS);
+        return () => clearTimeout(timer);
+      }
+      if (!inGatedGroup) {
+        router.replace(PAYWALL_ROUTE);
+      }
+      hadProRef.current = false;
+      return;
+    }
+
+    hadProRef.current = true;
+    setShowDowngradeBanner(false); // Pro restored (e.g. re-upgrade)
+
     if (!inAuthGroup) {
       // Cold start with a valid session — make sure the first-run
       // permissions prompt has been resolved (grant OR skip).
@@ -110,21 +148,22 @@ function AuthGate() {
         cancelled = true;
       };
     }
-  }, [isLoading, isAuthenticated, inAuthGroup, router]);
+  }, [isLoading, isAuthenticated, inAuthGroup, inGatedGroup, hasProAccess, router]);
 
   if (isLoading) {
     return null; // splash still visible
   }
 
-  return <ThemedNavigation />;
+  return <ThemedNavigation downgradeBanner={showDowngradeBanner} />;
 }
+
 
 /**
  * Bridges the app theme (light/dark/classic — see theme/) into
  * react-navigation's theme object so headers, tab bars, and transitions
  * pick up the same palette as our screens.
  */
-function ThemedNavigation() {
+function ThemedNavigation({ downgradeBanner }: { downgradeBanner: boolean }) {
   const t = useTheme();
   const base = t.name === 'dark' ? DarkTheme : DefaultTheme;
   const navTheme = {
@@ -142,10 +181,35 @@ function ThemedNavigation() {
 
   return (
     <NavThemeProvider value={navTheme}>
+      {downgradeBanner && (
+        <View style={downgradeBannerStyles(t)}>
+          <Text style={downgradeBannerText(t)}>
+            Your tree's plan was downgraded. Mobile access ends in 5 minutes — save your work.
+          </Text>
+        </View>
+      )}
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(gated)" options={{ headerShown: false }} />
       </Stack>
       <ToastHost />
     </NavThemeProvider>
   );
+}
+
+function downgradeBannerStyles(t: ReturnType<typeof useTheme>) {
+  return {
+    backgroundColor: t.colors.danger,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  } as const;
+}
+
+function downgradeBannerText(t: ReturnType<typeof useTheme>) {
+  return {
+    color: '#fff',
+    fontSize: 13,
+    textAlign: 'center' as const,
+    fontWeight: '600' as const,
+  };
 }
