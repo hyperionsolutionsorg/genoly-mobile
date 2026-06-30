@@ -13,7 +13,12 @@
     "mobile:web": "npm --workspace @genoly/mobile run web",
     "typecheck": "npm --workspace @genoly/mobile run typecheck",
     "test": "jest",
-    "sync-deps": "node scripts/sync-manifest.mjs"
+    "test:scripts": "NODE_OPTIONS=--experimental-vm-modules jest --config jest.scripts.config.cjs",
+    "sync-deps": "node scripts/sync-manifest.mjs",
+    "release:patch": "node scripts/release.mjs patch",
+    "release:minor": "node scripts/release.mjs minor",
+    "release:major": "node scripts/release.mjs major",
+    "release:prerelease": "node scripts/release.mjs prerelease"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.9.0",
