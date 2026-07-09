@@ -1,44 +1,65 @@
 /**
- * Tree — family-tree exploration hub (wave D).
+ * Tree — the tree-surfaces shell (mobile port of the web unified explorer,
+ * genoly-family-web src/pages/FamilyExplorer.tsx).
  *
  * Layout:
- *   - Tree picker chips (when the member belongs to multiple trees;
- *     selection persists as the last-visited tree)
- *   - Search (debounced ONE-SHOT autocomplete queries — typing must not
- *     open a live subscription per keystroke; bandwidth diet)
- *   - Person directory (single listAllPersonsByTree read, sorted by name)
- *   - Add person CTA
+ *   - header: tree picker chips (multi-tree members) + Add-person CTA —
+ *     present in every mode
+ *   - TreeViewPicker: Explore (DEFAULT) | Register  (+ Pedigree/Fan in B/C)
+ *   - mode body:
+ *       explore  → <ExploreCanvas/>  perspective canvas (svg + pan/pinch)
+ *       register → <RegisterTable/>  the person directory as a table —
+ *                  absorbs the old hub's directory + debounced search
+ *
+ * Data: ONE explorerGraph subscription owned here and passed down (web
+ * parity — mode switches never re-fetch), plus the existing
+ * listAllPersonsByTree read for Register rows.
+ *
+ * Anchor state lives here: defaults to the viewer's resolved person
+ * (explorerGraph.viewerPersonId), else the first person alphabetically.
+ * No URL-sync machinery — mobile has no URL bar (plan §1).
+ *
+ * Gating: inherits the app-level Pro gate (AuthGate in app/_layout.tsx).
+ * No per-surface gate, no upgrade UI — by design (plan §4).
  */
 
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, type Href } from 'expo-router';
 import { useConvex, useQuery } from 'convex/react';
-import { Image } from 'expo-image';
 
 import {
+  explorerGraph,
   listAllPersonsByTree,
   searchPersonsAutocomplete,
-  type PersonDoc,
   type PersonSearchResult,
 } from '../../lib/genolyApi';
+import type { SortKey } from '../../lib/tree/listHelpers';
+import { DEFAULT_REGISTER_UI } from '../../lib/tree/registerUi';
 import { useActiveTree } from '../../hooks/useActiveTree';
-import { useSignedUrl } from '../../hooks/useSignedUrl';
 import { setLastVisitedTreeSlug } from '../../utils/preferences';
-import { genderAccents, useTheme, useThemedStyles, type Theme } from '../../theme';
-import { Screen, EmptyState, TextField, Button, Skeleton } from '../../components/ui';
+import { useThemedStyles, type Theme } from '../../theme';
+import { Screen, EmptyState, Button, Skeleton } from '../../components/ui';
+import { TreeViewPicker, type TreeViewMode } from '../../components/tree/TreeViewPicker';
+import { ExploreCanvas, DEFAULT_EXPLORE_RADIUS } from '../../components/tree/ExploreCanvas';
+import { RegisterTable } from '../../components/tree/RegisterTable';
 
 const ADD_PERSON_ROUTE = '/add-person' as unknown as Href;
 const WELCOME_ROUTE = '/welcome' as unknown as Href;
 
 export default function TreeScreen() {
   const router = useRouter();
-  const t = useTheme();
   const styles = useThemedStyles(createStyles);
   const convex = useConvex();
   const { trees, activeTree, isLoading } = useActiveTree();
   const [selectedTreeId, setSelectedTreeId] = useState<string | null>(null);
-  const [search, setSearch] = useState('');
+
+  // ── Shell-owned surface state ───────────────────────────────────────
+  const [mode, setMode] = useState<TreeViewMode>('explore'); // Explore is the default
+  const [anchorId, setAnchorId] = useState<string | null>(null);
+  const [radius, setRadius] = useState(DEFAULT_EXPLORE_RADIUS);
+  const [sortKey, setSortKey] = useState<SortKey>(DEFAULT_REGISTER_UI.sortKey);
+  const [search, setSearch] = useState(DEFAULT_REGISTER_UI.searchQuery);
   const [results, setResults] = useState<PersonSearchResult[] | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -49,9 +70,38 @@ export default function TreeScreen() {
     return activeTree;
   }, [selectedTreeId, trees, activeTree]);
 
+  // ── Data: one graph subscription + the register's person rows ────────
   const persons = useQuery(listAllPersonsByTree, tree ? { treeId: tree._id } : ('skip' as const));
+  const graph = useQuery(
+    explorerGraph,
+    tree ? { treeId: tree._id, anchorId: anchorId ?? undefined, radius } : ('skip' as const),
+  );
 
-  // Debounced one-shot search (no per-keystroke subscriptions).
+  // Reset per-tree state when the member switches trees.
+  const treeId = tree?._id ?? null;
+  useEffect(() => {
+    setAnchorId(null);
+    setSearch('');
+    setResults(null);
+  }, [treeId]);
+
+  // Default anchor: the viewer's resolved person, else the first person A→Z.
+  useEffect(() => {
+    if (anchorId !== null || !graph) return;
+    if (graph.viewerPersonId) {
+      setAnchorId(graph.viewerPersonId);
+      return;
+    }
+    if (persons && persons.length > 0) {
+      const first = [...persons].sort((a, b) =>
+        a.preferredName.localeCompare(b.preferredName),
+      )[0];
+      setAnchorId(first._id);
+    }
+  }, [anchorId, graph, persons]);
+
+  // Debounced one-shot search (no per-keystroke subscriptions — kept from
+  // the old hub; the field now lives in Register).
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const term = search.trim();
@@ -70,9 +120,9 @@ export default function TreeScreen() {
     };
   }, [search, tree, convex]);
 
-  const onPickTree = (treeId: string) => {
-    setSelectedTreeId(treeId);
-    const picked = trees?.find((candidate) => candidate._id === treeId);
+  const onPickTree = (nextTreeId: string) => {
+    setSelectedTreeId(nextTreeId);
+    const picked = trees?.find((candidate) => candidate._id === nextTreeId);
     if (picked?.slug) {
       setLastVisitedTreeSlug(picked.slug).catch(() => {});
     }
@@ -80,6 +130,11 @@ export default function TreeScreen() {
 
   const openPerson = (personId: string) => {
     router.push(`/person/${personId}` as unknown as Href);
+  };
+
+  const explorePerson = (personId: string) => {
+    setAnchorId(personId);
+    setMode('explore');
   };
 
   if (isLoading) {
@@ -107,161 +162,84 @@ export default function TreeScreen() {
     );
   }
 
-  const sortedPersons = (persons ?? [])
-    .slice()
-    .sort((a, b) => a.preferredName.localeCompare(b.preferredName));
-
-  const showingSearch = results !== null;
-
   return (
     <Screen title="Tree" subtitle={tree.name} noScroll>
-      {/* Tree picker */}
-      {trees && trees.length > 1 ? (
+      {/* Shell header: tree picker + Add person — present in every mode. */}
+      <View style={styles.headerRow}>
         <View style={styles.pickerRow}>
-          {trees.map((candidate) => {
-            const selected = candidate._id === tree._id;
-            return (
-              <TouchableOpacity
-                key={candidate._id}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                accessibilityLabel={`Switch to ${candidate.name}`}
-                activeOpacity={0.7}
-                onPress={() => onPickTree(candidate._id)}
-                style={[styles.treeChip, selected && styles.treeChipSelected]}
-              >
-                <Text
-                  style={[styles.treeChipText, selected && styles.treeChipTextSelected]}
-                  numberOfLines={1}
-                >
-                  {candidate.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          {trees && trees.length > 1
+            ? trees.map((candidate) => {
+                const selected = candidate._id === tree._id;
+                return (
+                  <TouchableOpacity
+                    key={candidate._id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`Switch to ${candidate.name}`}
+                    activeOpacity={0.7}
+                    onPress={() => onPickTree(candidate._id)}
+                    style={[styles.treeChip, selected && styles.treeChipSelected]}
+                  >
+                    <Text
+                      style={[styles.treeChipText, selected && styles.treeChipTextSelected]}
+                      numberOfLines={1}
+                    >
+                      {candidate.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })
+            : null}
         </View>
-      ) : null}
-
-      <TextField
-        label="Find someone"
-        placeholder="Search by name…"
-        value={search}
-        onChangeText={setSearch}
-        autoCorrect={false}
-      />
-
-      <FlatList<PersonDoc | PersonSearchResult>
-        data={showingSearch ? (results ?? []) : sortedPersons}
-        keyExtractor={(item) => item._id}
-        keyboardShouldPersistTaps="handled"
-        ListHeaderComponent={
-          <View style={styles.listHeader}>
-            <Text style={styles.listLabel}>
-              {showingSearch
-                ? `${results?.length ?? 0} match${(results?.length ?? 0) === 1 ? '' : 'es'}`
-                : `${sortedPersons.length} ${sortedPersons.length === 1 ? 'person' : 'people'}`}
-            </Text>
-            <Button
-              variant="link"
-              label="+ Add person"
-              onPress={() => router.push(ADD_PERSON_ROUTE)}
-              accessibilityLabel="Add a person to the tree"
-            />
-          </View>
-        }
-        ListEmptyComponent={
-          persons === undefined && !showingSearch ? (
-            <Skeleton height={72} />
-          ) : (
-            <EmptyState
-              icon={showingSearch ? '🔍' : '🌱'}
-              title={showingSearch ? 'No one by that name yet' : 'The tree is waiting'}
-              body={
-                showingSearch
-                  ? 'Try another spelling — or add them.'
-                  : 'Add your first relative and watch the branches grow.'
-              }
-              ctaLabel="Add person"
-              onCtaPress={() => router.push(ADD_PERSON_ROUTE)}
-            />
-          )
-        }
-        renderItem={({ item }) => (
-          <PersonRow
-            styles={styles}
-            person={item}
-            accent={
-              item.gender === 'male'
-                ? genderAccents.male
-                : item.gender === 'female'
-                  ? genderAccents.female
-                  : t.colors.border
-            }
-            onPress={() => openPerson(item._id)}
-          />
-        )}
-      />
-    </Screen>
-  );
-}
-
-type Styles = ReturnType<typeof createStyles>;
-
-function PersonRow({
-  styles,
-  person,
-  accent,
-  onPress,
-}: {
-  styles: Styles;
-  person: PersonDoc | PersonSearchResult;
-  accent: string;
-  onPress: () => void;
-}) {
-  const avatarKey = 'avatarPhotoKey' in person ? person.avatarPhotoKey : undefined;
-  const avatarUrl = useSignedUrl(avatarKey);
-  const initials = person.preferredName
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-
-  return (
-    <TouchableOpacity
-      accessibilityRole="button"
-      accessibilityLabel={`Open ${person.preferredName}`}
-      activeOpacity={0.7}
-      onPress={onPress}
-      style={styles.personRow}
-    >
-      {avatarUrl ? (
-        <Image source={{ uri: avatarUrl }} style={styles.avatar} contentFit="cover" />
-      ) : (
-        <View style={[styles.avatar, styles.avatarFallback, { borderColor: accent }]}>
-          <Text style={styles.avatarInitials}>{initials || '?'}</Text>
-        </View>
-      )}
-      <View style={styles.personCopy}>
-        <Text style={styles.personName} numberOfLines={1}>
-          {person.preferredName}
-        </Text>
-        {'nickname' in person && person.nickname ? (
-          <Text style={styles.personMeta} numberOfLines={1}>
-            “{person.nickname}”
-          </Text>
-        ) : null}
+        <Button
+          variant="link"
+          label="+ Add person"
+          onPress={() => router.push(ADD_PERSON_ROUTE)}
+          accessibilityLabel="Add a person to the tree"
+        />
       </View>
-      <Text style={styles.chevron}>›</Text>
-    </TouchableOpacity>
+
+      <TreeViewPicker mode={mode} onChange={setMode} />
+
+      {mode === 'explore' ? (
+        <ExploreCanvas
+          graph={graph}
+          anchorId={anchorId}
+          radius={radius}
+          onRadiusChange={setRadius}
+          onReAnchor={setAnchorId}
+          onOpenPerson={openPerson}
+        />
+      ) : (
+        <RegisterTable
+          persons={persons}
+          graph={graph}
+          search={search}
+          onSearchChange={setSearch}
+          searchResults={results}
+          sortKey={sortKey}
+          onSortChange={setSortKey}
+          onOpenPerson={openPerson}
+          onExplorePerson={explorePerson}
+          onAddPerson={() => router.push(ADD_PERSON_ROUTE)}
+        />
+      )}
+    </Screen>
   );
 }
 
 function createStyles(t: Theme) {
   return StyleSheet.create({
+    headerRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: t.spacing.sm,
+    },
     pickerRow: {
+      flex: 1,
       flexDirection: 'row',
       flexWrap: 'wrap',
-      marginBottom: t.spacing.md,
     },
     treeChip: {
       borderWidth: 1,
@@ -286,59 +264,6 @@ function createStyles(t: Theme) {
     treeChipTextSelected: {
       color: t.colors.onPrimary,
       fontWeight: '600',
-    },
-    listHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: t.spacing.sm,
-    },
-    listLabel: {
-      ...t.typography.sectionHeader,
-      color: t.colors.textMuted,
-    },
-    personRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: t.colors.surface,
-      borderRadius: t.radius.sm,
-      paddingVertical: t.spacing.md,
-      paddingHorizontal: t.spacing.lg,
-      marginBottom: t.spacing.sm,
-      minHeight: 44,
-    },
-    avatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      marginRight: t.spacing.md,
-    },
-    avatarFallback: {
-      backgroundColor: t.colors.surfaceMuted,
-      borderWidth: 2,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    avatarInitials: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: t.colors.textMuted,
-    },
-    personCopy: {
-      flex: 1,
-    },
-    personName: {
-      ...t.typography.rowLabel,
-      color: t.colors.text,
-    },
-    personMeta: {
-      ...t.typography.helper,
-      color: t.colors.textMuted,
-    },
-    chevron: {
-      color: t.colors.textMuted,
-      fontSize: 18,
-      marginLeft: t.spacing.sm,
     },
   });
 }
