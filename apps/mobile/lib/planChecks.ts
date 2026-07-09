@@ -33,3 +33,28 @@ export function filterProTenants(tenants: TenantSummary[]): TenantSummary[] {
  * Gives the user time to finish what they're doing when their tenant downgrades.
  */
 export const DOWNGRADE_GRACE_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Computes the absolute epoch-ms deadline for the downgrade grace period,
+ * anchored at the moment a downgrade is first detected.
+ *
+ * Callers must compute this exactly ONCE per downgrade event and reuse the
+ * returned deadline across re-renders/navigation. Recomputing it on every
+ * render (e.g. `Date.now() + DOWNGRADE_GRACE_MS` inline in an effect with a
+ * large dependency array) is the bug this helper exists to prevent: an
+ * unrelated re-render — such as a route change — must not push the eviction
+ * time further into the future.
+ */
+export function computeDowngradeDeadline(detectedAtMs: number): number {
+  return detectedAtMs + DOWNGRADE_GRACE_MS;
+}
+
+/**
+ * Remaining ms until a previously computed downgrade deadline, clamped to
+ * zero. Used to (re)schedule the eviction timer from the fixed deadline
+ * rather than from a fresh full grace window, so the timer stays correct
+ * even if the effect that owns it re-runs for unrelated reasons.
+ */
+export function getGraceRemainingMs(deadlineMs: number, nowMs: number): number {
+  return Math.max(0, deadlineMs - nowMs);
+}
