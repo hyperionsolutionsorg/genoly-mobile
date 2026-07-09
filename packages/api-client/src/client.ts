@@ -105,7 +105,17 @@ export class FetchApiClient implements ApiClient {
         }
 
         if (response.ok) {
-          return (await response.json()) as T;
+          // 204 No Content (decline/unfriend/revoke) has no body — calling
+          // .json() on an empty body throws. Treat any 2xx with an empty
+          // body as void; only parse JSON when there's actual text.
+          if (response.status === 204) {
+            return undefined as unknown as T;
+          }
+          const text = await response.text();
+          if (!text) {
+            return undefined as unknown as T;
+          }
+          return JSON.parse(text) as T;
         }
 
         // Parse custom error body
@@ -251,9 +261,9 @@ export class FetchApiClient implements ApiClient {
 
   // §3 Friends & leaderboard ──────────────────────────────────────────────
 
-  /** GET /api/fitness/friends. */
+  /** GET /api/fitness/friends — list partitioned into accepted / pendingIncoming / pendingOutgoing / blocked. */
   async getFriends(): Promise<FriendsByStatus> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    return this.request<FriendsByStatus>('GET', '/api/fitness/friends');
   }
 
   /**
@@ -272,38 +282,77 @@ export class FetchApiClient implements ApiClient {
     );
   }
 
-  /** POST /api/fitness/friends/request. */
+  /**
+   * POST /api/fitness/friends/request — initiate a friendship by the
+   * target's Genoly email. 201 on success. Server errors: 404 not_found
+   * (no Genoly user at that email, OR the target has blocked the caller —
+   * indistinguishable by design, privacy per the contract), 409 conflict
+   * (a friendship already exists in some state), 400 validation_failed
+   * (self-friend attempt).
+   */
   async requestFriend(opts: { targetEmail: string }): Promise<{
     friendshipId: string;
     status: 'pending';
   }> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    return this.request<{ friendshipId: string; status: 'pending' }>(
+      'POST',
+      '/api/fitness/friends/request',
+      opts,
+    );
   }
 
-  /** POST /api/fitness/friends/:friendshipId/accept. */
+  /**
+   * POST /api/fitness/friends/:friendshipId/accept — recipient-only.
+   * 403 forbidden if the caller is the original requester; 409 conflict
+   * if the friendship isn't currently pending; 404 not_found if the
+   * caller isn't a member of the friendship (or it doesn't exist).
+   */
   async acceptFriend(friendshipId: string): Promise<{
     status: 'accepted';
     acceptedAt: number;
   }> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    return this.request<{ status: 'accepted'; acceptedAt: number }>(
+      'POST',
+      `/api/fitness/friends/${encodeURIComponent(friendshipId)}/accept`,
+    );
   }
 
-  /** POST /api/fitness/friends/:friendshipId/decline — deletes the row. */
+  /**
+   * POST /api/fitness/friends/:friendshipId/decline — recipient-only;
+   * deletes the row (204, no body). Same error semantics as accept.
+   */
   async declineFriend(friendshipId: string): Promise<void> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    await this.request<void>(
+      'POST',
+      `/api/fitness/friends/${encodeURIComponent(friendshipId)}/decline`,
+    );
   }
 
-  /** DELETE /api/fitness/friends/:friendshipId — unfriend. */
+  /**
+   * DELETE /api/fitness/friends/:friendshipId — unfriend (accepted rows)
+   * or withdraw (pending rows) or unblock (blocked rows, blocker only).
+   * Either party may call for accepted/pending; 204 on success, 404 if
+   * the caller isn't a member (or, for a blocked row, isn't the blocker).
+   */
   async unfriend(friendshipId: string): Promise<void> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    await this.request<void>(
+      'DELETE',
+      `/api/fitness/friends/${encodeURIComponent(friendshipId)}`,
+    );
   }
 
-  /** POST /api/fitness/friends/:friendshipId/block. */
+  /**
+   * POST /api/fitness/friends/:friendshipId/block — any status →
+   * blocked. Caller must be a member of the friendship (404 otherwise).
+   */
   async blockFriend(friendshipId: string): Promise<{
     status: 'blocked';
     blockedAt: number;
   }> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    return this.request<{ status: 'blocked'; blockedAt: number }>(
+      'POST',
+      `/api/fitness/friends/${encodeURIComponent(friendshipId)}/block`,
+    );
   }
 
   // §4 Goals ──────────────────────────────────────────────────────────────

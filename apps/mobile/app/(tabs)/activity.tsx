@@ -37,6 +37,7 @@ import { Banner } from '../../components/ui';
 // Typed-routes union lags new top-level routes until `expo start`
 // regenerates .expo/types — same cast pattern as the rest of the app.
 const LEADERBOARD_ROUTE = '/leaderboard' as unknown as Href;
+const FRIENDS_ROUTE = '/friends' as unknown as Href;
 
 export default function ActivityScreen() {
   const t = useTheme();
@@ -158,10 +159,21 @@ export default function ActivityScreen() {
         </View>
       )}
 
-      {/* Friends — link to the daily standings (pushed screen, Step 8) */}
+      {/* Friends — manage connections (Step 9) + link to daily standings (Step 8) */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Friends</Text>
         <View style={styles.sectionBody}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Manage friends"
+            accessibilityHint="Send requests, accept or decline, and manage your friends list"
+            style={styles.linkRow}
+            onPress={() => router.push(FRIENDS_ROUTE)}
+          >
+            <Text style={styles.linkRowLabel}>Manage friends</Text>
+            <Text style={styles.linkRowChevron}>›</Text>
+          </TouchableOpacity>
+          <View style={styles.linkRowDivider} />
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel="Open friends leaderboard"
@@ -443,6 +455,10 @@ function createStyles(t: Theme) {
       fontSize: 22,
       color: t.colors.textMuted,
       marginLeft: t.spacing.sm,
+    },
+    linkRowDivider: {
+      height: 1,
+      backgroundColor: t.colors.border,
     },
     emptyState: {
       backgroundColor: t.colors.surface,
