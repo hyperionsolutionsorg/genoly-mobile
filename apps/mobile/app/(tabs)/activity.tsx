@@ -8,6 +8,8 @@
  *   2. Optional dead-letter banner (only when deadLetterDepth > 0)
  *   3. Today's three big-number cards: Steps, Active calories, Distance
  *   4. Section: "Last 7 days" with horizontal bars
+ *   5. Section: "Friends" — link row to the pushed Leaderboard screen
+ *      (`/leaderboard`, Step 8 salvage: daily standings vs fitness friends)
  *
  * States handled: initial load / empty / error / refreshing.
  *
@@ -26,14 +28,20 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useRouter, type Href } from 'expo-router';
 import type { HealthEntry } from '@genoly/types';
 import { useDashboardData } from '../../hooks/useDashboardData';
-import { useThemedStyles, useTheme, type Theme } from '../../theme';
+import { useThemedStyles, useTheme, MIN_TOUCH_TARGET, type Theme } from '../../theme';
 import { Banner } from '../../components/ui';
+
+// Typed-routes union lags new top-level routes until `expo start`
+// regenerates .expo/types — same cast pattern as the rest of the app.
+const LEADERBOARD_ROUTE = '/leaderboard' as unknown as Href;
 
 export default function ActivityScreen() {
   const t = useTheme();
   const styles = useThemedStyles(createStyles);
+  const router = useRouter();
   const data = useDashboardData();
 
   const onRefresh = useCallback(() => {
@@ -149,6 +157,23 @@ export default function ActivityScreen() {
           </View>
         </View>
       )}
+
+      {/* Friends — link to the daily standings (pushed screen, Step 8) */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Friends</Text>
+        <View style={styles.sectionBody}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Open friends leaderboard"
+            accessibilityHint="Shows today's step standings across you and your fitness friends"
+            style={styles.linkRow}
+            onPress={() => router.push(LEADERBOARD_ROUTE)}
+          >
+            <Text style={styles.linkRowLabel}>Friends leaderboard</Text>
+            <Text style={styles.linkRowChevron}>›</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -402,6 +427,22 @@ function createStyles(t: Theme) {
       color: t.colors.textMuted,
       textAlign: 'right',
       fontVariant: ['tabular-nums'],
+    },
+    linkRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: t.spacing.sm,
+      minHeight: MIN_TOUCH_TARGET,
+    },
+    linkRowLabel: {
+      ...t.typography.rowLabel,
+      color: t.colors.text,
+    },
+    linkRowChevron: {
+      fontSize: 22,
+      color: t.colors.textMuted,
+      marginLeft: t.spacing.sm,
     },
     emptyState: {
       backgroundColor: t.colors.surface,

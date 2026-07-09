@@ -29,6 +29,17 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 
 // ── Mocks ────────────────────────────────────────────────────────────
 
+// activity.tsx imports expo-router (useRouter for the Friends-leaderboard
+// link row, Step 8 salvage). jest-expo 56 cannot load expo-router's
+// screen-level imports (TurboModule gap), so mock it at the module
+// boundary — same approach as leaderboard.test.tsx.
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+  Stack: {
+    Screen: () => null,
+  },
+}));
+
 // utils/api.ts throws at module top-level if convexBaseUrl is missing
 // from app.json's `extra`. In the jest-expo environment that field is
 // undefined, so we mock the whole module to keep it loadable. The
