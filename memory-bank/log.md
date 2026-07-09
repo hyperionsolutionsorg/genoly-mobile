@@ -556,3 +556,9 @@ Orchestrated run (brief `_mobile-phase1-and-challenge-growth-brief.md`) closed s
 ## [2026-07-09] merge | run merges landed — Phase 1 fitness CLOSED + 4 Pro tree surfaces live on main
 
 All 8 run PRs squash-merged to main in order (operator-authorized): fitness #27 → #35 (re-files #29, auto-closed by GitHub on base-branch deletion) → #30 → #33; tree #28 → #31 → #32 → #34. Main at `e4ec701`. Post-merge verify on the unified tree (both stacks together for the first time): `npm run typecheck` 0 errors; `npm test` 385 passed / 34 skipped / 419 total (skips = jest-expo 56 screen-suite pattern, pre-existing). **Phase 1 (mobile sync + leaderboard) is COMPLETE per §15 — ApiClient 15/20 implemented (devices/subscription stubs are post-Phase-1).** Worktrees removed; all run feature branches deleted (local + remote). `origin/feat/step-8-leaderboard` (`e630ba3`, the 2026-05 original) left for operator deletion — fully salvaged and superseded. package-lock.json drift resolved by the merged lockfile (stash dropped). Remaining operator items: simulator/device pass (task #300), research-report review (web vault), APNs/FCM + prod URLs unchanged.
+
+## [2026-07-09] doc | GRAPH_REPORT.md regenerated — post-Phase-1 + tree-surfaces narrative
+
+Full rewrite of `docs/GRAPH_REPORT.md` (previous regen: 2026-06-09, Fitness-only/4-tab era). Now covers the 2026-06-11 member-app run, V1.0.0's Pro-only gate + paywall, and today's Phase-1 closure + 4 tree surfaces (Explore/Register/Pedigree/Fan + `lib/tree/` pure ports).
+
+Corrected the stale claim flagged in `vault/mobile-audit.md` §7 item 6: `getSubscription` is NOT wired — it still throws `not_implemented`; Settings reads plan tier via `getSession()`. Also noted a numeric discrepancy: `client.ts` has 4 stub methods (`getDevices`, `setPrimaryDevice`, `revokeDevice`, `getSubscription`), making the accurate count 16/20 implemented, not the 15/20 this log's 2026-07-09 entries state.
