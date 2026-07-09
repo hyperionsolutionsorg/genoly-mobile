@@ -58,6 +58,8 @@ import {
   kbSearchArticles,
   submitContact,
   updateProfile,
+  explorerGraph,
+  pedigreeGetAncestorTree,
   isDemoEmail,
   isAdminRole,
 } from '../lib/genolyApi';
@@ -114,6 +116,10 @@ describe('function reference names', () => {
     [kbSearchArticles, 'kb:searchArticles'],
     [submitContact, 'contactSubmissions:submitContact'],
     [updateProfile, 'users:updateProfile'],
+    // Tree surfaces. ⚠️ pedigree:getAncestorTree (nested tree) — NEVER
+    // explorerGraph:getAncestorTree (flat Ahnentafel, Focus-only, Pro-gated).
+    [explorerGraph, 'explorerGraph:explorerGraph'],
+    [pedigreeGetAncestorTree, 'pedigree:getAncestorTree'],
   ])('reference resolves to %s', (ref, expected) => {
     expect(getFunctionName(ref)).toBe(expected);
   });

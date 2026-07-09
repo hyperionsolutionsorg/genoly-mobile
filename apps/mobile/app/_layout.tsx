@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useRef, useState } from 'react';
 import { View, Text } from 'react-native';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import { useConvexAuth } from 'convex/react';
 
@@ -33,6 +34,8 @@ export const unstable_settings = {
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+const rootGestureStyle = { flex: 1 } as const;
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -48,11 +51,15 @@ export default function RootLayout() {
   }
 
   return (
-    <ConvexAuthProvider client={getConvexClient()} storage={convexAuthStorage}>
-      <ThemeProvider>
-        <AuthGate />
-      </ThemeProvider>
-    </ConvexAuthProvider>
+    // GestureHandlerRootView must wrap the app for the tree canvases'
+    // pan/pinch GestureDetectors (components/tree/ZoomPanView.tsx).
+    <GestureHandlerRootView style={rootGestureStyle}>
+      <ConvexAuthProvider client={getConvexClient()} storage={convexAuthStorage}>
+        <ThemeProvider>
+          <AuthGate />
+        </ThemeProvider>
+      </ConvexAuthProvider>
+    </GestureHandlerRootView>
   );
 }
 

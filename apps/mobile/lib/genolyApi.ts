@@ -634,6 +634,39 @@ export const updateProfile = makeFunctionReference<
   unknown
 >('users:updateProfile');
 
+// ── Tree surfaces (Explore canvas / Register / Pedigree / Fan) ────────
+//
+// Payload shapes live in lib/tree/explorerTypes.ts (hand-maintained mirrors
+// of web convex/explorerGraph.ts + convex/pedigree.ts) so the ported pure
+// geometry modules under lib/tree/ stay dependency-free.
+
+import type { AncestorNode, ExplorerGraphResult } from './tree/explorerTypes';
+
+/**
+ * The bounded kinship neighborhood around an anchor person — the single data
+ * source for the Explore canvas and the Register's relationship column.
+ * Server clamps radius to ±5; server default ±3 (mobile passes ±2 by default
+ * — svg render budget, see components/tree/ExploreCanvas.tsx).
+ */
+export const explorerGraph = makeFunctionReference<
+  'query',
+  { treeId: string; anchorId?: string; radius?: number },
+  ExplorerGraphResult
+>('explorerGraph:explorerGraph');
+
+/**
+ * The NESTED ancestor tree (father/mother recursion) for the Pedigree Classic
+ * and Fan surfaces (Tasks B/C — pinned here so both are independent of each
+ * other). ⚠️ Name-collision hazard: `explorerGraph:getAncestorTree` is a
+ * DIFFERENT query (flat Ahnentafel shape, Focus-only, Pro-gated). Never pin
+ * that one for these surfaces.
+ */
+export const pedigreeGetAncestorTree = makeFunctionReference<
+  'query',
+  { personId: string; maxGenerations?: number },
+  AncestorNode | null
+>('pedigree:getAncestorTree');
+
 // ── Demo detection (mirror of web src/App.tsx + convex/lib/demoUsers.ts) ──
 
 export const DEMO_USER_EMAILS = new Set(['demo-admin@genoly.org', 'demo-viewer@genoly.org']);
