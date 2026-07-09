@@ -10,10 +10,14 @@
  *       explore  → <ExploreCanvas/>  perspective canvas (svg + pan/pinch)
  *       register → <RegisterTable/>  the person directory as a table —
  *                  absorbs the old hub's directory + debounced search
+ *       pedigree → <PedigreeClassic/> ancestor chart (svg + pan/pinch),
+ *                  rooted at the shared anchor (Task B)
  *
  * Data: ONE explorerGraph subscription owned here and passed down (web
  * parity — mode switches never re-fetch), plus the existing
- * listAllPersonsByTree read for Register rows.
+ * listAllPersonsByTree read for Register rows, plus a pedigree:getAncestorTree
+ * subscription that only runs while `mode === 'pedigree'` (skipped otherwise
+ * — Explore/Register never pay for it).
  *
  * Anchor state lives here: defaults to the viewer's resolved person
  * (explorerGraph.viewerPersonId), else the first person alphabetically.
@@ -31,6 +35,7 @@ import { useConvex, useQuery } from 'convex/react';
 import {
   explorerGraph,
   listAllPersonsByTree,
+  pedigreeGetAncestorTree,
   searchPersonsAutocomplete,
   type PersonSearchResult,
 } from '../../lib/genolyApi';
@@ -43,6 +48,10 @@ import { Screen, EmptyState, Button, Skeleton } from '../../components/ui';
 import { TreeViewPicker, type TreeViewMode } from '../../components/tree/TreeViewPicker';
 import { ExploreCanvas, DEFAULT_EXPLORE_RADIUS } from '../../components/tree/ExploreCanvas';
 import { RegisterTable } from '../../components/tree/RegisterTable';
+import {
+  PedigreeClassic,
+  DEFAULT_PEDIGREE_GENERATIONS,
+} from '../../components/tree/PedigreeClassic';
 
 const ADD_PERSON_ROUTE = '/add-person' as unknown as Href;
 const WELCOME_ROUTE = '/welcome' as unknown as Href;
@@ -58,6 +67,7 @@ export default function TreeScreen() {
   const [mode, setMode] = useState<TreeViewMode>('explore'); // Explore is the default
   const [anchorId, setAnchorId] = useState<string | null>(null);
   const [radius, setRadius] = useState(DEFAULT_EXPLORE_RADIUS);
+  const [pedigreeGenerations, setPedigreeGenerations] = useState(DEFAULT_PEDIGREE_GENERATIONS);
   const [sortKey, setSortKey] = useState<SortKey>(DEFAULT_REGISTER_UI.sortKey);
   const [search, setSearch] = useState(DEFAULT_REGISTER_UI.searchQuery);
   const [results, setResults] = useState<PersonSearchResult[] | null>(null);
@@ -75,6 +85,15 @@ export default function TreeScreen() {
   const graph = useQuery(
     explorerGraph,
     tree ? { treeId: tree._id, anchorId: anchorId ?? undefined, radius } : ('skip' as const),
+  );
+  // Only subscribed while Pedigree is the active mode — Explore/Register
+  // never pay for this query (web parity: mode switches don't re-fetch
+  // data the inactive mode doesn't need).
+  const ancestorTree = useQuery(
+    pedigreeGetAncestorTree,
+    mode === 'pedigree' && anchorId
+      ? { personId: anchorId, maxGenerations: pedigreeGenerations }
+      : ('skip' as const),
   );
 
   // Reset per-tree state when the member switches trees.
@@ -207,6 +226,16 @@ export default function TreeScreen() {
           anchorId={anchorId}
           radius={radius}
           onRadiusChange={setRadius}
+          onReAnchor={setAnchorId}
+          onOpenPerson={openPerson}
+        />
+      ) : mode === 'pedigree' ? (
+        <PedigreeClassic
+          ancestorTree={ancestorTree}
+          personId={anchorId}
+          viewerPersonId={graph?.viewerPersonId}
+          generations={pedigreeGenerations}
+          onGenerationsChange={setPedigreeGenerations}
           onReAnchor={setAnchorId}
           onOpenPerson={openPerson}
         />

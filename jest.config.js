@@ -38,8 +38,20 @@ module.exports = {
   // Map tsconfig's `@/*` path alias to `apps/mobile/` so jest-expo's
   // babel transform can resolve it. (ts-jest reads tsconfig paths automatically;
   // babel requires explicit moduleNameMapper.)
+  //
+  // d3-hierarchy (added for the Pedigree Classic layout, apps/mobile/lib/
+  // tree/classicLayout.ts) ships ESM-only from node_modules (`"type":
+  // "module"`, no `main`/CJS build) — the base RN jest preset's
+  // transformIgnorePatterns only allow-lists react-native packages, so a
+  // plain `import ... from 'd3-hierarchy'` hits "Unexpected token 'export'"
+  // under jest-expo's CJS test runtime. Rather than touch
+  // transformIgnorePatterns (the comment above explains why that's fragile
+  // here), map the bare specifier to the package's own prebuilt UMD bundle
+  // (`dist/d3-hierarchy.js`, ships in the npm package, CJS-compatible) —
+  // scoped, no preset changes.
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/apps/mobile/$1',
+    '^d3-hierarchy$': '<rootDir>/node_modules/d3-hierarchy/dist/d3-hierarchy.js',
   },
   testPathIgnorePatterns: [
     '/node_modules/',
