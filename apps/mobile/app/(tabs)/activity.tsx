@@ -10,6 +10,21 @@
  *   4. Section: "Last 7 days" with horizontal bars
  *   5. Section: "Friends" — link row to the pushed Leaderboard screen
  *      (`/leaderboard`, Step 8 salvage: daily standings vs fitness friends)
+ *   6. Section: "Goals" — link row to the pushed Goals screen (Step 10:
+ *      set/edit/archive daily & weekly steps/calories targets + history)
+ *
+ * Goals/dashboard consistency note (Step 10): this dashboard's "Today"
+ * card renders raw HealthEntry values from `getDailyAggregates` — it does
+ * NOT render goal targets today, so there's no duplicated-source-of-truth
+ * risk to reconcile here. The only other place goal values reach the
+ * client today is `friends/leaderboard`'s `myStepGoal`/`myCalorieGoal`
+ * response fields (Step 8) — `useLeaderboardData` already reads them off
+ * the SAME `fitness_goals` active rows this screen's "Goals" section
+ * edits via `useGoalsData`, so a goal changed here is picked up next time
+ * the leaderboard re-fetches (no client-side goals cache to invalidate).
+ * Note `leaderboard.tsx` doesn't currently render those two fields in its
+ * UI (pre-existing, out of scope for this step) — flagging in case a
+ * future pass wants to surface "vs. your goal" on that screen.
  *
  * States handled: initial load / empty / error / refreshing.
  *
@@ -38,6 +53,7 @@ import { Banner } from '../../components/ui';
 // regenerates .expo/types — same cast pattern as the rest of the app.
 const LEADERBOARD_ROUTE = '/leaderboard' as unknown as Href;
 const FRIENDS_ROUTE = '/friends' as unknown as Href;
+const GOALS_ROUTE = '/goals' as unknown as Href;
 
 export default function ActivityScreen() {
   const t = useTheme();
@@ -182,6 +198,23 @@ export default function ActivityScreen() {
             onPress={() => router.push(LEADERBOARD_ROUTE)}
           >
             <Text style={styles.linkRowLabel}>Friends leaderboard</Text>
+            <Text style={styles.linkRowChevron}>›</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Goals — set/edit targets + history (Step 10) */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Goals</Text>
+        <View style={styles.sectionBody}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Manage goals"
+            accessibilityHint="Set, edit, or remove your daily and weekly steps and calories targets"
+            style={styles.linkRow}
+            onPress={() => router.push(GOALS_ROUTE)}
+          >
+            <Text style={styles.linkRowLabel}>Manage goals</Text>
             <Text style={styles.linkRowChevron}>›</Text>
           </TouchableOpacity>
         </View>

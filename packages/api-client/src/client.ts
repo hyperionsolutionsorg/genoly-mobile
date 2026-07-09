@@ -359,30 +359,50 @@ export class FetchApiClient implements ApiClient {
 
   /** GET /api/fitness/goals — currently active goals (max 4). */
   async getGoals(): Promise<{ goals: Goal[] }> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    return this.request<{ goals: Goal[] }>('GET', '/api/fitness/goals');
   }
 
-  /** GET /api/fitness/goals/history. */
+  /**
+   * GET /api/fitness/goals/history — archived goals, most recently
+   * archived first. Optional filters map to query params; `limit`
+   * defaults server-side to 50 (max 200) when omitted.
+   */
   async getGoalsHistory(opts?: {
     period?: GoalPeriod;
     metric?: GoalMetric;
     limit?: number;
   }): Promise<{ goals: ArchivedGoal[] }> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    const params = new URLSearchParams();
+    if (opts?.period) params.set('period', opts.period);
+    if (opts?.metric) params.set('metric', opts.metric);
+    if (opts?.limit !== undefined) params.set('limit', String(opts.limit));
+    const qs = params.toString();
+    return this.request<{ goals: ArchivedGoal[] }>(
+      'GET',
+      `/api/fitness/goals/history${qs ? `?${qs}` : ''}`,
+    );
   }
 
-  /** PUT /api/fitness/goals — create-or-update for a (period, metric) pair. */
+  /**
+   * PUT /api/fitness/goals — idempotent create-or-update for a
+   * (period, metric) pair. `created: false` means the server found an
+   * existing active goal with the same target and made no writes.
+   */
   async upsertGoal(opts: {
     period: GoalPeriod;
     metric: GoalMetric;
     target: number;
   }): Promise<{ id: string; status: 'active'; created: boolean }> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    return this.request<{ id: string; status: 'active'; created: boolean }>(
+      'PUT',
+      '/api/fitness/goals',
+      opts,
+    );
   }
 
   /** DELETE /api/fitness/goals/:goalId — archives, doesn't delete. */
   async archiveGoal(goalId: string): Promise<void> {
-    throw new ApiClientError({ code: 'bad_request', message: 'not_implemented' }, 400);
+    await this.request<void>('DELETE', `/api/fitness/goals/${encodeURIComponent(goalId)}`);
   }
 
   // §5 Devices ────────────────────────────────────────────────────────────
