@@ -27,6 +27,18 @@ module.exports = {
   // matcher extensions belong.
   setupFiles: ['./jest.setup.js'],
   setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
+  // d3-hierarchy ships ESM-only from its package.json "main"/"module" entry
+  // (`src/index.js`, bare `export` syntax) and its `exports` map blocks any
+  // subpath require (so `transformIgnorePatterns` tricks or `require.resolve`
+  // workarounds both fail). Point the bare specifier straight at the
+  // pre-bundled UMD build instead — same public API (`hierarchy`, `tree`,
+  // etc.), plain CJS, no transform needed. Used by lib/tree/classicLayout.ts
+  // and lib/tree/fanGeometry.ts (both call into d3-hierarchy for the tree
+  // walk). Task C, 2026-07-09 — this was needed for Pedigree Classic's own
+  // suite too; it had been silently failing to parse before this fix.
+  moduleNameMapper: {
+    '^d3-hierarchy$': '<rootDir>/../../node_modules/d3-hierarchy/dist/d3-hierarchy.js',
+  },
   // Skipped 2026-06-04 during Expo SDK 54→55 upgrade, still skipped in
   // SDK 56. jest-expo 56's preset does not yet fully mock the New
   // Architecture TurboModule chain (Dimensions.set, PlatformConstantsIOS,
