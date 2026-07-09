@@ -13,6 +13,8 @@ import {
   hasAnyProTenant,
   filterProTenants,
   DOWNGRADE_GRACE_MS,
+  computeDowngradeDeadline,
+  getGraceRemainingMs,
   type TenantSummary,
 } from '../lib/planChecks';
 
@@ -71,5 +73,72 @@ describe('filterProTenants', () => {
 describe('DOWNGRADE_GRACE_MS', () => {
   it('is 5 minutes', () => {
     expect(DOWNGRADE_GRACE_MS).toBe(5 * 60 * 1000);
+  });
+});
+
+// F2 regression coverage — 2026-07-09 pro-gating audit: the downgrade grace
+// deadline must be anchored ONCE at detection time and must NOT be
+// recomputed from "now" on every call, otherwise re-anchoring on each
+// re-render (e.g. in-app navigation) would silently extend the grace
+// window indefinitely.
+describe('computeDowngradeDeadline', () => {
+  it('adds exactly DOWNGRADE_GRACE_MS to the detection timestamp', () => {
+    const detectedAt = 1_000_000;
+    expect(computeDowngradeDeadline(detectedAt)).toBe(detectedAt + DOWNGRADE_GRACE_MS);
+  });
+
+  it('is a pure function of its input — same input always yields the same deadline', () => {
+    const detectedAt = 42;
+    expect(computeDowngradeDeadline(detectedAt)).toBe(computeDowngradeDeadline(detectedAt));
+  });
+
+  it('does not depend on when it is called (only on the detection timestamp passed in)', () => {
+    const detectedAt = 5_000;
+    const first = computeDowngradeDeadline(detectedAt);
+    // Simulate time passing / a later re-render re-deriving the deadline
+    // from the SAME anchor timestamp — must be identical, not "now + grace".
+    const second = computeDowngradeDeadline(detectedAt);
+    expect(second).toBe(first);
+  });
+});
+
+describe('getGraceRemainingMs', () => {
+  it('returns the full grace window when now equals the detection time', () => {
+    const detectedAt = 10_000;
+    const deadline = computeDowngradeDeadline(detectedAt);
+    expect(getGraceRemainingMs(deadline, detectedAt)).toBe(DOWNGRADE_GRACE_MS);
+  });
+
+  it('shrinks linearly as time passes toward the deadline', () => {
+    const detectedAt = 10_000;
+    const deadline = computeDowngradeDeadline(detectedAt);
+    const halfwayElapsed = detectedAt + DOWNGRADE_GRACE_MS / 2;
+    expect(getGraceRemainingMs(deadline, halfwayElapsed)).toBe(DOWNGRADE_GRACE_MS / 2);
+  });
+
+  it('is zero exactly at the deadline', () => {
+    const deadline = computeDowngradeDeadline(0);
+    expect(getGraceRemainingMs(deadline, deadline)).toBe(0);
+  });
+
+  it('clamps to zero once the deadline has already passed (never negative)', () => {
+    const deadline = computeDowngradeDeadline(0);
+    expect(getGraceRemainingMs(deadline, deadline + 60_000)).toBe(0);
+  });
+
+  it('recomputing remaining time from the same fixed deadline at different "now"s never resets past the anchor', () => {
+    // This is the crux of the F2 fix: if an effect re-runs multiple times
+    // (e.g. because a navigation-driven re-render fired it again) but the
+    // deadline itself is unchanged, each recomputed "remaining" must keep
+    // shrinking toward the SAME original deadline — never jump back up to
+    // a fresh full grace window.
+    const detectedAt = 100_000;
+    const deadline = computeDowngradeDeadline(detectedAt);
+
+    const remainingAtT1 = getGraceRemainingMs(deadline, detectedAt + 1_000);
+    const remainingAtT2 = getGraceRemainingMs(deadline, detectedAt + 2_000);
+
+    expect(remainingAtT2).toBeLessThan(remainingAtT1);
+    expect(remainingAtT1).toBeLessThanOrEqual(DOWNGRADE_GRACE_MS);
   });
 });

@@ -15,7 +15,7 @@ import { ToastHost } from '../components/ui';
 import { getConvexClient, convexAuthStorage } from '../utils/convex';
 import { getHasRequestedHealthPermissions } from '../utils/preferences';
 import { useHasProTenantAccess } from '../lib/genolyApi';
-import { DOWNGRADE_GRACE_MS } from '../lib/planChecks';
+import { computeDowngradeDeadline, getGraceRemainingMs } from '../lib/planChecks';
 
 // Cast once at module scope — Expo Router's Href type is generated from
 // the file system route map, but `(auth)/login` is a group-route the
@@ -71,12 +71,20 @@ export default function RootLayout() {
  * Arms:
  *   1. Member session loading → keep splash.
  *   2. No member session + outside the (auth) group → /(auth)/login.
- *   3. Session valid + health permissions never requested → /(auth)/permissions.
- *   4. Session valid + no Pro tenant → /(gated)/paywall.
- *   5. Otherwise → render the app.
+ *   3. Session valid, Pro status still resolving (`hasProAccess === null`) →
+ *      hold the splash. The app tree must not mount here — mounting would
+ *      fire a gated screen's queries once before we know whether the user
+ *      is Pro (2026-07-09 audit F1).
+ *   4. Session valid + health permissions never requested → /(auth)/permissions.
+ *   5. Session valid + no Pro tenant → /(gated)/paywall.
+ *   6. Otherwise → render the app.
  *
  * Downgrade path: when a user loses their last Pro tenant while in-app, a
- * 5-minute grace banner is shown before the hard redirect fires.
+ * 5-minute grace banner is shown before the hard redirect fires. The grace
+ * deadline is anchored once at detection time (`computeDowngradeDeadline`)
+ * and owned by a dedicated effect keyed only on that deadline, so it cannot
+ * be reset by unrelated re-renders such as in-app navigation
+ * (2026-07-09 audit F2).
  */
 function AuthGate() {
   const { isLoading, isAuthenticated } = useConvexAuth();
@@ -89,7 +97,18 @@ function AuthGate() {
   // Downgrade grace: track whether the user previously had Pro access so we
   // can detect a mid-session flip and show a warning banner before evicting.
   const hadProRef = useRef<boolean | null>(null);
+  // Plain ref (not state): true for the whole lifetime of an active grace
+  // window, from detection through eviction/cancellation. Read-only inside
+  // the routing effect below so it deliberately stays out of that effect's
+  // dependency array — it exists only to stop the routing effect from
+  // firing a redundant immediate redirect while (or right after) the
+  // dedicated eviction effect owns the timing.
+  const graceActiveRef = useRef(false);
   const [showDowngradeBanner, setShowDowngradeBanner] = useState(false);
+  // Absolute epoch-ms deadline for the current downgrade grace window, set
+  // exactly once at detection and cleared when the grace period ends or Pro
+  // is regained. `null` means no grace period is active.
+  const [downgradeDeadline, setDowngradeDeadline] = useState<number | null>(null);
 
   // Cast: the generated typed-routes union lags new route groups until
   // `expo start` regenerates .expo/types (same reason as the Href casts).
@@ -114,28 +133,38 @@ function AuthGate() {
     }
 
     // While plan is loading (null), hold — don't bounce to paywall prematurely.
+    // (Render-level hold for F1 lives below, after this effect.)
     if (hasProAccess === null) return;
 
     if (!hasProAccess) {
       // Downgrade detection: if the user previously had Pro in this session
-      // and just lost it, show the grace banner and delay the redirect.
-      if (hadProRef.current === true && !inGatedGroup) {
+      // and just lost it, anchor a grace deadline once and show the banner.
+      // hadProRef is flipped to false immediately so a later re-run of this
+      // effect (e.g. triggered by navigation) can't re-enter this branch and
+      // re-anchor a fresh deadline (2026-07-09 audit F2).
+      const justDowngraded = hadProRef.current === true;
+      hadProRef.current = false;
+
+      if (justDowngraded && !inGatedGroup) {
+        graceActiveRef.current = true;
+        setDowngradeDeadline(computeDowngradeDeadline(Date.now()));
         setShowDowngradeBanner(true);
-        const timer = setTimeout(() => {
-          setShowDowngradeBanner(false);
-          router.replace(PAYWALL_ROUTE);
-        }, DOWNGRADE_GRACE_MS);
-        return () => clearTimeout(timer);
+        return;
       }
-      if (!inGatedGroup) {
+
+      // No grace in flight (never had Pro this session, already inside the
+      // gated group, or a grace window is already being timed by the
+      // eviction effect below) — redirect immediately as before.
+      if (!graceActiveRef.current && !inGatedGroup) {
         router.replace(PAYWALL_ROUTE);
       }
-      hadProRef.current = false;
       return;
     }
 
     hadProRef.current = true;
+    graceActiveRef.current = false;
     setShowDowngradeBanner(false); // Pro restored (e.g. re-upgrade)
+    setDowngradeDeadline(null); // Cancel any pending eviction.
 
     if (!inAuthGroup) {
       // Cold start with a valid session — make sure the first-run
@@ -157,8 +186,35 @@ function AuthGate() {
     }
   }, [isLoading, isAuthenticated, inAuthGroup, inGatedGroup, hasProAccess, router]);
 
+  // Downgrade-grace eviction timer. Keyed ONLY on `downgradeDeadline`, which
+  // is set exactly once at detection above. Each run recomputes the
+  // remaining time from that fixed deadline and the current clock, so even
+  // if this effect re-runs (e.g. because `router` isn't referentially
+  // stable across navigations), the timer still fires at the ORIGINAL
+  // detection time + DOWNGRADE_GRACE_MS — never a fresh 5 minutes
+  // (2026-07-09 audit F2).
+  useEffect(() => {
+    if (downgradeDeadline === null) return;
+    const remaining = getGraceRemainingMs(downgradeDeadline, Date.now());
+    const timer = setTimeout(() => {
+      graceActiveRef.current = false;
+      setShowDowngradeBanner(false);
+      setDowngradeDeadline(null);
+      router.replace(PAYWALL_ROUTE);
+    }, remaining);
+    return () => clearTimeout(timer);
+  }, [downgradeDeadline, router]);
+
   if (isLoading) {
     return null; // splash still visible
+  }
+
+  // Session resolved but Pro status is still in flight: hold the splash
+  // rather than mounting the app tree underneath. This closes the F1
+  // mount-before-redirect window — a gated screen (and its queries) can no
+  // longer mount before we know the user isn't Pro.
+  if (isAuthenticated && hasProAccess === null) {
+    return null;
   }
 
   return <ThemedNavigation downgradeBanner={showDowngradeBanner} />;
