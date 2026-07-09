@@ -42,12 +42,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { Stack } from 'expo-router';
 import type { LeaderboardRow } from '@genoly/types';
 
 import { useLeaderboardData } from '../hooks/useLeaderboardData';
-import { useThemedStyles, useTheme, type Theme } from '../theme';
+import { useThemedStyles, useTheme, MIN_TOUCH_TARGET, type Theme } from '../theme';
 import { Banner } from '../components/ui';
 
 export default function LeaderboardScreen() {
@@ -77,7 +78,12 @@ export default function LeaderboardScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Leaderboard' }} />
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={data.refreshing} onRefresh={onRefresh} tintColor={t.colors.primary} />
+        }
+      >
         {/* Header */}
         <View style={styles.headerRow}>
           <View style={styles.headerTextCol}>
@@ -249,6 +255,8 @@ function createStyles(t: Theme) {
       backgroundColor: t.colors.bgElevated,
       minWidth: 84,
       alignItems: 'center',
+      minHeight: MIN_TOUCH_TARGET,
+      justifyContent: 'center',
     },
     refreshButtonDisabled: {
       opacity: 0.7,

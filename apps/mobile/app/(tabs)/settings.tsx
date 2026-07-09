@@ -51,6 +51,7 @@ import {
   useTheme,
   useThemedStyles,
   useThemePreference,
+  MIN_TOUCH_TARGET,
   type Theme,
   type ThemePreference,
 } from '../../theme';
@@ -310,9 +311,13 @@ export default function SettingsScreen() {
       {/* Health sync section */}
       <Section label="Health sync">
         <Row styles={styles} label="Status">
-          <Text style={[styles.valueText, healthEnabled ? styles.statusOn : styles.statusOff]}>
-            {healthEnabled ? 'Enabled' : 'Disabled'}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color={t.colors.textMuted} />
+          ) : (
+            <Text style={[styles.valueText, healthEnabled ? styles.statusOn : styles.statusOff]}>
+              {healthEnabled ? 'Enabled' : 'Disabled'}
+            </Text>
+          )}
         </Row>
         <Button
           variant="secondary"
@@ -511,7 +516,7 @@ function createStyles(t: Theme) {
       marginRight: t.spacing.sm,
       marginBottom: t.spacing.sm,
       backgroundColor: t.colors.bgElevated,
-      minHeight: 44,
+      minHeight: MIN_TOUCH_TARGET,
       justifyContent: 'center',
     },
     themeChipSelected: {

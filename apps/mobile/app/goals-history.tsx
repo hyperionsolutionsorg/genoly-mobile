@@ -36,7 +36,15 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+} from 'react-native';
 import { Stack } from 'expo-router';
 import type { ArchivedGoal, GoalMetric, GoalPeriod } from '@genoly/types';
 
@@ -129,7 +137,12 @@ export default function GoalsHistoryScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Goal history' }} />
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={data.historyLoading} onRefresh={onRetry} tintColor={t.colors.primary} />
+        }
+      >
         {/* Header */}
         <View style={styles.headerCol}>
           <Text style={styles.screenTitle}>Goal history</Text>
@@ -173,8 +186,11 @@ export default function GoalsHistoryScreen() {
           <Banner variant="error" message={data.historyError} actionLabel="Retry" onAction={onRetry} />
         )}
 
-        {/* Loading */}
-        {data.historyLoading && (
+        {/* Loading — only the initial/filter-change fetch (no cached rows
+            to show yet). A refresh with existing rows on screen relies on
+            the pull-to-refresh spinner above instead, so the list doesn't
+            double up two loading indicators at once. */}
+        {data.historyLoading && groups.length === 0 && (
           <View style={styles.loadingRow}>
             <ActivityIndicator size="small" color={t.colors.primary} />
             <Text style={styles.loadingText}>Loading history…</Text>
