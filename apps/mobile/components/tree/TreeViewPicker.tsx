@@ -3,9 +3,9 @@
  * src/components/ViewPicker.tsx role): a pure presentational segmented
  * control; mode state lives with the caller (the tree shell).
  *
- * Task A shipped Explore (default) + Register. Task B adds Pedigree (Classic
- * only). Task C appends 'fan' the same way — the type union + renderer slot
- * are already wired for it.
+ * Task A shipped Explore (default) + Register. Task B added Pedigree
+ * (Classic only). Task C appends Fan the same way (defaults to 4
+ * generations, hard-capped at 5 — see components/tree/FanView.tsx).
  *
  * No lock icons on any tab by design: all tree surfaces inherit the app-level
  * Pro gate (AuthGate in app/_layout.tsx); a non-Pro user never reaches this
@@ -23,12 +23,12 @@ export interface TreeViewOption {
   label: string;
 }
 
-/** The modes currently shipped. Tasks B/C append here to light their tabs up. */
+/** The modes currently shipped. */
 export const AVAILABLE_TREE_VIEWS: TreeViewOption[] = [
   { mode: 'explore', label: 'Explore' },
   { mode: 'register', label: 'Register' },
   { mode: 'pedigree', label: 'Pedigree' }, // Task B
-  // { mode: 'fan', label: 'Fan' },            ← Task C
+  { mode: 'fan', label: 'Fan' }, // Task C
 ];
 
 export interface TreeViewPickerProps {
