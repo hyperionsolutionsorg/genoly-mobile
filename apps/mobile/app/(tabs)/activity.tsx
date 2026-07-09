@@ -42,6 +42,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import type { HealthEntry } from '@genoly/types';
@@ -93,7 +94,12 @@ export default function ActivityScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={data.refreshing} onRefresh={onRefresh} tintColor={t.colors.primary} />
+      }
+    >
       {/* Header */}
       <View style={styles.headerRow}>
         <View style={styles.headerTextCol}>
@@ -273,10 +279,16 @@ function SevenDayChart({
       {entries.map((entry) => {
         const widthPct = (entry.steps / maxSteps) * 100;
         const isToday = entry.date === todayDate;
+        const dayLabel = formatDayLabel(entry.date, todayDate);
         return (
-          <View key={entry.date} style={styles.barRow}>
+          <View
+            key={entry.date}
+            style={styles.barRow}
+            accessible
+            accessibilityLabel={`${dayLabel}, ${formatSteps(entry.steps)} steps`}
+          >
             <Text style={[styles.barDateLabel, isToday && styles.barDateLabelToday]}>
-              {formatDayLabel(entry.date, todayDate)}
+              {dayLabel}
             </Text>
             <View style={styles.barTrack}>
               <View
@@ -382,6 +394,8 @@ function createStyles(t: Theme) {
       backgroundColor: t.colors.bgElevated,
       minWidth: 84,
       alignItems: 'center',
+      minHeight: MIN_TOUCH_TARGET,
+      justifyContent: 'center',
     },
     refreshButtonDisabled: {
       opacity: 0.7,
