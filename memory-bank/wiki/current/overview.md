@@ -1,16 +1,19 @@
 ---
 type: current
 name: "Overview — genoly-mobile"
-updated: 2026-06-11
+updated: 2026-07-09
 status: active
 ---
 
 # Overview — the 30-second picture
 
-`genoly-mobile` is the Expo mobile app + cross-platform packages for the unified Genoly mobile experience: the **member-side family app** (Convex reactive client — in build-out as of 2026-06-11) and the **fitness layer** (HTTP bearer contract — Phase 1 largely shipped). Mobile is payment-neutral (no in-app purchases) — web (genoly.org/billing) is the sole subscription surface.
+`genoly-mobile` is the Expo mobile app + cross-platform packages for the unified Genoly mobile experience: the **member-side family app** (Convex reactive client, shipped 2026-06-11) and the **fitness layer** (HTTP bearer contract — Phase 1 largely shipped, 5/20 ApiClient methods implemented). The app is now **v1.0.0 and Pro-gated**: mobile access requires membership in a Pro-plan tenant (enforced client-side by `lib/planChecks.ts` + a paywall screen), and mobile itself remains payment-neutral (no in-app purchases) — web (genoly.org/pricing) is the sole subscription surface.
 
-**Where things stand (2026-06-11):**
+**Where things stand (2026-07-09):**
 
+- **V1.0.0 shipped 2026-06-29/06-30** (PRs #24, #25, #26): Pro-only plan gate (`lib/planChecks.ts` — `hasAnyProTenant`, `filterProTenants`, 5-min downgrade grace; `app/(gated)/paywall.tsx`; 4th `AuthGate` arm in `app/_layout.tsx`), version bumped to 1.0.0 across all four version-bearing files, and a release automation script (`scripts/release.mjs` — atomic version bump + CHANGELOG generator + git tag). This had never been cascaded into these state files until today's backfill (see `log.md` 2026-07-09 entry).
+- **Two-workstream run open as of 2026-07-09.** Workstream A: finish Phase 1 fitness (Step 8 leaderboard salvage in flight on `feat/step-8-leaderboard-salvage`, then Steps 9/10/13) + port four Pro-gated tree surfaces from web to mobile (Explorer-as-default, Register table view, Classic pedigree, Fan-if-legible). Workstream B: challenge-growth / standalone-user research, report only.
+- **Workspace root moved** `/Users/snalluri/Personal/Code/Geno` → `/Users/shankar/Code/Geno` (2026-07-09 new-Mac restore).
 - **Mobile e2e run CLOSED 2026-06-11** (Claude autonomous): member-side app shipped (auth/wizard/dashboard/tree/photos/settings/support) + Family Walking Challenges end-to-end (web PR #128 + mobile PRs #16-#23) + store-readiness docs. Handoff: `vault/handoff-mobile-e2e-2026-06-11.md`; P1 backlog in handoff §7.
 
 **Where things stood before the run (2026-06-05):**
@@ -22,7 +25,7 @@ status: active
 
 **Key cross-references:**
 
-- Workspace: [`/Users/snalluri/Personal/Code/Geno/AGENTS.md`](../../../../AGENTS.md) (workspace operating manual) + [`master-context.md`](../../../../master-context.md) (cross-repo state)
+- Workspace: [`/Users/shankar/Code/Geno/AGENTS.md`](../../../../AGENTS.md) (workspace operating manual; moved from `/Users/snalluri/Personal/Code/Geno` 2026-07-09) + [`master-context.md`](../../../../master-context.md) (cross-repo state)
 - Repo operating manual: [`../../../AGENTS.md`](../../../AGENTS.md)
 - Fork procedure: [`../../../FORK_PROCEDURE.md`](../../../FORK_PROCEDURE.md)
 - Mobile sync architecture (lives in web repo): `../genoly-family-web/docs/mobile-sync-architecture.md`
@@ -31,6 +34,6 @@ status: active
 - History: [`../../log.md`](../../log.md)
 - Index: [`../../index.md`](../../index.md)
 
-**Tech stack snapshot:** Expo SDK 56 + React Native 0.85.3 + React 19.2.3 + Expo Router ~56.2.9 + Hermes. Native modules: `expo-secure-store` (auth), `expo-sqlite` (offline queue), `expo-background-fetch` (sync), `react-native-health` (HealthKit), `react-native-health-connect` (Health Connect). State: Zustand 5.x (planned). Forms: react-hook-form + zod. CI: EAS Build (Hobby tier). Icons: `@react-native-vector-icons/fontawesome` (migrated from `@expo/vector-icons` in SDK 56).
+**Tech stack snapshot:** Expo SDK 56 + React Native 0.85.3 + React 19.2.3 + Expo Router ~56.2.9 + Hermes. App version 1.0.0 (source of truth `apps/mobile/app.json`; kept in sync with `apps/mobile/package.json`, root `package.json`, and `apps/mobile/constants/version.ts` by `scripts/release.mjs`). Native modules: `expo-secure-store` (auth), `expo-sqlite` (offline queue), `expo-background-fetch` (sync), `react-native-health` (HealthKit), `react-native-health-connect` (Health Connect). State: Zustand 5.x (planned). Forms: react-hook-form + zod. CI: EAS Build (Hobby tier). Icons: `@react-native-vector-icons/fontawesome` (migrated from `@expo/vector-icons` in SDK 56).
 
 **The four `wiki/current/` files** are cascade-redundant projections per Rule #0. They stay coherent because every state change updates all four in the same commit. Each is ≤200 lines — older content archives to `wiki/phases/` or `wiki/decisions/`.

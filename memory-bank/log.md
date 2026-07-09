@@ -13,6 +13,24 @@ Ops: `merge`, `decision`, `doc`, `rule`, `note`, `query`, `lint`.
 Tail recent: `grep "^## \[" memory-bank/log.md | tail -10`.
 ---
 
+## [2026-07-09] note | memory-bank refresh — V1.0.0 gate + release automation backfilled
+
+Three PRs landed 2026-06-29/06-30 but were never cascaded into `wiki/current/` — the last cascade there is still dated 2026-06-11 (mobile e2e run close, `d78fe0e`). This entry backfills them plus opens today's dispatch.
+
+**#24 `ae3f781` — V1.0.0: mobile Pro-only plan gate + version bump.** `apps/mobile/lib/planChecks.ts` (new) owns the gate logic: `hasAnyProTenant()` / `filterProTenants()` over a `TenantSummary[]`, plus `DOWNGRADE_GRACE_MS = 5 * 60 * 1000`. `apps/mobile/lib/genolyApi.ts` gains `listMyTenants` (mirrors web `convex/tenants.ts:listMyTenants`) and the `useHasProTenantAccess()` hook (returns `null` while loading, else `hasAnyProTenant(tenants)`). `app/_layout.tsx`'s `AuthGate` grew a 4th arm: session valid + no Pro tenant → `/(gated)/paywall` (new screen: "Upgrade your tree" / "Continue on web" — both open genoly.org in the system browser, no IAP, per payment-neutrality). Downgrade is reactive: a `hadProRef` tracks prior Pro status; losing it mid-session shows a red banner for `DOWNGRADE_GRACE_MS` before the hard redirect. Version bumped to 1.0.0 (iOS buildNumber 1, Android versionCode 100), surfaced in Settings → About via new `constants/version.ts`. `docs/CHANGELOG.md` initialized. Tests: `paywall-gate.test.tsx` (14 assertions) + `version.test.tsx`.
+
+**#25 `1f4caac` — fix: version-drift.** #24 bumped `constants/version.ts` to "1.0.0" but left `apps/mobile/app.json` (the App Store/Play Store source of truth), `apps/mobile/package.json`, and the root `package.json` at "0.1.0". CI being disabled meant `version.test.tsx`'s parity assertion (`VERSION === appJson.expo.version`) didn't catch it at merge time. Fixed by bumping all three lagging files; `ios.buildNumber`/`android.versionCode` untouched (separate store-submission ritual). No code changes.
+
+**#26 `4412d3a` — release automation + CHANGELOG generator.** New `scripts/release.mjs` (root, zero deps): pre-flight drift check across the four version-bearing files (closes the exact failure mode #25 had to hotfix) → atomic SemVer bump across all four → CHANGELOG section generated from conventional commits since last tag → commit `chore: release v<new>` → annotated tag → prints push command (no auto-push). `ios.buildNumber`/`android.versionCode` intentionally left alone. New npm scripts `release:patch`/`minor`/`major`/`prerelease` + `test:scripts` (dedicated `jest.scripts.config.cjs` — root jest-expo preset is wrong for plain-ESM scripts). `scripts/release.test.mjs` — 45 Jest cases. `docs/RELEASING.md` added. Closes #401 (mobile half).
+
+**Workspace path change.** The workspace root moved from `/Users/snalluri/Personal/Code/Geno` to `/Users/shankar/Code/Geno` (2026-07-09 new-Mac restore). The old path is historical; cross-references in `wiki/current/*` are being repointed to the new path as part of this cascade.
+
+**Today's dispatch (2026-07-09) — two-workstream run opened.** Workstream A: finish Phase 1 fitness (Step 8 leaderboard salvage — branch `feat/step-8-leaderboard-salvage`, sourced from `origin/feat/step-8-leaderboard` at `e630ba3`, pre-SDK-56, in flight now in a sibling worktree; then Step 9 friends, Step 10 goals+history, Step 13 polish) plus porting four Pro-gated tree surfaces from web to mobile (Explorer-as-default, Register table view, Classic pedigree, Fan-if-legible). Workstream B: challenge-growth / standalone-user research — report only, no code.
+
+**Baseline verified this session:** `npm run typecheck` — 0 errors. `npm test` — 189 passed / 12 skipped / 201 total, 14 of 15 suites run (1 UI suite skipped — jest-expo 56 TurboModule chain, pre-existing, not a regression). Uncommitted `package-lock.json` (3-line diff, `"version": "0.1.0"` → `"1.0.0"` in 3 places) is lockfile metadata drift left over from #25/#26's `package.json` edits never being run through `npm install` — harmless (no dependency changes), left uncommitted intentionally.
+
+---
+
 ## [2026-06-10] decision | graphifyy 0.8.36 upgrade + AGENTS.md graph-tooling cleanup
 
 Workspace-wide `graphifyy` CLI (code knowledge graph; binary `graphify`) bumped

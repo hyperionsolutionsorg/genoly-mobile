@@ -1,11 +1,13 @@
 ---
 type: current
 name: "Progress — genoly-mobile"
-updated: 2026-06-11 (mobile e2e run Phase A+B; prior: 2026-06-10)
+updated: 2026-07-09 (V1.0.0 Pro gate + release automation backfilled; two-workstream run opened; prior: 2026-06-11)
 status: active
 ---
 
 # Progress
+
+> **2026-07-09 — Backfill + two-workstream run.** Three PRs cascaded in from 2026-06-29/06-30: **V1.0.0** (`ae3f781` PR #24 — mobile Pro-only plan gate via `lib/planChecks.ts` + `(gated)/paywall.tsx` + version 1.0.0) + version-drift fix (`1f4caac` PR #25) + release automation (`4412d3a` PR #26 — `scripts/release.mjs` + CHANGELOG generator). See `log.md` 2026-07-09 entry for full detail. Today's dispatch: Workstream A = Step 8 leaderboard salvage (branch `feat/step-8-leaderboard-salvage`, from `origin/feat/step-8-leaderboard` `e630ba3`) IN FLIGHT + Steps 9/10/13 queued + porting 4 Pro-gated tree surfaces from web (Explorer-as-default, Register table, Classic pedigree, Fan-if-legible). Workstream B = challenge-growth/standalone-user research (report only). Baseline: `npm run typecheck` 0 errors; `npm test` 189 passed / 12 skipped / 201 total.
 
 > **2026-06-11 — MOBILE E2E RUN (Claude autonomous).** Phase A audit + Phase B plan committed. See [[2026-06-11-mobile-e2e-plan]], `vault/mobile-audit.md`, `vault/mobile-improvement-plan.md`. Step 8 confirmed UNMERGED on `origin/feat/step-8-leaderboard`. Execution waves: ✅ C1 foundation MERGED PR #16 `7651701` (theme module + UI kit + 5-tab nav; tsc 0 errors; 90 tests) → ✅ C2 member auth MERGED PR #17 `cf5b041` → ✅ C3 wizard MERGED PR #18 `75bc9dc` → ✅ C4 dashboard MERGED PR #19 `d84b9fd` → ✅ D1 tree essentials MERGED PR #20 `0bfca9d` → D-rest (pedigree/chat/blog/analytics, P1) → F engagement → ✅ H walking challenges SHIPPED (web #128 + mobile #21) → ✅ G settings/support MERGED PR #22 `8033d3b` → ✅ J deployment readiness MERGED PR #23 `d35ed98` → ✅ K handoff written (`vault/handoff-mobile-e2e-2026-06-11.md`) — RUN CLOSED. Remaining: P1 backlog per handoff §7 (incl. polish wave I items: reanimated celebrations, haptics call sites, device a11y sweep).
 
@@ -67,14 +69,22 @@ status: active
 | 5 | SQLite sync queue + drainer | Claude (autonomous overnight Round 2) | DONE 2026-05-29 — `@genoly/sync-queue` package merged via PR #5, squash `10f6f03`. 16-test suite. |
 | 6 | Background fetch wiring | Claude (autonomous overnight Round 3) | DONE 2026-05-29 — `apps/mobile/utils/backgroundSync.ts` wires `expo-background-fetch` + `expo-task-manager` to call `SyncQueue.drain()`. 12-test suite. Merged via PR #5 (`10f6f03`). Follow-up infra config (`UIBackgroundModes` + `RECEIVE_BOOT_COMPLETED`) merged via PR #6 (`f2463a8`). |
 | 7 | Dashboard (today + last 7 days) | Claude (interactive) | IMPLEMENTATION COMPLETE 2026-05-29 — `apps/mobile/hooks/useDashboardData.ts` + `apps/mobile/app/(tabs)/fitness.tsx` (real Dashboard replacing stub). Big-number today card + 7-day horizontal bars + dead-letter banner + refresh button. 24-test suite. PR pending. See `[[2026-05-29-mobile-step-7-dashboard]]`. |
-| 8 | Leaderboard screen | Claude | Depends on #7 |
-| 9 | Friends list + actions | Claude | Depends on #8 |
-| 10 | Goals + history screens | Claude | Depends on #7 |
+| 8 | Leaderboard screen | Claude | IN FLIGHT 2026-07-09 — branch `feat/step-8-leaderboard-salvage`, salvaging `origin/feat/step-8-leaderboard` (`e630ba3`, pre-SDK-56) with fixups, running in a sibling worktree. |
+| 9 | Friends list + actions | Claude | QUEUED for 2026-07-09 run — depends on #8. |
+| 10 | Goals + history screens | Claude | QUEUED for 2026-07-09 run — depends on #7 (merged). |
 | 11 | Settings + subscription read + logout | Claude (autonomous overnight Round 3) | DONE 2026-05-29 — `apps/mobile/app/(tabs)/settings.tsx` full Settings screen with sign-out flow (revokeToken + reset prefs + unregister bg-fetch + fail-closed if offline). 8-test suite. Merged via PR #5, squash `10f6f03`. |
 | 12 | Health Connect adapter (Android parity) | Claude (autonomous overnight Round 1) | DONE 2026-05-29 — `HealthConnectAdapter` (Android, `react-native-health-connect`). Merged via PR #5, squash `10f6f03`. |
-| 13 | Polish + manual test + submit | Claude | Depends on all |
+| 13 | Polish + manual test + submit | Claude | QUEUED for 2026-07-09 run — depends on all. |
 
 Total estimated effort: ~10 working days for one engineer.
+
+## V1.0.0 + release automation commits (reference)
+
+| Date | Commit | Subject |
+|---|---|---|
+| 2026-06-29 | `ae3f781` (PR #24) | feat: V1.0.0 — mobile Pro-only plan gate and version bump |
+| 2026-06-29 | `1f4caac` (PR #25) | fix: complete V1.0.0 stamp — bump app.json + both package.json files |
+| 2026-06-30 | `4412d3a` (PR #26) | feat: release automation script + CHANGELOG generator |
 
 ## Architecture decisions reference
 
