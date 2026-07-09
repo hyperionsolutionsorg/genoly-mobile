@@ -13,7 +13,7 @@ status: active
 
 **2026-07-09 — TWO-WORKSTREAM RUN OPEN (state-audit + cascade session ran first).** This session backfilled three PRs that had landed 2026-06-29/06-30 without ever being cascaded into these files: `ae3f781` (PR #24, V1.0.0 mobile Pro-only plan gate — `lib/planChecks.ts` + `(gated)/paywall.tsx` + 4th `AuthGate` arm + version 1.0.0), `1f4caac` (PR #25, version-drift fix), `4412d3a` (PR #26, `scripts/release.mjs` release automation + CHANGELOG generator). Full detail in `log.md` 2026-07-09 entry. Also: the workspace root moved `/Users/snalluri/Personal/Code/Geno` → `/Users/shankar/Code/Geno` (2026-07-09 new-Mac restore) — reading-order paths below updated. Baseline verified: `npm run typecheck` 0 errors; `npm test` 189 passed / 12 skipped / 201 total (14 of 15 suites; 1 UI suite skipped, jest-expo 56 TurboModule gap, pre-existing). Uncommitted `package-lock.json` (3-line `version` field drift 0.1.0→1.0.0, harmless, left as-is).
 
-**Today's dispatch, now starting:** Workstream A — Step 8 leaderboard salvage IN FLIGHT on branch `feat/step-8-leaderboard-salvage` (sourced from `origin/feat/step-8-leaderboard` `e630ba3`, pre-SDK-56, in a sibling worktree) → Steps 9 (friends), 10 (goals+history), 13 (polish) queued next; plus porting four Pro-gated tree surfaces from web to mobile (Explorer-as-default, Register table view, Classic pedigree, Fan-if-legible). Workstream B — challenge-growth / standalone-user research, report only, no code, running in parallel.
+**2026-07-09 run CLOSED — OPERATOR ACTIONS PENDING.** Eight PRs open, all agent-built + orchestrator-reviewed, NONE merged (permission layer holds merges for the operator). Merge queue, in order: fitness stack **#27 → #29 → #30 → #33** (Step-8 leaderboard salvage → Step-9 friends → Step-10 goals+history → Step-13 polish), then tree stack **#28 → #31 → #32 → #34** (Explore-default + Register table → Classic pedigree → Fan view → AuthGate hardening); the two stacks are independent of each other. Also pending: push the two local main commits (memory-bank cascades), review `vault/pro-gating-audit-2026-07-09.md` (all 8 surfaces gated; F1/F2 fixed in #34; F3 accepted by design) and the Workstream B research at web `vault/research/challenge-growth-standalone-model-2026-07-09.md` + EXEC-SUMMARY (uncommitted; recommends "Circles" domain + guest accounts — DO NOT build until reviewed), simulator/device visual pass (task #300; `vault/mobile-screenshots/` still empty), and worktree cleanup (`git worktree remove ../genoly-mobile-step8 ../genoly-mobile-treeA` after merges).
 
 **2026-06-11 — MOBILE E2E RUN CLOSED.** Read `vault/handoff-mobile-e2e-2026-06-11.md` FIRST (PR list, decisions, walking-challenges recap, deployment-readiness status, P1 backlog, review-with-care list). Mobile main: tests 170 pass / tsc 0 errors; member app live against dev. Web companion PR #128 (`b73d2c6`).
 
@@ -32,8 +32,11 @@ status: active
 - Steps 1, 2, 3 — MERGED to main (PRs #3, #4).
 - Steps 4, 5, 6, 11, 12 — MERGED to main (PR #5 + infra follow-ups PRs #6, #7).
 - Step 7 (Dashboard) — MERGED (PR #8).
-- Step 8 (Leaderboard) — IN FLIGHT 2026-07-09, branch `feat/step-8-leaderboard-salvage` (sibling worktree), salvaging `origin/feat/step-8-leaderboard` `e630ba3`.
-- Steps 9, 10, 13 — QUEUED for today's run, after Step 8 lands.
+- Step 8 (Leaderboard) — BUILT 2026-07-09, PR #27 open (salvaged `e630ba3` + audit §2 fixups; pushed route off Activity "Friends" section).
+- Step 9 (Friends) — BUILT 2026-07-09, PR #29 open (6 endpoints + friends screen; 204 No-Content fix in api-client `request()`).
+- Step 10 (Goals + history) — BUILT 2026-07-09, PR #30 open (4 endpoints; 4 fixed goal slots; month-grouped history route).
+- Step 13 (Polish) — BUILT 2026-07-09, PR #33 open (touch targets, pull-to-refresh, a11y; closes Phase 1 once merged).
+- Tree surfaces (operator-scoped A2, not in §15) — PRs #28/#31/#32/#34 open: Explore default, Register table, Classic pedigree, Fan (GO, 4-gen default / 5 cap), AuthGate hardening.
 - V1.0.0 Pro-only plan gate + version 1.0.0 — MERGED 2026-06-29 (PRs #24, #25).
 - Release automation script + CHANGELOG generator — MERGED 2026-06-30 (PR #26).
 
