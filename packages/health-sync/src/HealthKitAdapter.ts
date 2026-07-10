@@ -60,7 +60,30 @@ function loadNativeModule(): RNHealthKit | null {
     const mod = require('react-native-health');
     // The default export may be the module itself OR live under `.default`
     // depending on the version. Try both.
-    return (mod?.default ?? mod) as RNHealthKit;
+    const jsModule = (mod?.default ?? mod) as RNHealthKit;
+
+    // RN 0.85 bridgeless: the NativeModules interop proxy exposes native
+    // methods as LAZY, NON-ENUMERABLE properties. react-native-health's
+    // index.js does `Object.assign({}, AppleHealthKit, { Constants })`,
+    // which copies own-enumerable props only — so under the new
+    // architecture its export carries ONLY `Constants`; every method is
+    // undefined ("undefined is not a function" at initHealthKit; diagnosed
+    // on-device 2026-07-10). Direct property access on the proxy works
+    // fine, so when the JS module lost its methods, delegate method lookups
+    // to the NativeModules proxy and keep Constants from the pure-JS side.
+    if (typeof jsModule?.initHealthKit !== 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- REASON: same synchronous-resolution constraint as above.
+      const native = require('react-native').NativeModules?.AppleHealthKit;
+      if (native && typeof native.initHealthKit === 'function') {
+        return new Proxy(native, {
+          get(target, prop, receiver) {
+            if (prop === 'Constants') return jsModule?.Constants;
+            return Reflect.get(target, prop, receiver);
+          },
+        }) as RNHealthKit;
+      }
+    }
+    return jsModule;
   } catch {
     return null;
   }
