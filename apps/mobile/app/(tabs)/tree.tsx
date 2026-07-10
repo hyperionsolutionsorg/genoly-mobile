@@ -5,24 +5,22 @@
  * Layout:
  *   - header: tree picker chips (multi-tree members) + Add-person CTA —
  *     present in every mode
- *   - TreeViewPicker: Explore (DEFAULT) | Register | Pedigree | Fan
+ *   - TreeViewPicker: Explore (DEFAULT) | Register | Fan
+ *     (Pedigree Classic removed 2026-07-09 — duplicate of Explore at phone
+ *     sizes, operator direction; recoverable from git history / PR #31)
  *   - mode body:
  *       explore  → <ExploreCanvas/>  perspective canvas (svg + pan/pinch)
  *       register → <RegisterTable/>  the person directory as a table —
  *                  absorbs the old hub's directory + debounced search
- *       pedigree → <PedigreeClassic/> ancestor chart (svg + pan/pinch),
- *                  rooted at the shared anchor (Task B)
  *       fan      → <FanView/> radial ancestor wheel (svg + pan/pinch),
- *                  same shared anchor + query as Pedigree, its own
- *                  generation-depth state (default 4, hard-capped at 5 —
- *                  Task C; see FanView's header for the legibility analysis)
+ *                  rooted at the shared anchor, its own generation-depth
+ *                  state (default 3, hard-capped at 3 — operator saw label
+ *                  overlap at 4+ on a real tree; see FanView's header)
  *
  * Data: ONE explorerGraph subscription owned here and passed down (web
  * parity — mode switches never re-fetch), plus the existing
- * listAllPersonsByTree read for Register rows, plus TWO
- * pedigree:getAncestorTree subscriptions (Pedigree's and Fan's — same
- * pinned query, different `maxGenerations`, so they can't share one
- * subscription instance) each skipped unless its own mode is active —
+ * listAllPersonsByTree read for Register rows, plus Fan's
+ * pedigree:getAncestorTree subscription, skipped unless Fan is active —
  * Explore/Register never pay for either.
  *
  * Anchor state lives here: defaults to the viewer's resolved person
@@ -54,10 +52,6 @@ import { Screen, EmptyState, Button, Skeleton } from '../../components/ui';
 import { TreeViewPicker, type TreeViewMode } from '../../components/tree/TreeViewPicker';
 import { ExploreCanvas, DEFAULT_EXPLORE_RADIUS } from '../../components/tree/ExploreCanvas';
 import { RegisterTable } from '../../components/tree/RegisterTable';
-import {
-  PedigreeClassic,
-  DEFAULT_PEDIGREE_GENERATIONS,
-} from '../../components/tree/PedigreeClassic';
 import { FanView, DEFAULT_FAN_GENERATIONS } from '../../components/tree/FanView';
 
 const ADD_PERSON_ROUTE = '/add-person' as unknown as Href;
@@ -74,7 +68,6 @@ export default function TreeScreen() {
   const [mode, setMode] = useState<TreeViewMode>('explore'); // Explore is the default
   const [anchorId, setAnchorId] = useState<string | null>(null);
   const [radius, setRadius] = useState(DEFAULT_EXPLORE_RADIUS);
-  const [pedigreeGenerations, setPedigreeGenerations] = useState(DEFAULT_PEDIGREE_GENERATIONS);
   const [fanGenerations, setFanGenerations] = useState(DEFAULT_FAN_GENERATIONS);
   const [sortKey, setSortKey] = useState<SortKey>(DEFAULT_REGISTER_UI.sortKey);
   const [search, setSearch] = useState(DEFAULT_REGISTER_UI.searchQuery);
@@ -94,17 +87,9 @@ export default function TreeScreen() {
     explorerGraph,
     tree ? { treeId: tree._id, anchorId: anchorId ?? undefined, radius } : ('skip' as const),
   );
-  // Only subscribed while Pedigree is the active mode — Explore/Register
-  // never pay for this query (web parity: mode switches don't re-fetch
-  // data the inactive mode doesn't need).
-  const ancestorTree = useQuery(
-    pedigreeGetAncestorTree,
-    mode === 'pedigree' && anchorId
-      ? { personId: anchorId, maxGenerations: pedigreeGenerations }
-      : ('skip' as const),
-  );
-  // Fan's own subscription (same query, different depth) — only while Fan
-  // is the active mode; Explore/Register/Pedigree never pay for it.
+  // Fan's ancestor subscription — only while Fan is the active mode;
+  // Explore/Register never pay for it (web parity: mode switches don't
+  // re-fetch data the inactive mode doesn't need).
   const fanAncestorTree = useQuery(
     pedigreeGetAncestorTree,
     mode === 'fan' && anchorId
@@ -242,16 +227,6 @@ export default function TreeScreen() {
           anchorId={anchorId}
           radius={radius}
           onRadiusChange={setRadius}
-          onReAnchor={setAnchorId}
-          onOpenPerson={openPerson}
-        />
-      ) : mode === 'pedigree' ? (
-        <PedigreeClassic
-          ancestorTree={ancestorTree}
-          personId={anchorId}
-          viewerPersonId={graph?.viewerPersonId}
-          generations={pedigreeGenerations}
-          onGenerationsChange={setPedigreeGenerations}
           onReAnchor={setAnchorId}
           onOpenPerson={openPerson}
         />
