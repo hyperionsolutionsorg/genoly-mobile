@@ -33,6 +33,7 @@
     "expo-image-picker": "~56.0.20",
     "expo-linking": "~56.0.15",
     "expo-router": "~56.2.14",
+    "expo-screen-orientation": "~56.0.5",
     "expo-splash-screen": "~56.0.12",
     "expo-sqlite": "~56.0.5",
     "expo-status-bar": "~56.0.4",

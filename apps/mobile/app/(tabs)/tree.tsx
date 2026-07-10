@@ -35,6 +35,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, type Href } from 'expo-router';
 import { useConvex, useQuery } from 'convex/react';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import Svg, { Path, Rect } from 'react-native-svg';
 
 import {
   explorerGraph,
@@ -47,7 +49,7 @@ import type { SortKey } from '../../lib/tree/listHelpers';
 import { DEFAULT_REGISTER_UI } from '../../lib/tree/registerUi';
 import { useActiveTree } from '../../hooks/useActiveTree';
 import { setLastVisitedTreeSlug } from '../../utils/preferences';
-import { useThemedStyles, type Theme } from '../../theme';
+import { useTheme, useThemedStyles, type Theme } from '../../theme';
 import { Screen, EmptyState, Button, Skeleton } from '../../components/ui';
 import { TreeViewPicker, type TreeViewMode } from '../../components/tree/TreeViewPicker';
 import { ExploreCanvas, DEFAULT_EXPLORE_RADIUS } from '../../components/tree/ExploreCanvas';
@@ -60,6 +62,7 @@ const WELCOME_ROUTE = '/welcome' as unknown as Href;
 export default function TreeScreen() {
   const router = useRouter();
   const styles = useThemedStyles(createStyles);
+  const t = useTheme();
   const convex = useConvex();
   const { trees, activeTree, isLoading } = useActiveTree();
   const [selectedTreeId, setSelectedTreeId] = useState<string | null>(null);
@@ -69,6 +72,10 @@ export default function TreeScreen() {
   const [anchorId, setAnchorId] = useState<string | null>(null);
   const [radius, setRadius] = useState(DEFAULT_EXPLORE_RADIUS);
   const [fanGenerations, setFanGenerations] = useState(DEFAULT_FAN_GENERATIONS);
+  // Explore-only landscape toggle. A programmatic orientation lock overrides
+  // the device's auto-rotate setting, so this button works even for users
+  // who keep rotation-lock ON. Always relock portrait when leaving Explore.
+  const [landscape, setLandscape] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>(DEFAULT_REGISTER_UI.sortKey);
   const [search, setSearch] = useState(DEFAULT_REGISTER_UI.searchQuery);
   const [results, setResults] = useState<PersonSearchResult[] | null>(null);
@@ -96,6 +103,21 @@ export default function TreeScreen() {
       ? { personId: anchorId, maxGenerations: fanGenerations }
       : ('skip' as const),
   );
+
+  // Apply the Explore landscape toggle; force portrait for any non-Explore
+  // mode. On unmount (leaving the Tree tab), always relock portrait so the
+  // rest of the app stays upright.
+  useEffect(() => {
+    const wantLandscape = mode === 'explore' && landscape;
+    ScreenOrientation.lockAsync(
+      wantLandscape
+        ? ScreenOrientation.OrientationLock.LANDSCAPE
+        : ScreenOrientation.OrientationLock.PORTRAIT_UP,
+    ).catch(() => {});
+    return () => {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+    };
+  }, [mode, landscape]);
 
   // Reset per-tree state when the member switches trees.
   const treeId = tree?._id ?? null;
@@ -222,14 +244,25 @@ export default function TreeScreen() {
       <TreeViewPicker mode={mode} onChange={setMode} />
 
       {mode === 'explore' ? (
-        <ExploreCanvas
-          graph={graph}
-          anchorId={anchorId}
-          radius={radius}
-          onRadiusChange={setRadius}
-          onReAnchor={setAnchorId}
-          onOpenPerson={openPerson}
-        />
+        <View style={styles.canvasWrap}>
+          <ExploreCanvas
+            graph={graph}
+            anchorId={anchorId}
+            radius={radius}
+            onRadiusChange={setRadius}
+            onReAnchor={setAnchorId}
+            onOpenPerson={openPerson}
+          />
+          <TouchableOpacity
+            style={styles.rotateBtn}
+            onPress={() => setLandscape((v) => !v)}
+            accessibilityRole="button"
+            accessibilityLabel={landscape ? 'Switch to portrait' : 'Rotate to landscape for a wider view'}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <RotateIcon color={t.colors.text} landscape={landscape} />
+          </TouchableOpacity>
+        </View>
       ) : mode === 'fan' ? (
         <FanView
           ancestorTree={fanAncestorTree}
@@ -258,8 +291,56 @@ export default function TreeScreen() {
   );
 }
 
+/**
+ * A phone glyph with a curved rotate arrow — the affordance the operator
+ * asked for ("a symbol to tell users they can click and it rotates").
+ * When already landscape, the phone is drawn on its side so the icon also
+ * signals the current state / that tapping returns to portrait.
+ */
+function RotateIcon({ color, landscape }: { color: string; landscape: boolean }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      {landscape ? (
+        <Rect x={2} y={7} width={20} height={10} rx={2} stroke={color} strokeWidth={1.8} />
+      ) : (
+        <Rect x={7} y={2} width={10} height={20} rx={2} stroke={color} strokeWidth={1.8} />
+      )}
+      <Path
+        d="M20 5a7 7 0 0 0-6-3.4M4 19a7 7 0 0 0 6 3.4"
+        stroke={color}
+        strokeWidth={1.8}
+        strokeLinecap="round"
+      />
+      <Path d="M20 2v3h-3M4 22v-3h3" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 function createStyles(t: Theme) {
   return StyleSheet.create({
+    canvasWrap: {
+      flex: 1,
+      position: 'relative',
+    },
+    rotateBtn: {
+      position: 'absolute',
+      top: t.spacing.sm,
+      right: t.spacing.sm,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: t.colors.bgElevated,
+      borderWidth: 1,
+      borderColor: t.colors.border,
+      // Float above the svg canvas.
+      shadowColor: '#000',
+      shadowOpacity: 0.12,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 3,
+    },
     headerRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
