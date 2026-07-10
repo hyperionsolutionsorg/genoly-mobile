@@ -31,12 +31,13 @@
  * No per-surface gate, no upgrade UI — by design (plan §4).
  */
 
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, type Href } from 'expo-router';
 import { useConvex, useQuery } from 'convex/react';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 import {
   explorerGraph,
@@ -72,10 +73,12 @@ export default function TreeScreen() {
   const [anchorId, setAnchorId] = useState<string | null>(null);
   const [radius, setRadius] = useState(DEFAULT_EXPLORE_RADIUS);
   const [fanGenerations, setFanGenerations] = useState(DEFAULT_FAN_GENERATIONS);
-  // Explore-only landscape toggle. A programmatic orientation lock overrides
-  // the device's auto-rotate setting, so this button works even for users
-  // who keep rotation-lock ON. Always relock portrait when leaving Explore.
-  const [landscape, setLandscape] = useState(false);
+  // Fullscreen landscape Explore. The expand button opens a Modal (above the
+  // tab bar + brand bar) that gives the canvas the WHOLE screen in landscape;
+  // in-place rotation kept all the chrome and wasted the space. A programmatic
+  // orientation lock overrides the device's auto-rotate setting, so this works
+  // even for users who keep rotation-lock ON. Always relock portrait on exit.
+  const [fullscreen, setFullscreen] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>(DEFAULT_REGISTER_UI.sortKey);
   const [search, setSearch] = useState(DEFAULT_REGISTER_UI.searchQuery);
   const [results, setResults] = useState<PersonSearchResult[] | null>(null);
@@ -104,20 +107,25 @@ export default function TreeScreen() {
       : ('skip' as const),
   );
 
-  // Apply the Explore landscape toggle; force portrait for any non-Explore
-  // mode. On unmount (leaving the Tree tab), always relock portrait so the
-  // rest of the app stays upright.
+  // Lock landscape while the fullscreen Explore modal is open; portrait
+  // otherwise. Programmatic lock → works regardless of device auto-rotate.
+  // Always relock portrait on unmount (leaving the Tree tab).
   useEffect(() => {
-    const wantLandscape = mode === 'explore' && landscape;
     ScreenOrientation.lockAsync(
-      wantLandscape
+      fullscreen
         ? ScreenOrientation.OrientationLock.LANDSCAPE
         : ScreenOrientation.OrientationLock.PORTRAIT_UP,
     ).catch(() => {});
     return () => {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
     };
-  }, [mode, landscape]);
+  }, [fullscreen]);
+
+  // Safety: if the member leaves Explore (mode switch) while somehow still
+  // flagged fullscreen, close it.
+  useEffect(() => {
+    if (mode !== 'explore' && fullscreen) setFullscreen(false);
+  }, [mode, fullscreen]);
 
   // Reset per-tree state when the member switches trees.
   const treeId = tree?._id ?? null;
@@ -255,12 +263,12 @@ export default function TreeScreen() {
           />
           <TouchableOpacity
             style={styles.rotateBtn}
-            onPress={() => setLandscape((v) => !v)}
+            onPress={() => setFullscreen(true)}
             accessibilityRole="button"
-            accessibilityLabel={landscape ? 'Switch to portrait' : 'Rotate to landscape for a wider view'}
+            accessibilityLabel="Open fullscreen landscape view"
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <RotateIcon color={t.colors.text} landscape={landscape} />
+            <ExpandIcon color={t.colors.text} />
           </TouchableOpacity>
         </View>
       ) : mode === 'fan' ? (
@@ -287,6 +295,37 @@ export default function TreeScreen() {
           onAddPerson={() => router.push(ADD_PERSON_ROUTE)}
         />
       )}
+
+      {/* Fullscreen landscape Explore — a Modal so it covers the tab bar +
+          brand bar and the canvas gets the whole screen. Shares the same
+          anchor/radius/graph state, so re-anchoring here persists back to
+          the inline view. Pan/pinch/zoom via the canvas's ZoomPanView. */}
+      <Modal
+        visible={fullscreen}
+        animationType="fade"
+        supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
+        onRequestClose={() => setFullscreen(false)}
+      >
+        <SafeAreaView style={styles.fsRoot} edges={['top', 'bottom', 'left', 'right']}>
+          <ExploreCanvas
+            graph={graph}
+            anchorId={anchorId}
+            radius={radius}
+            onRadiusChange={setRadius}
+            onReAnchor={setAnchorId}
+            onOpenPerson={openPerson}
+          />
+          <TouchableOpacity
+            style={styles.fsCloseBtn}
+            onPress={() => setFullscreen(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Exit fullscreen"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <CloseIcon color={t.colors.text} />
+          </TouchableOpacity>
+        </SafeAreaView>
+      </Modal>
     </Screen>
   );
 }
@@ -297,21 +336,26 @@ export default function TreeScreen() {
  * When already landscape, the phone is drawn on its side so the icon also
  * signals the current state / that tapping returns to portrait.
  */
-function RotateIcon({ color, landscape }: { color: string; landscape: boolean }) {
+function ExpandIcon({ color }: { color: string }) {
+  // Diagonal expand-arrows with a landscape phone hint — signals "tap to
+  // open the big landscape view".
   return (
     <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      {landscape ? (
-        <Rect x={2} y={7} width={20} height={10} rx={2} stroke={color} strokeWidth={1.8} />
-      ) : (
-        <Rect x={7} y={2} width={10} height={20} rx={2} stroke={color} strokeWidth={1.8} />
-      )}
       <Path
-        d="M20 5a7 7 0 0 0-6-3.4M4 19a7 7 0 0 0 6 3.4"
+        d="M9 4H5a1 1 0 0 0-1 1v4M15 4h4a1 1 0 0 1 1 1v4M9 20H5a1 1 0 0 1-1-1v-4M15 20h4a1 1 0 0 0 1-1v-4"
         stroke={color}
         strokeWidth={1.8}
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <Path d="M20 2v3h-3M4 22v-3h3" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function CloseIcon({ color }: { color: string }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Path d="M6 6l12 12M18 6L6 18" stroke={color} strokeWidth={2} strokeLinecap="round" />
     </Svg>
   );
 }
@@ -335,6 +379,28 @@ function createStyles(t: Theme) {
       borderWidth: 1,
       borderColor: t.colors.border,
       // Float above the svg canvas.
+      shadowColor: '#000',
+      shadowOpacity: 0.12,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 3,
+    },
+    fsRoot: {
+      flex: 1,
+      backgroundColor: t.colors.bg,
+    },
+    fsCloseBtn: {
+      position: 'absolute',
+      top: t.spacing.sm,
+      right: t.spacing.sm,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: t.colors.bgElevated,
+      borderWidth: 1,
+      borderColor: t.colors.border,
       shadowColor: '#000',
       shadowOpacity: 0.12,
       shadowRadius: 4,
