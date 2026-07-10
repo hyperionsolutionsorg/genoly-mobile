@@ -20,6 +20,7 @@ import { apiClient } from '../../utils/api';
 import { signupSchema, mapMemberAuthError, type SignupForm } from '../../lib/authSchemas';
 import { useTheme, useThemedStyles, type Theme } from '../../theme';
 import { Button, TextField, Banner, toast } from '../../components/ui';
+import { GenolyLogo } from '../../components/GenolyLogo';
 
 const PERMISSIONS_ROUTE = '/(auth)/permissions' as unknown as Href;
 const LOGIN_ROUTE = '/(auth)/login' as unknown as Href;
@@ -89,6 +90,9 @@ export default function SignupScreen() {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
+      <View style={{ alignItems: 'center', marginBottom: 20 }}>
+        <GenolyLogo size={30} withWordmark />
+      </View>
       <Text accessibilityRole="header" style={styles.title}>
         Create your account
       </Text>

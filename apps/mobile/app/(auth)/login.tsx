@@ -22,6 +22,7 @@ import { loginSchema, mapMemberAuthError, type LoginForm } from '../../lib/authS
 import { isCurrentSessionMfaVerified, recordLoginAttempt } from '../../lib/genolyApi';
 import { useThemedStyles, type Theme } from '../../theme';
 import { Button, TextField, Banner, toast } from '../../components/ui';
+import { GenolyLogo } from '../../components/GenolyLogo';
 
 const TABS_ROUTE = '/(tabs)' as unknown as Href;
 const PERMISSIONS_ROUTE = '/(auth)/permissions' as unknown as Href;
@@ -96,6 +97,9 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={{ alignItems: 'center', marginBottom: 20 }}>
+        <GenolyLogo size={30} withWordmark />
+      </View>
       <Text accessibilityRole="header" style={styles.title}>
         Welcome back
       </Text>

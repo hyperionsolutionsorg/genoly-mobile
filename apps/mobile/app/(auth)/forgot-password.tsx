@@ -23,6 +23,7 @@ import {
 } from '../../lib/authSchemas';
 import { useThemedStyles, type Theme } from '../../theme';
 import { Button, TextField, Banner, toast } from '../../components/ui';
+import { GenolyLogo } from '../../components/GenolyLogo';
 
 const TABS_ROUTE = '/(tabs)' as unknown as Href;
 
@@ -84,6 +85,9 @@ export default function ForgotPasswordScreen() {
   if (step === 'request') {
     return (
       <View style={styles.container}>
+        <View style={{ alignItems: 'center', marginBottom: 20 }}>
+          <GenolyLogo size={30} withWordmark />
+        </View>
         <Text accessibilityRole="header" style={styles.title}>
           Reset your password
         </Text>

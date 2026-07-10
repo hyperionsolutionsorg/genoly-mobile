@@ -81,7 +81,7 @@ export default function HomeScreen() {
 
   if (isLoading || treeLoading) {
     return (
-      <Screen title="Home" brand>
+      <Screen title="Home">
         <Skeleton height={72} />
         <Skeleton height={104} />
         <Skeleton height={104} />
@@ -92,7 +92,6 @@ export default function HomeScreen() {
 
   return (
     <Screen
-      brand
       title={firstName ? `Welcome, ${firstName}` : 'Home'}
       subtitle={activeTree ? activeTree.name : 'Your family, every day'}
     >
