@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View, Text } from 'react-native';
 import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { ConvexAuthProvider } from '@convex-dev/auth/react';
 import { useConvexAuth } from 'convex/react';
 
@@ -45,6 +46,17 @@ export default function RootLayout() {
   useEffect(() => {
     if (error) throw error;
   }, [error]);
+
+  // app.json orientation is "default" (so the native config PERMITS
+  // landscape — required for the Explore rotate toggle). But we want the
+  // app portrait EVERYWHERE by default, regardless of the device's
+  // auto-rotate setting. A programmatic lock overrides the accelerometer,
+  // so this holds even when the user has rotation-lock off on their phone.
+  // Only the Explore surface unlocks to landscape on its rotate button and
+  // relocks portrait on leave (see app/(tabs)/tree.tsx).
+  useEffect(() => {
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {});
+  }, []);
 
   if (!loaded) {
     return null; // splash handled via SplashScreen
