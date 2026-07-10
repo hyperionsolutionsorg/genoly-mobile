@@ -581,3 +581,11 @@ First successful LOCAL Android build/run on the restored Mac (emulator visual pa
 #37 `1731751` — app icon/splash/favicon replaced the placeholder concentric-circles with the Genoly family-tree mark (rendered 1024² from web favicon.svg via rsvg-convert; adaptive foreground in the 66% safe zone). Operator "logo is round" report closed; verified on the emulator launcher.
 Merges done under the operator's 2026-07-09 standing authorization to merge my own reviewed PRs without asking (see main-agent memory [[feedback-merge-own-prs-without-asking]]).
 Task #300 visual pass: PARTIAL — unauthenticated surfaces captured to vault/mobile-screenshots/ (01-login, 02-signup); authenticated surfaces (tree Explorer/Pedigree/Fan, dashboard, challenges, fitness) still need a dev sign-in + operator OK to use dev-cloud bandwidth. Minor pre-existing dev warning noted: expo-router logs `No route named "(gated)"` at layout mount though (gated)/paywall resolves fine — non-fatal, filed for later.
+
+## [2026-07-09] merge | UI feedback round 1 (#38) — Pedigree removed, Fan→3 gens, Genoly branding
+
+Operator feedback from the first authenticated emulator session. #38 `main`:
+- Removed Pedigree (Classic) tree view — duplicate of Explore at phone sizes. Picker entry, tree.tsx branch + getAncestorTree subscription gone; PedigreeClassic.tsx + classicLayout.ts (+ test) deleted. d3-hierarchy retained (Fan uses hierarchy()). Recoverable via PR #31.
+- Fan generations default+cap 4/5 → 3/3. Real tree (long Telugu names) overlapped labels at 4-5; analytical scout estimate assumed shorter names.
+- New GenolyLogo (react-native-svg port of web favicon.svg mark) + Screen `brand` prop; Home shows logo + wordmark. Closes "no Genoly branding once logged in."
+Verified tsc clean; suite 372 pass/34 skip (−13 = removed classicLayout tests). Keyboard Q (email keyboard vs password) = Gboard device-level floating mode, NOT app — email field config is correct (keyboardType email-address + autoComplete email + autoCapitalize none). Merged under standing merge authorization. Operator running their own Metro on :8081 during this — changes reach their live app on reload. Note: two emulators live (5554 mine, 5556 operator's).
