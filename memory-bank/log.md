@@ -589,3 +589,11 @@ Operator feedback from the first authenticated emulator session. #38 `main`:
 - Fan generations default+cap 4/5 → 3/3. Real tree (long Telugu names) overlapped labels at 4-5; analytical scout estimate assumed shorter names.
 - New GenolyLogo (react-native-svg port of web favicon.svg mark) + Screen `brand` prop; Home shows logo + wordmark. Closes "no Genoly branding once logged in."
 Verified tsc clean; suite 372 pass/34 skip (−13 = removed classicLayout tests). Keyboard Q (email keyboard vs password) = Gboard device-level floating mode, NOT app — email field config is correct (keyboardType email-address + autoComplete email + autoCapitalize none). Merged under standing merge authorization. Operator running their own Metro on :8081 during this — changes reach their live app on reload. Note: two emulators live (5554 mine, 5556 operator's).
+
+## [2026-07-10] merge | iOS Simulator build WORKS (#39) — health patch + Expo alignment; Android session closed
+
+Xcode 26.6 installed by operator (iOS 26.5 runtime + iPhone 17 sims via first-launch; license accepted). CocoaPods 1.17.0 via brew. Used DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer per-command (xcode-select still points at CommandLineTools; changing it needs sudo — not required).
+
+Two REAL blockers fixed (#39 `efe60ec`): (1) react-native-health 1.19.0 (latest) calls RCTCallableJSModules.setBridge:, removed in RN 0.85 → iOS-only compile error; patched via patch-package (guarded performSelector) + root postinstall so EAS gets it too. (2) Ten expo-* packages lagged their SDK 56 expected versions; the precompiled ExpoImage.framework is built against the aligned set → dyld "Symbol not found: ExpoModulesCore.Record.from" launch crash; fixed via `npx expo install --fix`. Device-verified: builds + launches to login on iPhone 17 Pro sim, Genoly icon intact (vault/mobile-screenshots/ios-01-login.png). tsc clean, suite 372/34.
+
+Gotchas banked: expo version bumps stale the Pods project — `rm -rf ios && expo run:ios` (ios/ is generated+gitignored) beats fighting `pod update`. Android emulator + Metro from the 2026-07-09 session were stopped before starting iOS.
