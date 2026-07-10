@@ -183,27 +183,6 @@ export function ExploreCanvas({
               </TouchableOpacity>
             );
           })}
-          {/* No-silent-caps affordance (web parity), collapsed to an ⓘ so it
-              costs no canvas real estate: tap → toast explains more
-              generations exist beyond the current range. */}
-          {hitCeiling ? (
-            <TouchableOpacity
-              accessibilityRole="button"
-              accessibilityLabel="More generations exist beyond this range"
-              accessibilityHint="Shows how to widen the view"
-              activeOpacity={0.7}
-              onPress={() =>
-                toast.info(
-                  radius >= RADIUS_CEILING
-                    ? `Showing ±${RADIUS_CEILING} generations around this perspective — tap a card (or a +N pill) to travel further.`
-                    : 'More generations exist beyond this range — raise "Generations" to widen the view.',
-                )
-              }
-              style={styles.ceilingInfoBtn}
-            >
-              <Text style={styles.ceilingInfoText}>i</Text>
-            </TouchableOpacity>
-          ) : null}
         </View>
         {viewerPersonId && anchorId !== viewerPersonId ? (
           <TouchableOpacity
@@ -416,6 +395,29 @@ export function ExploreCanvas({
         </Svg>
       </ZoomPanView>
 
+      {/* No-silent-caps affordance (web parity) as a PROMINENT floating ⓘ
+          at the canvas's bottom-left (operator direction 2026-07-10): even a
+          member who never noticed the Generations chips discovers from
+          inside the view that the range can widen. Tap → toast. Rendered
+          only when the current range actually hits a ceiling. */}
+      {hitCeiling ? (
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="More generations exist beyond this range"
+          accessibilityHint="Shows how to widen the view"
+          activeOpacity={0.7}
+          onPress={() =>
+            toast.info(
+              radius >= RADIUS_CEILING
+                ? `Showing ±${RADIUS_CEILING} generations around this perspective — tap a card (or a +N pill) to travel further.`
+                : 'More generations exist beyond this range — raise "Generations" to widen the view.',
+            )
+          }
+          style={styles.ceilingInfoBtn}
+        >
+          <Text style={styles.ceilingInfoText}>i</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
@@ -476,21 +478,30 @@ function createStyles(t: Theme) {
       color: t.colors.link,
     },
     ceilingInfoBtn: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
+      position: 'absolute',
+      bottom: t.spacing.sm,
+      left: t.spacing.sm,
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       borderWidth: 1.5,
       borderColor: t.colors.primary,
       alignItems: 'center',
       justifyContent: 'center',
-      marginLeft: t.spacing.xs,
+      backgroundColor: t.colors.bgElevated,
+      // Float above the svg canvas (mirrors the expand/close buttons).
+      shadowColor: '#000',
+      shadowOpacity: 0.12,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 1 },
+      elevation: 3,
     },
     ceilingInfoText: {
       color: t.colors.primary,
-      fontSize: 13,
+      fontSize: 18,
       fontWeight: '700',
       fontStyle: 'italic',
-      lineHeight: 15,
+      lineHeight: 21,
     },
   });
 }
