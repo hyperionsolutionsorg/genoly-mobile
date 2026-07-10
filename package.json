@@ -18,7 +18,8 @@
     "release:patch": "node scripts/release.mjs patch",
     "release:minor": "node scripts/release.mjs minor",
     "release:major": "node scripts/release.mjs major",
-    "release:prerelease": "node scripts/release.mjs prerelease"
+    "release:prerelease": "node scripts/release.mjs prerelease",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -28,6 +29,7 @@
     "@types/jest": "^29.5.0",
     "jest": "^29.7.0",
     "jest-expo": "^56.0.4",
+    "patch-package": "^8.0.1",
     "react-hook-form": "^7.77.0",
     "react-test-renderer": "^19.2.3",
     "ts-jest": "^29.2.5",
