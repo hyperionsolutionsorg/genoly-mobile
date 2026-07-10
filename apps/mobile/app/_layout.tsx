@@ -251,9 +251,35 @@ function ThemedNavigation({ downgradeBanner }: { downgradeBanner: boolean }) {
           </Text>
         </View>
       )}
-      <Stack>
+      {/* Every screen renders its own in-page title via <Screen>, so:
+          - full-screen surfaces (tabs, auth, wizard, paywall) hide the
+            native header entirely (it was showing raw route names like
+            "(auth)/login" — operator report 2026-07-10);
+          - pushed detail screens keep a native header for the back
+            affordance but get real titles, and the back button is
+            chevron-only (no "(tabs)" label). */}
+      <Stack screenOptions={{ headerBackButtonDisplayMode: 'minimal' }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="(gated)" options={{ headerShown: false }} />
+        <Stack.Screen name="(gated)/paywall" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/signup" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/forgot-password" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/mfa-challenge" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)/permissions" options={{ headerShown: false }} />
+        <Stack.Screen name="welcome" options={{ headerShown: false }} />
+        <Stack.Screen name="add-person" options={{ title: 'Add person' }} />
+        <Stack.Screen name="challenge-create" options={{ title: 'New challenge' }} />
+        <Stack.Screen name="challenge/[challengeId]" options={{ title: 'Challenge' }} />
+        <Stack.Screen name="friends" options={{ title: 'Friends' }} />
+        <Stack.Screen name="goals" options={{ title: 'Goals' }} />
+        <Stack.Screen name="goals-history" options={{ title: 'Goal history' }} />
+        <Stack.Screen name="leaderboard" options={{ title: 'Leaderboard' }} />
+        <Stack.Screen name="support" options={{ title: 'Support' }} />
+        <Stack.Screen name="support-article/[slug]" options={{ title: 'Help article' }} />
+        <Stack.Screen name="person/[personId]/index" options={{ title: 'Person' }} />
+        <Stack.Screen name="person/[personId]/edit" options={{ title: 'Edit person' }} />
+        <Stack.Screen name="person/[personId]/add-event" options={{ title: 'Add event' }} />
+        <Stack.Screen name="person/[personId]/add-photo" options={{ title: 'Add photo' }} />
       </Stack>
       <ToastHost />
     </NavThemeProvider>

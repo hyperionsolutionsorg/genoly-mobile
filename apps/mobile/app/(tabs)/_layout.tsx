@@ -3,7 +3,6 @@ import FontAwesome from '@react-native-vector-icons/fontawesome';
 import { Tabs } from 'expo-router';
 
 import { useTheme } from '../../theme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
 // Browse FontAwesome 5 icon names at https://icons.expo.fyi/Index?q=fa5
 function TabBarIcon(props: {
@@ -35,9 +34,10 @@ export default function TabLayout() {
         tabBarStyle: { backgroundColor: t.colors.bgElevated, borderTopColor: t.colors.border },
         headerStyle: { backgroundColor: t.colors.bgElevated },
         headerTintColor: t.colors.text,
-        // Disable the static render of the header on web to prevent a
-        // hydration error in React Navigation.
-        headerShown: useClientOnlyValue(false, true),
+        // No native tab headers: every tab screen renders its own in-page
+        // title via <Screen>, so the bar was a duplicate (e.g. "Tree" twice
+        // — operator report 2026-07-10).
+        headerShown: false,
       }}>
       <Tabs.Screen
         name="index"
