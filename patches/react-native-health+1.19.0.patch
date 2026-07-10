@@ -1,0 +1,25 @@
+diff --git a/node_modules/react-native-health/RCTAppleHealthKit/RCTAppleHealthKit.m b/node_modules/react-native-health/RCTAppleHealthKit/RCTAppleHealthKit.m
+index e8ddce1..e067b58 100644
+--- a/node_modules/react-native-health/RCTAppleHealthKit/RCTAppleHealthKit.m
++++ b/node_modules/react-native-health/RCTAppleHealthKit/RCTAppleHealthKit.m
+@@ -841,7 +841,19 @@ RCT_EXPORT_METHOD(getClinicalRecords:(NSDictionary *)input callback:(RCTResponse
+ - (void)emitEventInternal:(NSNotification *)notification {
+   if (self.hasListeners) {
+     self.callableJSModules = [RCTAppleHealthKit sharedJsModule];
+-    [self.callableJSModules setBridge:self.bridge];
++    // PATCHED (patch-package, 2026-07-10): RN 0.85 removed
++    // RCTCallableJSModules.setBridge: (bridgeless New Architecture), which
++    // made this line a compile error. Guarded via performSelector so it
++    // still runs on legacy-bridge RN and no-ops on 0.85+, where
++    // RCTEventEmitter's sendEventWithName works through the interop layer
++    // without a bridge reference.
++#pragma clang diagnostic push
++#pragma clang diagnostic ignored "-Wundeclared-selector"
++    if ([self.callableJSModules respondsToSelector:@selector(setBridge:)]) {
++      [self.callableJSModules performSelector:@selector(setBridge:)
++                                   withObject:self.bridge];
++    }
++#pragma clang diagnostic pop
+     [self sendEventWithName:notification.name
+                    body:notification.userInfo];
+   }
