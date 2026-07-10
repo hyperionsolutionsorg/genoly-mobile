@@ -706,11 +706,18 @@ export const listMyTenants = makeFunctionReference<
  * Returns `null` while loading (splash is still visible), `true` for Pro
  * access, and `false` for paywall.
  */
-import { useQuery } from 'convex/react';
+import { useQuery, useConvexAuth } from 'convex/react';
 import { hasAnyProTenant } from './planChecks';
 
 export function useHasProTenantAccess(): boolean | null {
-  const tenants = useQuery(listMyTenants);
+  const { isAuthenticated } = useConvexAuth();
+  // Skip the query while unauthenticated: listMyTenants runs requireAuthUser
+  // and THROWS "Not authenticated" with no session, which surfaces as a render
+  // error before AuthGate's !isAuthenticated branch can route to /(auth)/login
+  // (in a production build it hits the router error boundary instead of login).
+  // Returning null here keeps AuthGate on the splash until it routes on auth.
+  const tenants = useQuery(listMyTenants, isAuthenticated ? {} : 'skip');
+  if (!isAuthenticated) return null;
   if (tenants === undefined) return null; // loading
   return hasAnyProTenant(tenants);
 }
