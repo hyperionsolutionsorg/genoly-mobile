@@ -303,7 +303,13 @@ export default function TreeScreen() {
       <Modal
         visible={fullscreen}
         animationType="fade"
-        supportedOrientations={['landscape', 'landscape-left', 'landscape-right']}
+        // 'portrait' included so the dismissal transition (which happens
+        // while the orientation lock flips back to portrait) stays inside
+        // the modal's supported mask — iOS raises "Modal was presented with
+        // 0x18 orientations mask" and crashes in prod otherwise. The app's
+        // Info.plist must also allow landscape (app.json orientation
+        // "default" — requires prebuild, not just a JS reload).
+        supportedOrientations={['portrait', 'landscape', 'landscape-left', 'landscape-right']}
         onRequestClose={() => setFullscreen(false)}
       >
         <SafeAreaView style={styles.fsRoot} edges={['top', 'bottom', 'left', 'right']}>
