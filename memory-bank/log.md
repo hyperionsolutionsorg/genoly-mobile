@@ -607,3 +607,9 @@ Operator Qs answered: email-keyboard oddity = Gboard floating mode (device-level
 ## [2026-07-10] merge | Brand bar (#41) — Genoly logo on every tab + auth screens
 
 Tab native header repurposed as the BRAND BAR (GenolyLogo + wordmark, left-aligned, all 5 tabs) — also restores the safe-area inset that #40's headerShown:false removed (in-page titles were colliding with the status-bar clock). Auth screens (login/signup/forgot/mfa) get a centered logo above their headings; Home's in-page brand row removed (bar carries it). Simulator-verified on Tree tab. tsc clean; 372/34.
+
+## [2026-07-10] merge | Explore landscape toggle (#42) + both emulators up
+
+Operator ask: Explore in landscape with a tap symbol, working even when device auto-rotate is off. #42: expo-screen-orientation added; app.json orientation portrait→default (permits landscape natively); root _layout locks PORTRAIT_UP on mount (app portrait everywhere by default; programmatic lock overrides the accelerometer → works with rotation-lock ON); Explore canvas gets a floating rotate button (phone+arrow SVG) toggling LANDSCAPE⇄PORTRAIT_UP, relocking portrait on leave. Native rebuild both platforms; both launch clean, tsc clean, 372/34. Landscape visual behind login — operator to confirm post-sign-in.
+
+Both emulators brought back up this session (operator had closed Android; asked to reopen + open iOS). Android AVD in use is `hyperion_test` (5554); iPhone 17 Pro sim booted. Physical-phone testing guidance given: Android = sideload EAS preview APK (only real-device path for Health Connect; needs `eas login` or dashboard); iOS = requires Apple Developer Program ($99/yr) → TestFlight/ad-hoc, no sideloading. Operator considering eas login for APK.
