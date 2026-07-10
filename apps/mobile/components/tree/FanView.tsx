@@ -5,22 +5,22 @@
  *
  * Architecture-scout verdict (tree-surfaces-plan.md §5): GO, with
  * constraints. The geometry is deterministic (`lib/tree/fanGeometry.ts`,
- * ported verbatim), so legibility at 390pt width was computed exactly:
- * the wheel is comfortably legible through 4 generations, borderline at 5
- * (heavy name truncation + crowding), and NOT legible at 6-7 on a phone —
- * the web only gets away with 7 because of its huge desktop viewport.
- * That's why this view:
- *   - defaults to 4 generations (DEFAULT_FAN_GENERATIONS);
- *   - hard-caps at 5 (MAX_FAN_GENERATIONS) — the generation control never
- *     offers 6 or higher, and the render loop clamps defensively even if a
+ * ported verbatim). The scout's analytical estimate had 4 generations as
+ * comfortable, but the 2026-07-09 device pass on a REAL tree (Nalluri,
+ * long Telugu names) showed label overlap already at 4-5 — analytical
+ * average-name-length legibility underestimated real names. Operator
+ * direction: restrict to 3. That's why this view:
+ *   - defaults to 3 generations (DEFAULT_FAN_GENERATIONS);
+ *   - hard-caps at 3 (MAX_FAN_GENERATIONS) — the generation control never
+ *     offers 4 or higher, and the render loop clamps defensively even if a
  *     caller passed a larger value;
  *   - requires pinch-to-zoom (the shared ZoomPanView, same as
  *     Explore/Pedigree) — that's the mitigation the web Fan doesn't need
  *     but this one does; it's what tips gen 4/5 outer labels from
  *     "borderline" to legible on demand.
  *
- * Simplifications vs. the web FanChart (mirrors the Pedigree Classic
- * precedent — components/tree/PedigreeClassic.tsx):
+ * Simplifications vs. the web FanChart (mirrored the Pedigree Classic
+ * precedent, which shipped in PR #31 and was removed 2026-07-09):
  *   - no hover-path highlight (`isOnAncestralPath` still ships — and is
  *     unit-tested — but this view doesn't wire it up: touch has no hover,
  *     and long-press is already spoken for by "open profile", so there's no
@@ -65,9 +65,9 @@ import { ZoomPanView } from './ZoomPanView';
  * hard cap 5 (borderline — relies on pinch-zoom). 6-7 are NEVER offered on
  * mobile; the web's `gens` range of 2-7 does not apply here.
  */
-export const DEFAULT_FAN_GENERATIONS = 4;
+export const DEFAULT_FAN_GENERATIONS = 3;
 export const MIN_FAN_GENERATIONS = 2;
-export const MAX_FAN_GENERATIONS = 5;
+export const MAX_FAN_GENERATIONS = 3;
 
 /** Fallback square size before the viewport reports its own layout (first paint). */
 const FALLBACK_FAN_SIZE = 390;

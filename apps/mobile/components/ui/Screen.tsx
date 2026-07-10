@@ -2,12 +2,15 @@ import type { ReactNode } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 
 import { useTheme } from '../../theme';
+import { GenolyLogo } from '../GenolyLogo';
 
 export interface ScreenProps {
   /** Screen title rendered at the top (DESIGN.md §4 screen layout). Omit for custom headers. */
   title?: string;
   /** One-line subtitle under the title, in muted color. */
   subtitle?: string;
+  /** Render the Genoly logo + wordmark above the title (brand surfaces, e.g. Home). */
+  brand?: boolean;
   children: ReactNode;
   /** Center content vertically (form screens like Login). */
   centered?: boolean;
@@ -20,11 +23,16 @@ export interface ScreenProps {
  * Base screen shell: bg-colored ScrollView with screen padding, optional
  * title block. Every new screen starts here so spacing stays uniform.
  */
-export function Screen({ title, subtitle, children, centered, noScroll, testID }: ScreenProps) {
+export function Screen({ title, subtitle, brand, children, centered, noScroll, testID }: ScreenProps) {
   const t = useTheme();
 
-  const header = (title || subtitle) && (
+  const header = (title || subtitle || brand) && (
     <View style={{ marginTop: t.spacing.sm, marginBottom: t.spacing.xl }}>
+      {brand ? (
+        <View style={{ marginBottom: t.spacing.md }}>
+          <GenolyLogo size={22} withWordmark />
+        </View>
+      ) : null}
       {title ? (
         <Text accessibilityRole="header" style={[t.typography.screenTitle, { color: t.colors.text }]}>
           {title}

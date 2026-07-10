@@ -3,9 +3,11 @@
  * src/components/ViewPicker.tsx role): a pure presentational segmented
  * control; mode state lives with the caller (the tree shell).
  *
- * Task A shipped Explore (default) + Register. Task B added Pedigree
- * (Classic only). Task C appends Fan the same way (defaults to 4
- * generations, hard-capped at 5 — see components/tree/FanView.tsx).
+ * Task A shipped Explore (default) + Register; Task C added Fan (defaults
+ * to 3 generations, hard-capped at 3 — see components/tree/FanView.tsx).
+ * Task B's Pedigree (Classic) was REMOVED 2026-07-09 by operator direction:
+ * at phone sizes it read as a duplicate of Explore. Recoverable from git
+ * history (PR #31) if a distinct mobile pedigree treatment is ever wanted.
  *
  * No lock icons on any tab by design: all tree surfaces inherit the app-level
  * Pro gate (AuthGate in app/_layout.tsx); a non-Pro user never reaches this
@@ -16,7 +18,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { useThemedStyles, type Theme } from '../../theme';
 
-export type TreeViewMode = 'explore' | 'register' | 'pedigree' | 'fan';
+export type TreeViewMode = 'explore' | 'register' | 'fan';
 
 export interface TreeViewOption {
   mode: TreeViewMode;
@@ -27,7 +29,6 @@ export interface TreeViewOption {
 export const AVAILABLE_TREE_VIEWS: TreeViewOption[] = [
   { mode: 'explore', label: 'Explore' },
   { mode: 'register', label: 'Register' },
-  { mode: 'pedigree', label: 'Pedigree' }, // Task B
   { mode: 'fan', label: 'Fan' }, // Task C
 ];
 
