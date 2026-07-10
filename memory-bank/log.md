@@ -627,3 +627,13 @@ VERIFICATION FIRST: full adb-driven e2e on the Android emulator — signed in as
 ## [2026-07-10] merge | Explore ⓘ → floating canvas button (#45)
 
 Operator direction: the ceiling ⓘ moved from the Generations chips row to a prominent floating 40pt button at the Explore canvas's bottom-left (mirrors expand/close treatment) — discoverable from inside the view. Same toast, still ceiling-gated, applies to inline + fullscreen (same component). tsc clean; 372/34. Visual check deferred: the Android emulator had a DIFFERENT app (operator's Cloud² dashboard) foregrounded mid-verification — stopped driving the emulator to avoid disturbing their session; operator to eyeball in Genoly.
+
+## [2026-07-10] note | Local-Convex APK recipe (physical-device testing, zero cloud budget)
+
+Built a standalone release APK pointed at the LOCAL self-hosted Convex over LAN for the operator's physical Android. Recipe (repo left untouched — all config changes reverted after the build):
+1. Local Convex = docker `genoly-local` binding 0.0.0.0:3210 (deployment) + :3211 (HTTP actions). NOTE the OTHER container (`hyperion-convex-backend`, host 3212/3213) is a DIFFERENT project — don't confuse.
+2. `cd genoly-family-web && npx convex dev --once` (env already local) to freshen functions first.
+3. TEMPORARILY in apps/mobile/app.json: `extra.convexCloudUrl=http://<LAN-IP>:3210`, `extra.convexBaseUrl=http://<LAN-IP>:3211`, and expo-build-properties android `usesCleartextTraffic: true` (Android release blocks http:// otherwise).
+4. `expo prebuild -p android --no-install` then `android/gradlew assembleRelease -x lint` → `app/build/outputs/apk/release/app-release.apk` (~118 MB, debug-keystore signed — sideload-ok, NOT store-ready). Verify the IP is embedded (`unzip -p apk | strings | grep <IP>`).
+5. REVERT app.json (git checkout).
+Gotcha: piping gradle through `tail` truncated/flaked one run — run gradle with full output. Delivered: ~/Desktop/genoly-local-convex.apk (2026-07-10, main @ 66f11dd content + local URLs).
