@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Session handoff — genoly-mobile"
-updated: 2026-07-09 (V1.0.0 Pro gate + release automation backfilled; two-workstream run opened; prior: 2026-06-11)
+updated: 2026-07-11 (Transport hardening PR #46 OPEN for review/merge — fitness FetchApiClient HTTPS guard (assertSecureBaseUrl; loopback/LAN exempt) + android.usesCleartextTraffic:false. Independent of the web security PRs; merge anytime. Deliberately did NOT touch member-client convex.ts requireCloudUrl (the deferred LAN-relaxation is the opposite direction — still the operator's call). See log.md [2026-07-11]. Prior: 2026-07-09 (V1.0.0 Pro gate + release automation backfilled; two-workstream run opened; prior: 2026-06-11)
 status: active
 ---
 

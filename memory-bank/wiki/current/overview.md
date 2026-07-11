@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Overview — genoly-mobile"
-updated: 2026-07-09
+updated: 2026-07-11 (Transport hardening PR #46 open — fitness client HTTPS enforcement + Android cleartext off; part of the cross-repo security run. See log.md [2026-07-11].)
 status: active
 ---
 

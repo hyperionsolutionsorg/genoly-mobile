@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Progress — genoly-mobile"
-updated: 2026-07-09 (V1.0.0 Pro gate + release automation backfilled; two-workstream run opened; prior: 2026-06-11)
+updated: 2026-07-11 (Transport hardening 🟡 PR #46 OPEN — fitness client HTTPS guard + Android cleartext off (Req 1, cross-repo security run); jest 40/40. See log.md [2026-07-11]. Prior: 2026-07-09 (V1.0.0 Pro gate + release automation backfilled; two-workstream run opened; prior: 2026-06-11)
 status: active
 ---
 
