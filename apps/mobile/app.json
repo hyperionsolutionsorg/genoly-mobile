@@ -28,6 +28,7 @@
     "android": {
       "package": "org.hyperionsolutions.genoly",
       "versionCode": 100,
+      "usesCleartextTraffic": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"

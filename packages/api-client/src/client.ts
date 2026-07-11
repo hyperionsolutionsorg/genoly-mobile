@@ -27,6 +27,36 @@ export interface FetchApiClientOptions {
   fetch?: typeof fetch;
 }
 
+/**
+ * Reject a cleartext (http://) base URL to any non-local host so a
+ * bearer-authenticated fitness/health request can never leave the device over
+ * an unencrypted channel — e.g. if a production build is misconfigured with a
+ * scheme-less or http:// URL. Cleartext is permitted ONLY to loopback / private
+ * LAN hosts, where it is needed to talk to the self-hosted Convex backend
+ * during local development. Mirrors the member-side client's https-only guard.
+ */
+export function assertSecureBaseUrl(baseUrl: string): void {
+  const m = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\/([^/:?#]+)/.exec(baseUrl);
+  if (!m) {
+    throw new Error(`Invalid API baseUrl: ${baseUrl}`);
+  }
+  const scheme = m[1].toLowerCase();
+  const host = m[2].toLowerCase();
+  if (scheme === 'https') return;
+  const isLocal =
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '::1' ||
+    host.endsWith('.local') ||
+    /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+  if (scheme === 'http' && isLocal) return;
+  throw new Error(
+    `Refusing insecure API baseUrl "${baseUrl}": cleartext HTTP is only allowed to a local/LAN host during development. Production must use https://.`,
+  );
+}
+
 export class FetchApiClient implements ApiClient {
   private tokenStore: TokenStore;
   private baseUrl: string;
@@ -34,6 +64,7 @@ export class FetchApiClient implements ApiClient {
   private customFetch: typeof fetch;
 
   constructor(opts: FetchApiClientOptions) {
+    assertSecureBaseUrl(opts.baseUrl);
     this.tokenStore = opts.tokenStore;
     this.baseUrl = opts.baseUrl.replace(/\/$/, '');
     this.appVersion = opts.appVersion;
