@@ -637,3 +637,11 @@ Built a standalone release APK pointed at the LOCAL self-hosted Convex over LAN 
 4. `expo prebuild -p android --no-install` then `android/gradlew assembleRelease -x lint` → `app/build/outputs/apk/release/app-release.apk` (~118 MB, debug-keystore signed — sideload-ok, NOT store-ready). Verify the IP is embedded (`unzip -p apk | strings | grep <IP>`).
 5. REVERT app.json (git checkout).
 Gotcha: piping gradle through `tail` truncated/flaked one run — run gradle with full output. Delivered: ~/Desktop/genoly-local-convex.apk (2026-07-10, main @ 66f11dd content + local URLs).
+
+
+## [2026-07-11] note | Local-Convex APK — the MISSING piece: convex.ts https-only guard
+
+First local APK (2026-07-10) failed on the operator's phone with "Missing extra.convexCloudUrl in app.json". Root cause was NOT the config (assets/app.config in the APK correctly held the LAN http URLs) — it was `utils/convex.ts::requireCloudUrl`: the guard is `!url.startsWith('https://')`, which REJECTS a local `http://<LAN-IP>:3210` URL and throws that same message. So the full local-APK recipe needs a THIRD temp edit beyond the two in the 2026-07-10 recipe:
+3b. TEMP in apps/mobile/utils/convex.ts: relax requireCloudUrl to accept http:// (regex `^https?://`) + read extra from expoConfig ?? manifest ?? manifest2 (release-standalone reads one of them). REVERT after build.
+VERIFIED this time before delivery: installed the release APK on the emulator, launched → Genoly login (no config error), probed a bogus sign-in → logcat showed `[CONVEX A(auth:signIn)] Server Error at retrieveAccount` = a SERVER response from local Convex at 192.168.68.132:3210 (proves LAN connectivity, not just render). Delivered ~/Desktop/genoly-local-convex.apk (118 MB). Repo reverted (app.json + convex.ts).
+Consideration for later: make requireCloudUrl permanently accept http:// for private/LAN hosts (10./192.168./127.) so local physical-device testing needs no code hack — deferred as a product/security call. NOTE: emulator now has the RELEASE build (dev-client uninstalled); reinstall dev-client for live-reload work. Also a separate app "Cloud²/Hyperion Payment System" is installed on this emulator (operator's) — not Genoly.
