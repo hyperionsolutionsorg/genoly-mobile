@@ -33,6 +33,7 @@
 
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, type Href } from 'expo-router';
 import { useConvex, useQuery } from 'convex/react';
@@ -312,25 +313,32 @@ export default function TreeScreen() {
         supportedOrientations={['portrait', 'landscape', 'landscape-left', 'landscape-right']}
         onRequestClose={() => setFullscreen(false)}
       >
-        <SafeAreaView style={styles.fsRoot} edges={['top', 'bottom', 'left', 'right']}>
-          <ExploreCanvas
-            graph={graph}
-            anchorId={anchorId}
-            radius={radius}
-            onRadiusChange={setRadius}
-            onReAnchor={setAnchorId}
-            onOpenPerson={openPerson}
-          />
-          <TouchableOpacity
-            style={styles.fsCloseBtn}
-            onPress={() => setFullscreen(false)}
-            accessibilityRole="button"
-            accessibilityLabel="Exit fullscreen"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <CloseIcon color={t.colors.text} />
-          </TouchableOpacity>
-        </SafeAreaView>
+        {/* A Modal renders in its OWN native view root, which the app-level
+            GestureHandlerRootView (app/_layout.tsx) does NOT reach into — so
+            the canvas's pan/pinch gestures are dead inside the modal without
+            a dedicated root here (react-native-gesture-handler requirement;
+            device-confirmed 2026-07-11). */}
+        <GestureHandlerRootView style={styles.fsRoot}>
+          <SafeAreaView style={styles.fsRoot} edges={['top', 'bottom', 'left', 'right']}>
+            <ExploreCanvas
+              graph={graph}
+              anchorId={anchorId}
+              radius={radius}
+              onRadiusChange={setRadius}
+              onReAnchor={setAnchorId}
+              onOpenPerson={openPerson}
+            />
+            <TouchableOpacity
+              style={styles.fsCloseBtn}
+              onPress={() => setFullscreen(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Exit fullscreen"
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <CloseIcon color={t.colors.text} />
+            </TouchableOpacity>
+          </SafeAreaView>
+        </GestureHandlerRootView>
       </Modal>
     </Screen>
   );
