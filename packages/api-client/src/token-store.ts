@@ -61,6 +61,16 @@ export class SecureTokenStore implements TokenStore {
       this.secureStore = require('expo-secure-store');
     } catch {
       this.secureStore = null;
+      // A missing module here silently disables the fitness bearer token — every
+      // getToken() returns null, surfacing as "No bearer token available" with no
+      // other clue. `expo-secure-store` must be a dependency of the host app.
+      // Warn loudly in dev so this can never hide again.
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        console.warn(
+          '[SecureTokenStore] expo-secure-store is unavailable — the fitness bearer ' +
+            'token cannot be persisted. Install `expo-secure-store` in the app and rebuild.',
+        );
+      }
     }
   }
 
