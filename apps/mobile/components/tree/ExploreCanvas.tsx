@@ -48,6 +48,17 @@ const RADIUS_CEILING = 5;
 
 const CANVAS_PAD = 48;
 
+// react-native-svg rasterizes the ENTIRE SvgView into one bitmap sized
+// width*height*4 bytes. Android hard-caps a single bitmap at ~100 MB, so a
+// large/deep tree whose bounds reach ~7000x7000 px crashes natively with
+// "Canvas: trying to draw too large bitmap" (device-confirmed 2026-07-11 on
+// the E2E Large Tree at ±4 generations — ~211 MB). We cap the BASE raster to
+// a conservative cross-device budget; the whole tree still fits via the
+// viewBox, and ZoomPanView pinch-zoom recovers detail (zoom is GPU
+// compositing on the fixed bitmap, so it never re-rasterizes larger).
+const MAX_CANVAS_DIM = 3000; // px per side (under common GPU texture limits)
+const MAX_CANVAS_PIXELS = 9_000_000; // ~36 MB bitmap ceiling
+
 export interface ExploreCanvasProps {
   graph: ExplorerGraphResult | undefined;
   anchorId: string | null;
@@ -121,10 +132,21 @@ export function ExploreCanvas({
     }
     const originX = minX - CANVAS_PAD;
     const originY = minY - CANVAS_PAD;
-    const width = maxX - minX + CANVAS_PAD * 2;
-    const height = maxY - minY + CANVAS_PAD * 2;
+    const rawWidth = maxX - minX + CANVAS_PAD * 2;
+    const rawHeight = maxY - minY + CANVAS_PAD * 2;
+    // Uniform down-scale so the base bitmap stays within the budget (see the
+    // MAX_CANVAS_* constants). fit === 1 for normal trees (no change); it
+    // only bites on very large/deep ones, which then start zoomed-out.
+    const fit = Math.min(
+      1,
+      MAX_CANVAS_DIM / rawWidth,
+      MAX_CANVAS_DIM / rawHeight,
+      Math.sqrt(MAX_CANVAS_PIXELS / (rawWidth * rawHeight)),
+    );
+    const width = rawWidth * fit;
+    const height = rawHeight * fit;
 
-    return { scope, layout, labels, personById, originX, originY, width, height };
+    return { scope, layout, labels, personById, originX, originY, rawWidth, rawHeight, width, height, fit };
   }, [graph, anchorId]);
 
   // ── Loading / empty ──────────────────────────────────────────────────
@@ -147,13 +169,15 @@ export function ExploreCanvas({
     );
   }
 
-  const { scope, layout, labels, personById, originX, originY, width, height } = computed;
+  const { scope, layout, labels, personById, originX, originY, rawWidth, rawHeight, width, height, fit } = computed;
   const viewerPersonId = graph.viewerPersonId;
   const hitCeiling = graph.caps.hitRadiusCeiling;
 
+  // centerOn is in the CAPPED canvas space (0..width), matching what
+  // ZoomPanView expects — so multiply the content-space offset by `fit`.
   const centerOn = {
-    x: layout.anchorCenter.x - originX,
-    y: layout.anchorCenter.y - originY,
+    x: (layout.anchorCenter.x - originX) * fit,
+    y: (layout.anchorCenter.y - originY) * fit,
   };
 
   const personNodes = layout.nodes.filter((n): n is LaidPersonNode => n.kind === 'person');
@@ -204,7 +228,7 @@ export function ExploreCanvas({
         centerKey={`${anchorId}~${radius}`}
         accessibilityLabel="Family perspective canvas. Tap a person to see the family from their side; long-press to open their profile."
       >
-        <Svg width={width} height={height} viewBox={`${originX} ${originY} ${width} ${height}`}>
+        <Svg width={width} height={height} viewBox={`${originX} ${originY} ${rawWidth} ${rawHeight}`}>
           {/* Connectors under the cards. */}
           {layout.edges.map((e) => (
             <Polyline
