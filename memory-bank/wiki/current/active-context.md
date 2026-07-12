@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Active context — genoly-mobile"
-updated: 2026-07-11 (Transport hardening PR #46 OPEN — fitness FetchApiClient now enforces HTTPS via assertSecureBaseUrl (loopback/LAN exempt) + android.usesCleartextTraffic:false; jest 40/40, typecheck clean; part of the cross-repo security run (web #271/#272/#273). Flagged: prod-URL placeholders ship pointing at DEV; SQLite health at-rest plaintext. See log.md [2026-07-11]. Prior: 2026-07-09 (state cascade backfill: V1.0.0 Pro gate + release automation; two-workstream run opened; prior: 2026-06-11 mobile e2e run close)
+updated: 2026-07-11b (Prod-URL resolution PR #49 OPEN — new app.config.ts resolves Convex URLs by EAS_BUILD_PROFILE; production reads operator EAS env vars CONVEX_PROD_BASE_URL/CONVEX_PROD_CLOUD_URL and FAILS THE BUILD if unset (no more silent dev fallback); dead placeholders removed. 9 jest + expo-config profile checks. Part of cross-repo security follow-ups. See log.md [2026-07-11] prod-URL note. Prior: 2026-07-11 (Transport hardening PR #46 OPEN — fitness FetchApiClient now enforces HTTPS via assertSecureBaseUrl (loopback/LAN exempt) + android.usesCleartextTraffic:false; jest 40/40, typecheck clean; part of the cross-repo security run (web #271/#272/#273). Flagged: prod-URL placeholders ship pointing at DEV; SQLite health at-rest plaintext. See log.md [2026-07-11]. Prior: 2026-07-09 (state cascade backfill: V1.0.0 Pro gate + release automation; two-workstream run opened; prior: 2026-06-11 mobile e2e run close)
 status: active
 ---
 

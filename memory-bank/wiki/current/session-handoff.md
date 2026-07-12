@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Session handoff — genoly-mobile"
-updated: 2026-07-11 (Transport hardening PR #46 OPEN for review/merge — fitness FetchApiClient HTTPS guard (assertSecureBaseUrl; loopback/LAN exempt) + android.usesCleartextTraffic:false. Independent of the web security PRs; merge anytime. Deliberately did NOT touch member-client convex.ts requireCloudUrl (the deferred LAN-relaxation is the opposite direction — still the operator's call). See log.md [2026-07-11]. Prior: 2026-07-09 (V1.0.0 Pro gate + release automation backfilled; two-workstream run opened; prior: 2026-06-11)
+updated: 2026-07-11b (Prod-URL resolution PR #49 OPEN — app.config.ts by build profile. OPERATOR: set CONVEX_PROD_BASE_URL + CONVEX_PROD_CLOUD_URL as EAS env vars (production scope) before `eas build --profile production`, or the build fails closed (intended). Cut from clean HEAD; uncommitted local-APK WIP (LAN URLs + convex.ts) still on main — reconcile with the removed placeholder keys when next touching app.json. See log.md [2026-07-11] prod-URL note. Prior: 2026-07-11 (Transport hardening PR #46 OPEN for review/merge — fitness FetchApiClient HTTPS guard (assertSecureBaseUrl; loopback/LAN exempt) + android.usesCleartextTraffic:false. Independent of the web security PRs; merge anytime. Deliberately did NOT touch member-client convex.ts requireCloudUrl (the deferred LAN-relaxation is the opposite direction — still the operator's call). See log.md [2026-07-11]. Prior: 2026-07-09 (V1.0.0 Pro gate + release automation backfilled; two-workstream run opened; prior: 2026-06-11)
 status: active
 ---
 

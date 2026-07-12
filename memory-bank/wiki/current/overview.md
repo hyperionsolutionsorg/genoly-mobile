@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Overview — genoly-mobile"
-updated: 2026-07-11 (Transport hardening PR #46 open — fitness client HTTPS enforcement + Android cleartext off; part of the cross-repo security run. See log.md [2026-07-11].)
+updated: 2026-07-11b (Prod-URL resolution PR #49 open — production builds now resolve the prod Convex deployment (fail-closed) instead of silently using dev. See log.md [2026-07-11] prod-URL note. Prior: 2026-07-11 (Transport hardening PR #46 open — fitness client HTTPS enforcement + Android cleartext off; part of the cross-repo security run. See log.md [2026-07-11].)
 status: active
 ---
 
