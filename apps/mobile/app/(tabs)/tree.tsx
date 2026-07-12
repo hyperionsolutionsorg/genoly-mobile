@@ -328,12 +328,24 @@ export default function TreeScreen() {
               onReAnchor={setAnchorId}
               onOpenPerson={openPerson}
             />
+          </SafeAreaView>
+          {/* Close button is a SIBLING of the canvas — NOT inside its gesture
+              stack — with a box-none overlay so the canvas pan/pinch never
+              swallows the tap (the earlier in-canvas placement was being
+              eaten by the ZoomPanView pan gesture; device report 2026-07-11).
+              Inset from the safe-area corner so it's reachable, not jammed
+              into the notch/rounded corner. */}
+          <SafeAreaView
+            style={styles.fsCloseOverlay}
+            edges={['top', 'right']}
+            pointerEvents="box-none"
+          >
             <TouchableOpacity
               style={styles.fsCloseBtn}
               onPress={() => setFullscreen(false)}
               accessibilityRole="button"
               accessibilityLabel="Exit fullscreen"
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <CloseIcon color={t.colors.text} />
             </TouchableOpacity>
@@ -403,23 +415,31 @@ function createStyles(t: Theme) {
       flex: 1,
       backgroundColor: t.colors.bg,
     },
-    fsCloseBtn: {
+    fsCloseOverlay: {
       position: 'absolute',
-      top: t.spacing.sm,
-      right: t.spacing.sm,
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      alignItems: 'flex-end',
+      // Inset from the safe-area corner so the button clears the notch /
+      // rounded corner and is comfortably reachable.
+      padding: t.spacing.md,
+    },
+    fsCloseBtn: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: t.colors.bgElevated,
       borderWidth: 1,
       borderColor: t.colors.border,
       shadowColor: '#000',
-      shadowOpacity: 0.12,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 1 },
-      elevation: 3,
+      shadowOpacity: 0.18,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 5,
     },
     headerRow: {
       flexDirection: 'row',

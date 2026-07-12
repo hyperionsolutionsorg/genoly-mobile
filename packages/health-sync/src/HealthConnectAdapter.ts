@@ -23,6 +23,11 @@
 
 import type { HealthAdapter, HealthAdapterOptions, HealthAdapterPermissionState, HealthMetric, HealthSample } from './index';
 
+// react-native-health-connect SdkAvailabilityStatus.SDK_AVAILABLE. Inlined
+// (not imported) to keep this file's only require() the lazy native-module
+// load in loadNativeModule() — see the health-reading-isolation rule.
+const SDK_AVAILABLE = 3;
+
 // ── Native module loading ────────────────────────────────────────────
 
 interface HCRecord {
@@ -89,9 +94,15 @@ export class HealthConnectAdapter implements HealthAdapter {
     if (!this.hc) return false;
     try {
       const status = await this.hc.getSdkStatus();
-      // SDK status codes per react-native-health-connect:
-      //   0 = unavailable, 1 = available, 2 = needs provider update.
-      return status === 1;
+      // react-native-health-connect SdkAvailabilityStatus (constants.ts):
+      //   1 = SDK_UNAVAILABLE
+      //   2 = SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED
+      //   3 = SDK_AVAILABLE
+      // The prior code compared `=== 1` with a comment claiming 1=available —
+      // exactly inverted, so isAvailable() returned false on EVERY device
+      // that actually has Health Connect (device-confirmed on a Samsung with
+      // real data, 2026-07-11). Available === 3.
+      return status === SDK_AVAILABLE;
     } catch {
       return false;
     }
