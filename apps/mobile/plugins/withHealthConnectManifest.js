@@ -20,7 +20,7 @@
  * Health Connect requires minSdk 26 (already set via expo-build-properties).
  */
 
-const { withAndroidManifest } = require('@expo/config-plugins');
+const { withAndroidManifest, withMainActivity } = require('@expo/config-plugins');
 
 const PROVIDER_PACKAGE = 'com.google.android.apps.healthdata';
 
@@ -32,7 +32,35 @@ const HEALTH_READ_PERMISSIONS = [
   'android.permission.health.READ_DISTANCE',
 ];
 
+/**
+ * 3. Register the permission delegate in MainActivity.onCreate — REQUIRED by
+ *    react-native-health-connect (README "Set the permission delegate"): its
+ *    requestPermission() launches the permission contract through a `lateinit`
+ *    launcher that setPermissionDelegate() initializes. Without this, tapping
+ *    "Grant access" hard-crashes the app natively ("Genoly keeps stopping" —
+ *    device-confirmed 2026-07-11). The library's own plugin doesn't add it.
+ */
+function withHealthConnectDelegate(config) {
+  return withMainActivity(config, (config) => {
+    let src = config.modResults.contents;
+    if (!src.includes('HealthConnectPermissionDelegate')) {
+      // Kotlin MainActivity (Expo SDK 56 template).
+      src = src.replace(
+        /(import expo\.modules\.ReactActivityDelegateWrapper)/,
+        '$1\nimport dev.matinzd.healthconnect.permissions.HealthConnectPermissionDelegate',
+      );
+      src = src.replace(
+        /(super\.onCreate\(null\))/,
+        '$1\n    // react-native-health-connect: initialize the permission-contract\n    // launcher (see plugins/withHealthConnectManifest.js #3).\n    HealthConnectPermissionDelegate.setPermissionDelegate(this)',
+      );
+      config.modResults.contents = src;
+    }
+    return config;
+  });
+}
+
 module.exports = function withHealthConnectManifest(config) {
+  config = withHealthConnectDelegate(config);
   return withAndroidManifest(config, (config) => {
     const manifest = config.modResults.manifest;
 
