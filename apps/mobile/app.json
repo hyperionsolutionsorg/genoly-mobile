@@ -58,6 +58,7 @@
       ],
       "react-native-health-connect",
       "./plugins/withHealthConnectManifest.js",
+      "expo-secure-store",
       "expo-sqlite",
       "expo-web-browser",
       "expo-image",
