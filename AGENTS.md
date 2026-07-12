@@ -238,9 +238,13 @@ Same as web repo's (`../genoly-family-web/AGENTS.md` §8). Quick reference:
 ## 8. Mobile development quirks
 
 ### 8.1 Expo + Convex
-- Convex URL injected via `app.json` `extra.convexBaseUrl` (dev) / `extra.convexProdBaseUrl` (prod)
-- Read via `expo-constants` `Constants.expoConfig.extra.convexBaseUrl`
-- App version from `Constants.expoConfig.version` (for telemetry)
+- **Convex URLs are resolved by build profile in `apps/mobile/app.config.ts`** (dynamic config; extends `app.json`). `resolveConvexUrls()` picks the pair per `process.env.EAS_BUILD_PROFILE`:
+  - **production** → operator-set EAS env vars `CONVEX_PROD_BASE_URL` / `CONVEX_PROD_CLOUD_URL` (injected, NOT hardcoded — §3.10). Validated `https://…convex.site`/`.convex.cloud`; the config eval **throws (build fails)** if they're missing/placeholder/http — a production build can never silently fall back to dev.
+  - **development / preview / local `expo start`** → the committed dev URLs in `app.json` `extra.convexBaseUrl` / `convexCloudUrl`.
+  - The resolver sets the resolved values back onto `extra.convexBaseUrl` / `convexCloudUrl`, so app code is unchanged.
+- Read at runtime via `expo-constants` `Constants.expoConfig.extra.convexBaseUrl` (fitness client) / `convexCloudUrl` (member client, https-only guard in `utils/convex.ts`).
+- App version from `Constants.expoConfig.version` (for telemetry).
+- **Operator action for a real prod build:** set `CONVEX_PROD_BASE_URL` + `CONVEX_PROD_CLOUD_URL` as EAS environment variables (production scope) before `eas build --profile production`.
 
 ### 8.2 EAS Build
 - Account: `@hyperionsolutionsorg` (Hobby tier — free, current quota fits dev usage)
