@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Session handoff — genoly-mobile"
-updated: 2026-07-11b (Prod-URL resolution PR #49 OPEN — app.config.ts by build profile. OPERATOR: set CONVEX_PROD_BASE_URL + CONVEX_PROD_CLOUD_URL as EAS env vars (production scope) before `eas build --profile production`, or the build fails closed (intended). Cut from clean HEAD; uncommitted local-APK WIP (LAN URLs + convex.ts) still on main — reconcile with the removed placeholder keys when next touching app.json. See log.md [2026-07-11] prod-URL note. Prior: 2026-07-11 (Transport hardening PR #46 OPEN for review/merge — fitness FetchApiClient HTTPS guard (assertSecureBaseUrl; loopback/LAN exempt) + android.usesCleartextTraffic:false. Independent of the web security PRs; merge anytime. Deliberately did NOT touch member-client convex.ts requireCloudUrl (the deferred LAN-relaxation is the opposite direction — still the operator's call). See log.md [2026-07-11]. Prior: 2026-07-09 (V1.0.0 Pro gate + release automation backfilled; two-workstream run opened; prior: 2026-06-11)
+updated: 2026-07-13 (Rule #0 catch-up cascade — reconciled against real merge history: main HEAD `93181cd`, NO open mobile PRs. Everything MERGED: the 2026-07-09 Phase-1/tree run #27–#40 (stale "8 PRs open" was wrong), security #46 (fitness HTTPS transport) + #49 (app.config.ts prod-URL fail-closed), and fixes #50 (HC permission delegate) / #51 (ExploreCanvas raster cap — ±4 crash) / #52 (expo-secure-store — the fitness bearer token was never persisted, so health never synced on any build). Pending: mobile EAS prod env vars before prod build; local-APK stash@{0} reconcile-don't-pop; physical-Samsung + iOS verification; fitness token-recovery follow-up. See log.md [2026-07-13] + `_work-summary-security-and-mobile-2026-07-13.md` §4. Prior: 2026-07-11b (prod-URL resolution #49; transport hardening #46 — both then OPEN, now merged). Prior: 2026-07-09 (V1.0.0 Pro gate + Phase-1/tree run). Prior: 2026-06-11 (mobile e2e run close))
 status: active
 ---
 
@@ -11,9 +11,13 @@ status: active
 
 ## State right now
 
-**2026-07-09 — TWO-WORKSTREAM RUN OPEN (state-audit + cascade session ran first).** This session backfilled three PRs that had landed 2026-06-29/06-30 without ever being cascaded into these files: `ae3f781` (PR #24, V1.0.0 mobile Pro-only plan gate — `lib/planChecks.ts` + `(gated)/paywall.tsx` + 4th `AuthGate` arm + version 1.0.0), `1f4caac` (PR #25, version-drift fix), `4412d3a` (PR #26, `scripts/release.mjs` release automation + CHANGELOG generator). Full detail in `log.md` 2026-07-09 entry. Also: the workspace root moved `/Users/snalluri/Personal/Code/Geno` → `/Users/shankar/Code/Geno` (2026-07-09 new-Mac restore) — reading-order paths below updated. Baseline verified: `npm run typecheck` 0 errors; `npm test` 189 passed / 12 skipped / 201 total (14 of 15 suites; 1 UI suite skipped, jest-expo 56 TurboModule gap, pre-existing). Uncommitted `package-lock.json` (3-line `version` field drift 0.1.0→1.0.0, harmless, left as-is).
+**2026-07-13 — RECONCILED. main HEAD `93181cd`; NO open mobile PRs; working tree clean.** Everything from the last several runs is MERGED — the earlier "8 PRs open / NONE merged" state in this file was stale.
 
-**2026-07-09 run CLOSED — OPERATOR ACTIONS PENDING.** Eight PRs open, all agent-built + orchestrator-reviewed, NONE merged (permission layer holds merges for the operator). Merge queue, in order: fitness stack **#27 → #29 → #30 → #33** (Step-8 leaderboard salvage → Step-9 friends → Step-10 goals+history → Step-13 polish), then tree stack **#28 → #31 → #32 → #34** (Explore-default + Register table → Classic pedigree → Fan view → AuthGate hardening); the two stacks are independent of each other. Also pending: push the two local main commits (memory-bank cascades), review `vault/pro-gating-audit-2026-07-09.md` (all 8 surfaces gated; F1/F2 fixed in #34; F3 accepted by design) and the Workstream B research at web `vault/research/challenge-growth-standalone-model-2026-07-09.md` + EXEC-SUMMARY (uncommitted; recommends "Circles" domain + guest accounts — DO NOT build until reviewed), simulator/device visual pass (task #300; `vault/mobile-screenshots/` still empty), and worktree cleanup (`git worktree remove ../genoly-mobile-step8 ../genoly-mobile-treeA` after merges).
+- **2026-07-09 Phase-1/tree run — ALL MERGED** 2026-07-09/07-10 (#27–#40). Fitness Steps 8/9/10/13 (§15 Phase 1 COMPLETE, ApiClient 16/20 — 4 stubs: getDevices/setPrimaryDevice/revokeDevice + getSubscription) + four Pro-gated tree surfaces (Explore-default + Register table, Classic pedigree, Fan) + AuthGate hardening + device follow-ups (#36 minSdk 26, #37 icon/splash, #38 Pedigree removed / Fan capped 3 gens / branding, #39 iOS build, #40 HealthKit new-arch). Pro-gating audit `vault/pro-gating-audit-2026-07-09.md`: all surfaces gated; F1/F2 fixed (#34), F3 accepted by design.
+- **Security (cross-repo run) — MERGED.** #46 fitness client HTTPS transport (`assertSecureBaseUrl`, loopback/LAN exempt) + `usesCleartextTraffic:false`; #49 `app.config.ts` resolves Convex URLs by `EAS_BUILD_PROFILE`, **fails closed** for production if env vars unset.
+- **On-device fixes — MERGED.** #50 Health Connect permission delegate (Grant-access native crash); #51 `ExploreCanvas.tsx` raster cap (large tree at ±4 requested ~211MB → Android bitmap-limit crash; capped ~36MB, pinch-zoom recovers detail); #52 **`expo-secure-store`** added — it was never a dependency, so `SecureTokenStore` silently no-op'd and the fitness bearer token was never persisted → "No bearer token available", health never synced on ANY build. #51/#52 verified end-to-end on a release APK vs local Convex (`issue-token → 200`, `sync/daily → 200`, "Synced just now").
+
+**Delivered:** `~/Desktop/genoly-local-convex.apk` = release APK carrying #51+#52, pointed at local self-hosted Convex over LAN (local config reverted from the tree). Cross-repo source of truth: `~/Code/Geno/_work-summary-security-and-mobile-2026-07-13.md`.
 
 **2026-06-11 — MOBILE E2E RUN CLOSED.** Read `vault/handoff-mobile-e2e-2026-06-11.md` FIRST (PR list, decisions, walking-challenges recap, deployment-readiness status, P1 backlog, review-with-care list). Mobile main: tests 170 pass / tsc 0 errors; member app live against dev. Web companion PR #128 (`b73d2c6`).
 
@@ -58,14 +62,14 @@ status: active
 - ✅ FORK_PROCEDURE.md updated 2026-05-15 (Phase A forkability lint fix consequences)
 - ✅ AI memory bank Phase 1 foundation (`d4fbecc`) — AGENTS.md + CLAUDE.md
 
-## What's next
+## What's next (pending — consolidated 2026-07-13)
 
-1. **Step 8 salvage** — land `feat/step-8-leaderboard-salvage` (in flight, sibling worktree today). Reads from `apiClient.getLeaderboard({ date })` (currently stubbed).
-2. **Steps 9, 10, 13** — friends, goals+history, polish. Queued for today's run per `mobile-sync-architecture.md` §15.
-3. **Port 4 Pro-gated tree surfaces from web to mobile** — Explorer-as-default, Register table view, Classic pedigree, Fan-if-legible. Today's run, Workstream A.
-4. **[Report only] Challenge-growth / standalone-user research** — Workstream B, today's run, no code.
-5. **Theme module migration** — Lift inlined hex literals from screens into a `theme/colors.ts`.
-6. **Workspace test runner gap** — Make Jest see tests in `packages/health-sync` + `packages/sync-queue`.
+1. **Mobile EAS prod env vars** — set `CONVEX_PROD_BASE_URL` (`https://…convex.site`) + `CONVEX_PROD_CLOUD_URL` (`https://…convex.cloud`) as EAS env vars (production scope) BEFORE any `eas build --profile production`. Without them #49 makes the build fail at config-eval (intended). Dev/preview unaffected.
+2. **Local-APK WIP — reconcile, DO NOT blind-pop.** `git stash@{0}` ("operator local-APK WIP … pre-sync 2026-07-11") holds LAN-URL `app.json` + `convex.ts` edits cut BEFORE #49. Per-build URLs now come from `app.config.ts`, so reconcile the LAN hack with the new resolution rather than restoring it. Full local-APK recipe (LAN URLs + expo-build-properties cleartext + convex.ts http-guard relax + authSchemas `.test` bypass, all reverted after build) is in `log.md` [2026-07-10]/[2026-07-11] + `scratchpad/build-apk.sh`.
+3. **Device verification** — physical Samsung test of `~/Desktop/genoly-local-convex.apk`: grant Health Connect, confirm real step/calorie/distance sync (emulator has no HC provider → empty state only). **iOS not rebuilt** — the `expo-secure-store` fix (#52) applies to iOS too but wasn't built/tested.
+4. **Fitness token recovery (robustness)** — per `mobile-sync-architecture.md §3`: re-mint on cold-start `/auth/me` 401 + a Settings "re-authenticate" action. Currently `issueToken` runs only at login/signup with a swallowed catch, so a one-time mint failure needs full sign-out/in to recover. Not blocking.
+5. **Backlog (unchanged):** theme-module migration (lift inlined hex → `theme/colors.ts`); make Jest see `packages/health-sync` + `packages/sync-queue` tests; on-device SQLite at-rest encryption for `sync-queue` health aggregates (larger follow-up).
+6. **Cross-repo (not mobile):** stale web PR #191 "polish: Phase 3b follow-up" — rebase-or-close decision needed.
 
 
 ## Reading order for the next agent

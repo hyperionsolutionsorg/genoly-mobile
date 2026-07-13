@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Active context — genoly-mobile"
-updated: 2026-07-11b (Prod-URL resolution PR #49 OPEN — new app.config.ts resolves Convex URLs by EAS_BUILD_PROFILE; production reads operator EAS env vars CONVEX_PROD_BASE_URL/CONVEX_PROD_CLOUD_URL and FAILS THE BUILD if unset (no more silent dev fallback); dead placeholders removed. 9 jest + expo-config profile checks. Part of cross-repo security follow-ups. See log.md [2026-07-11] prod-URL note. Prior: 2026-07-11 (Transport hardening PR #46 OPEN — fitness FetchApiClient now enforces HTTPS via assertSecureBaseUrl (loopback/LAN exempt) + android.usesCleartextTraffic:false; jest 40/40, typecheck clean; part of the cross-repo security run (web #271/#272/#273). Flagged: prod-URL placeholders ship pointing at DEV; SQLite health at-rest plaintext. See log.md [2026-07-11]. Prior: 2026-07-09 (state cascade backfill: V1.0.0 Pro gate + release automation; two-workstream run opened; prior: 2026-06-11 mobile e2e run close)
+updated: 2026-07-13 (Rule #0 catch-up cascade — reconciled to real merge history: main HEAD `93181cd`, no open mobile PRs. All merged: 2026-07-09 Phase-1/tree run #27–#40; security #46 (fitness HTTPS transport) + #49 (app.config.ts prod-URL fail-closed); fixes #50 (HC permission delegate) / #51 (ExploreCanvas raster cap, ±4 crash) / #52 (expo-secure-store — bearer token now persists, health syncs). ApiClient 16/20. Pending: mobile EAS prod env vars; local-APK stash reconcile; physical-Samsung + iOS verify; token-recovery follow-up. See log.md [2026-07-13]. Prior: 2026-07-11b (prod-URL #49 + transport #46, then OPEN). Prior: 2026-07-09 (Phase-1/tree run + V1.0.0 backfill). Prior: 2026-06-11 (mobile e2e close))
 status: active
 ---
 
@@ -11,11 +11,16 @@ status: active
 
 ## Current focus
 
-**2026-07-09 — TWO-WORKSTREAM RUN OPEN.** This session also backfilled three PRs that landed 2026-06-29/06-30 but were never cascaded (last cascade here was 2026-06-11): **V1.0.0** (`ae3f781`, PR #24) shipped the mobile **Pro-only plan gate** — `apps/mobile/lib/planChecks.ts` (`hasAnyProTenant`, `filterProTenants`, `DOWNGRADE_GRACE_MS` = 5 min) + `useHasProTenantAccess()` hook in `lib/genolyApi.ts` + a 4th `AuthGate` arm in `app/_layout.tsx` (no Pro tenant → `/(gated)/paywall`, reactive downgrade with a 5-min grace banner) + new `app/(gated)/paywall.tsx` screen (Upgrade-on-web / Continue-on-web, no IAP) + version bump to 1.0.0. `1f4caac` (PR #25) fixed version drift (app.json + both package.json files left at 0.1.0). `4412d3a` (PR #26) added `scripts/release.mjs` (atomic 4-file version bump + CHANGELOG generator + git tag) + `docs/RELEASING.md`. Full detail: `log.md` 2026-07-09 entry. Workspace root also moved `/Users/snalluri/Personal/Code/Geno` → `/Users/shankar/Code/Geno` (new-Mac restore) — cross-references below updated.
+**2026-07-13 — nothing in flight; repo is at a clean, fully-merged rest.** main HEAD `93181cd`, no open mobile PRs, working tree clean. This is a docs-only Rule #0 catch-up that reconciled the state files against the real merge history (the prior "8 PRs open / #49 OPEN" state was stale — those all merged).
 
-**RUN CLOSED same day — 8 PRs open, NONE merged (operator merge queue).** Workstream A shipped two stacked chains: fitness #27 (Step-8 salvage) → #29 (Step-9 friends) → #30 (Step-10 goals+history) → #33 (Step-13 polish); tree surfaces #28 (Explore-default + Register table) → #31 (Classic pedigree) → #32 (Fan, GO w/ 4-gen default / 5 cap) → #34 (AuthGate hardening from audit F1/F2). Pro-gating audit at `vault/pro-gating-audit-2026-07-09.md`: all 8 surfaces unreachable for non-Pro via the app; F1/F2 remediated (#34), F3 accepted by design. Workstream B research written (uncommitted, operator review): `genoly-family-web/vault/research/challenge-growth-standalone-model-2026-07-09.md` + EXEC-SUMMARY. Full detail: `log.md` 2026-07-09 run-close entry. **Operator: merge #27→#29→#30→#33 then #28→#31→#32→#34; push the two local state commits; simulator pass pending (task #300).**
+**All merged (reconciled):**
+- **2026-07-09 Phase-1/tree run — #27–#40** (merged 2026-07-09/07-10). Fitness Steps 8/9/10/13 → §15 Phase 1 COMPLETE, **ApiClient 16/20** (stubs: getDevices/setPrimaryDevice/revokeDevice + getSubscription). Four Pro-gated tree surfaces (Explore-default + Register table, Classic pedigree, Fan) + AuthGate hardening. Device follow-ups #36–#40 (minSdk 26, icon/splash, Pedigree removed + Fan capped 3 gens + branding, iOS build, HealthKit new-arch). Pro-gating audit: `vault/pro-gating-audit-2026-07-09.md`.
+- **Security (cross-repo run) — #46** fitness client HTTPS transport (`assertSecureBaseUrl`; loopback/LAN exempt) + `usesCleartextTraffic:false`; **#49** `app.config.ts` resolves Convex URLs by `EAS_BUILD_PROFILE`, fails closed for production if the operator EAS env vars are unset.
+- **On-device fixes — #50** HC permission delegate (Grant-access native crash); **#51** `ExploreCanvas.tsx` raster cap (±4 on the large tree requested ~211MB → Android bitmap-limit crash; capped ~36MB); **#52** `expo-secure-store` added — it was never a dependency, so the bearer token was silently never persisted and health never synced on any build. #51/#52 verified end-to-end on a release APK vs local Convex.
 
-**Baseline this session:** `npm run typecheck` 0 errors. `npm test` 189 passed / 12 skipped / 201 total (14 of 15 suites; 1 UI suite skipped — jest-expo 56 TurboModule gap, pre-existing). Uncommitted `package-lock.json` 3-line diff (`version` field 0.1.0→1.0.0 in 3 places, lockfile metadata drift from #25/#26, harmless) left uncommitted.
+**Workstream B research** (challenge-growth / "Circles" standalone model) remains **decision-support only, awaiting operator** — web `vault/research/challenge-growth-standalone-model-2026-07-09.md` + EXEC-SUMMARY. DO NOT build until reviewed.
+
+**Pending / next:** see `session-handoff.md` "What's next" — mobile EAS prod env vars; local-APK `stash@{0}` reconcile (don't blind-pop); physical-Samsung + iOS verification; fitness token-recovery follow-up.
 
 ## Previous focus
 
@@ -87,12 +92,12 @@ All Phase 1 steps 1-7, 11, 12 are MERGED. Step 8 (Leaderboard) is next. See `[[2
 - ~~**Mobile-side step 7: Dashboard (today + last 7 days)**~~ IMPLEMENTATION COMPLETE 2026-05-29 (interactive session). See `[[2026-05-29-mobile-step-7-dashboard]]`. PR pending.
 - ~~**V1.0.0 Pro-only plan gate**~~ DONE 2026-06-29 — merged `ae3f781` (PR #24) + `1f4caac` version-drift fix (PR #25). See `log.md` 2026-07-09 backfill entry.
 - ~~**Release automation script + CHANGELOG generator**~~ DONE 2026-06-30 — merged `4412d3a` (PR #26). `scripts/release.mjs` + `docs/RELEASING.md`.
-- **Mobile-side step 8: Leaderboard screen** — IN FLIGHT 2026-07-09 on branch `feat/step-8-leaderboard-salvage` (sourced from `origin/feat/step-8-leaderboard` `e630ba3`, pre-SDK-56; salvage + fixups, running in a sibling worktree).
-- **Mobile-side step 9: Friends list + actions** — queued for today's run, depends on Step 8.
-- **Mobile-side step 10: Goals + history screens** — queued for today's run, depends on Step 7 (already merged).
-- **Mobile-side step 13: Polish + manual test + submit** — queued for today's run, depends on all.
-- **Port four Pro-gated tree surfaces from web to mobile** — Explorer-as-default, Register table view, Classic pedigree, Fan-if-legible. Today's run, Workstream A.
-- **Workstream B: challenge-growth / standalone-user research** — report only, no code. Today's run, in parallel.
+- ~~**Mobile-side steps 8/9/10/13**~~ DONE 2026-07-09 — merged #27 (Step 8 leaderboard salvage), #35/#29 (Step 9 friends), #30 (Step 10 goals+history), #33 (Step 13 polish). §15 Phase 1 COMPLETE; ApiClient 16/20.
+- ~~**Port four Pro-gated tree surfaces**~~ DONE 2026-07-09 — merged #28 (Explore-default + Register table) → #31 (Classic pedigree) → #32 (Fan) → #34 (AuthGate hardening). (Pedigree later removed + Fan capped at 3 gens in #38.)
+- ~~**Security: fitness transport hardening + prod-URL resolution**~~ DONE — merged #46 (`assertSecureBaseUrl` HTTPS guard + cleartext off) + #49 (`app.config.ts` prod-URL fail-closed).
+- ~~**Fixes: HC permission delegate / Explore ±4 crash / fitness bearer token**~~ DONE — merged #50 + #51 (ExploreCanvas raster cap) + #52 (expo-secure-store — bearer token now persists, health syncs).
+- **Workstream B: challenge-growth / standalone-user research** — report banked (web `vault/research/`), **decision-support only, awaiting operator review**; no code until reviewed.
+- **Open follow-ups** — mobile EAS prod env vars before prod build; local-APK `stash@{0}` reconcile; physical-Samsung + iOS verification; fitness token-recovery path. See `session-handoff.md`.
 
 
 ## Architecture reference
@@ -113,7 +118,7 @@ Server contract: [`../genoly-family-web/docs/fitness-api-contract.md`](../../../
 
 | Package | State |
 |---|---|
-| `packages/api-client/` | 5/20 `ApiClient` methods implemented (issueToken, revokeToken, getSession, getDailyAggregates, syncDailyAggregates); the other 15 (friends/leaderboard, goals, devices, subscription) throw `not_implemented`. Singleton wiring in `apps/mobile/utils/api.ts`. Also exports a shared `tokenStore` used by both ApiClient + auth gate. |
+| `packages/api-client/` | **16/20** `ApiClient` methods implemented after the 2026-07-09 run (auth + daily sync + friends/leaderboard + goals/history); 4 stubs remain: getDevices/setPrimaryDevice/revokeDevice + getSubscription. `client.ts` enforces HTTPS via `assertSecureBaseUrl` (#46, loopback/LAN exempt). `SecureTokenStore` uses `expo-secure-store` (added as a real dep in #52 — it had silently no-op'd before) and warns in `__DEV__` if the module is missing. Singleton wiring in `apps/mobile/utils/api.ts`; exports a shared `tokenStore` used by ApiClient + auth gate. |
 | `packages/health-sync/` | HealthAdapter interface defined. HealthKitAdapter / HealthConnectAdapter implementations shipped step 4/12. |
 | `packages/types/` | Mirrors `docs/fitness-api-contract.md` types. `isPaymentNeutral: true` tripwire confirmed in `SubscriptionStatus` type. |
 | `apps/mobile/lib/planChecks.ts` | V1.0.0 (PR #24) — Pro-only plan gate logic: `hasAnyProTenant()`, `filterProTenants()`, `DOWNGRADE_GRACE_MS` (5 min). |

@@ -1,18 +1,25 @@
 ---
 type: current
 name: "Overview — genoly-mobile"
-updated: 2026-07-11b (Prod-URL resolution PR #49 open — production builds now resolve the prod Convex deployment (fail-closed) instead of silently using dev. See log.md [2026-07-11] prod-URL note. Prior: 2026-07-11 (Transport hardening PR #46 open — fitness client HTTPS enforcement + Android cleartext off; part of the cross-repo security run. See log.md [2026-07-11].)
+updated: 2026-07-13 (Rule #0 catch-up — reconciled to main `93181cd`, no open mobile PRs. Phase 1 COMPLETE (#27–#40 merged, ApiClient 16/20); security #46/#49 merged; fixes #50/#51/#52 merged (bearer token now persists → health syncs). Pending: mobile EAS prod env vars, local-APK stash reconcile, physical-Samsung + iOS verify, token-recovery follow-up. See log.md [2026-07-13]. Prior: 2026-07-11b (prod-URL #49 + transport #46, then open).)
 status: active
 ---
 
 # Overview — the 30-second picture
 
-`genoly-mobile` is the Expo mobile app + cross-platform packages for the unified Genoly mobile experience: the **member-side family app** (Convex reactive client, shipped 2026-06-11) and the **fitness layer** (HTTP bearer contract — Phase 1 largely shipped, 5/20 ApiClient methods implemented). The app is now **v1.0.0 and Pro-gated**: mobile access requires membership in a Pro-plan tenant (enforced client-side by `lib/planChecks.ts` + a paywall screen), and mobile itself remains payment-neutral (no in-app purchases) — web (genoly.org/pricing) is the sole subscription surface.
+`genoly-mobile` is the Expo mobile app + cross-platform packages for the unified Genoly mobile experience: the **member-side family app** (Convex reactive client, shipped 2026-06-11) and the **fitness layer** (HTTP bearer contract — **Phase 1 COMPLETE 2026-07-09**, ApiClient 16/20 methods implemented; health sync fixed 2026-07-12 by adding `expo-secure-store` so the bearer token actually persists). The app is now **v1.0.0 and Pro-gated**: mobile access requires membership in a Pro-plan tenant (enforced client-side by `lib/planChecks.ts` + a paywall screen), and mobile itself remains payment-neutral (no in-app purchases) — web (genoly.org/pricing) is the sole subscription surface.
 
-**Where things stand (2026-07-09):**
+**Where things stand (2026-07-13):**
+
+- **Fully merged, clean rest.** main HEAD `93181cd`, no open mobile PRs. Reconciled 2026-07-13 (the state files had been stale at "8 PRs open / #49 OPEN" — all merged).
+- **Security (cross-repo run) MERGED:** #46 fitness client HTTPS transport guard + Android cleartext off; #49 `app.config.ts` resolves Convex URLs per `EAS_BUILD_PROFILE` and **fails the build** for production if the operator EAS env vars are unset (was silently shipping prod builds against dev).
+- **On-device fixes MERGED:** #50 Health Connect permission delegate (Grant-access native crash); #51 `ExploreCanvas.tsx` raster cap (large tree at ±4 requested ~211MB → Android bitmap-limit crash); #52 added **`expo-secure-store`** — never a dependency, so the fitness bearer token silently never persisted and health never synced on any build. #51/#52 verified end-to-end on a release APK vs local Convex. Delivered `~/Desktop/genoly-local-convex.apk`.
+- **Pending:** mobile EAS prod env vars before a production build; local-APK `stash@{0}` reconcile (don't blind-pop; per-build URLs now come from `app.config.ts`); physical-Samsung + iOS verification (iOS not rebuilt); fitness token-recovery follow-up. See `session-handoff.md`.
+
+**Earlier (2026-07-09):**
 
 - **V1.0.0 shipped 2026-06-29/06-30** (PRs #24, #25, #26): Pro-only plan gate (`lib/planChecks.ts` — `hasAnyProTenant`, `filterProTenants`, 5-min downgrade grace; `app/(gated)/paywall.tsx`; 4th `AuthGate` arm in `app/_layout.tsx`), version bumped to 1.0.0 across all four version-bearing files, and a release automation script (`scripts/release.mjs` — atomic version bump + CHANGELOG generator + git tag). This had never been cascaded into these state files until today's backfill (see `log.md` 2026-07-09 entry).
-- **Two-workstream run CLOSED 2026-07-09 (same day).** Workstream A: Phase 1 fitness Steps 8/9/10/13 built (stacked PRs #27→#29→#30→#33) + four Pro-gated tree surfaces ported (Explore-as-default, Register table, Classic pedigree, Fan — stacked PRs #28→#31→#32→#34, incl. AuthGate hardening from the Pro-gating audit `vault/pro-gating-audit-2026-07-09.md`). All 8 PRs reviewed, NONE merged — operator merge queue in session-handoff.md. Once merged, ApiClient stands 16/20 (4 stubs: getDevices/setPrimaryDevice/revokeDevice + getSubscription) and Phase 1 closes. Workstream B: challenge-growth research written to web `vault/research/` (uncommitted, operator review; recommends tree-less "Circles" + sponsored guest accounts).
+- **Two-workstream run CLOSED 2026-07-09 (same day).** Workstream A: Phase 1 fitness Steps 8/9/10/13 built (stacked PRs #27→#29→#30→#33) + four Pro-gated tree surfaces ported (Explore-as-default, Register table, Classic pedigree, Fan — stacked PRs #28→#31→#32→#34, incl. AuthGate hardening from the Pro-gating audit `vault/pro-gating-audit-2026-07-09.md`). All 8 PRs **merged** 2026-07-09/07-10 (with device follow-ups #36–#40): ApiClient stands 16/20 (4 stubs: getDevices/setPrimaryDevice/revokeDevice + getSubscription) and **Phase 1 is COMPLETE**. Workstream B: challenge-growth research written to web `vault/research/` (banked, decision-support only, operator review; recommends tree-less "Circles" + sponsored guest accounts).
 - **Workspace root moved** `/Users/snalluri/Personal/Code/Geno` → `/Users/shankar/Code/Geno` (2026-07-09 new-Mac restore).
 - **Mobile e2e run CLOSED 2026-06-11** (Claude autonomous): member-side app shipped (auth/wizard/dashboard/tree/photos/settings/support) + Family Walking Challenges end-to-end (web PR #128 + mobile PRs #16-#23) + store-readiness docs. Handoff: `vault/handoff-mobile-e2e-2026-06-11.md`; P1 backlog in handoff §7.
 
