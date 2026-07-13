@@ -105,9 +105,18 @@ export default function ChallengeDetailScreen() {
     } else if (result.status === 'no_data') {
       toast.info('No step data found for this window yet.');
     } else if (result.status === 'unavailable') {
-      toast.info('Health sync is off or unavailable — check Settings → Health sync.');
+      // reason set by challengeSync — say which link is broken so the
+      // user can actually fix it (this failure class was invisible
+      // before 2026-07-13).
+      if (result.reason === 'no-read-permission') {
+        toast.error('Genoly has no permission to read steps — grant access in Health Connect.');
+      } else if (result.reason === 'sync-disabled') {
+        toast.info('Health sync is off — enable it in Settings → Manage health permissions.');
+      } else {
+        toast.info('No health store available on this device.');
+      }
     } else {
-      toast.error('Sync didn’t go through. Try again in a moment.');
+      toast.error(`Sync didn’t go through${result.reason ? ` (${result.reason})` : ''}. Try again in a moment.`);
     }
   };
 

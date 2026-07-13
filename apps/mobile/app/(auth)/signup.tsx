@@ -71,8 +71,13 @@ export default function SignupScreen() {
           appVersion: Constants.expoConfig?.version,
         },
       });
-    } catch {
-      // Non-fatal.
+    } catch (e) {
+      // Non-fatal for account creation, but health uploads will be
+      // unauthenticated until the next full sign-in (see login.tsx).
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.warn('[signup] fitness issueToken failed — health sync will be unauthenticated:', msg);
+      }
     }
 
     toast.success('Welcome to Genoly! Check your inbox to verify your email.');

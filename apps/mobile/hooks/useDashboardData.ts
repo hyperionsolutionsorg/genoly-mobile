@@ -29,6 +29,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HealthEntry } from '@genoly/types';
 import { apiClient } from '../utils/api';
+import { collectHealthDataIntoQueue } from '../utils/healthSync';
 import { createSyncQueue, type SyncQueue } from '@genoly/sync-queue';
 
 // ── Public types ─────────────────────────────────────────────────────
@@ -135,6 +136,12 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     setError(null);
     try {
       const queue = await ensureQueue();
+
+      // 0. PRODUCE: read the device health store into the queue (the
+      // collector gates itself on healthSyncEnabled and never throws).
+      // Without this step the queue is permanently empty and the drain
+      // below is a no-op — see utils/healthSync.ts header.
+      await collectHealthDataIntoQueue(queue);
 
       // 1. Drain whatever's pending. We catch errors so a drain failure
       // doesn't block the read — a stale view is better than no view.

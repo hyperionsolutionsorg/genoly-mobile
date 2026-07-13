@@ -35,6 +35,7 @@
  */
 
 import { apiClient } from './api';
+import { collectHealthDataIntoQueue } from './healthSync';
 import { getHealthSyncEnabled } from './preferences';
 import { createSyncQueue, type DrainResult, type SyncQueue } from '@genoly/sync-queue';
 
@@ -109,9 +110,17 @@ export async function runBackgroundSyncTask(): Promise<'new-data' | 'no-data' | 
     if (!enabled) return 'no-data';
 
     const queue: SyncQueue = await createSyncQueue({ apiClient });
+
+    // PRODUCE first: read the health store into the queue so the drain
+    // below has something to upload (collector never throws; it gates
+    // on healthSyncEnabled itself, but we already checked above so the
+    // extra read is cheap and keeps both call sites uniform).
+    const collected = await collectHealthDataIntoQueue(queue);
+
     const result: DrainResult = await queue.drain();
 
     const didWork =
+      collected.status === 'enqueued' ||
       result.accepted > 0 ||
       result.rejectedPermanent > 0 ||
       result.retriesExhausted > 0 ||

@@ -63,6 +63,16 @@ export interface ChallengeSyncResult {
   challengeId: string;
   status: 'synced' | 'throttled' | 'no_data' | 'unavailable' | 'error';
   currentSteps?: number;
+  /**
+   * Machine-readable detail for 'unavailable' / 'no_data' / 'error'
+   * statuses so callers can show an actionable message instead of a
+   * generic one:
+   *   - 'sync-disabled'         — health sync toggle is off
+   *   - 'store-unavailable'     — no health store on this device
+   *   - 'no-read-permission'    — store present, read grants missing
+   *   - anything else           — the caught error's message
+   */
+  reason?: string;
 }
 
 /**
@@ -92,9 +102,11 @@ export async function syncChallengeSteps(
       : createHealthAdapter();
 
     if (!useMock) {
-      const healthEnabled = await getHealthSyncEnabled();
-      if (!healthEnabled || !(await adapter.isAvailable())) {
-        return { challengeId, status: 'unavailable' };
+      if (!(await getHealthSyncEnabled())) {
+        return { challengeId, status: 'unavailable', reason: 'sync-disabled' };
+      }
+      if (!(await adapter.isAvailable())) {
+        return { challengeId, status: 'unavailable', reason: 'store-unavailable' };
       }
     }
 
@@ -107,14 +119,25 @@ export async function syncChallengeSteps(
       .filter((sample) => typeof sample.steps === 'number' && sample.steps > 0)
       .map((sample) => ({ date: sample.date, steps: sample.steps }));
     if (days.length === 0) {
+      // Empty read: distinguish "no permission" (actionable — the user
+      // can grant in Health Connect) from "genuinely nothing recorded"
+      // where the platform can tell us (Android; iOS returns null).
+      const granted = await adapter.getGrantedMetrics?.();
+      if (Array.isArray(granted) && !granted.includes('steps')) {
+        return { challengeId, status: 'unavailable', reason: 'no-read-permission' };
+      }
       return { challengeId, status: 'no_data' };
     }
 
     const result = await convex.mutation(challengeSyncMySteps, { challengeId, days });
     await setChallengeSyncedAt(challengeId, Date.now());
     return { challengeId, status: 'synced', currentSteps: result.currentSteps };
-  } catch {
-    return { challengeId, status: 'error' };
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+      console.warn(`[challengeSync] sync failed for ${challengeId}:`, reason);
+    }
+    return { challengeId, status: 'error', reason };
   }
 }
 

@@ -56,6 +56,17 @@ export class MockHealthAdapter implements HealthAdapter {
     this.platform = options.platform ?? 'ios';
     this.available = options.available ?? true;
     this.denyPermissions = options.denyPermissions ?? false;
+    // Real platforms persist grants at the OS level across processes, so
+    // a fresh adapter instance can read without re-requesting. Model
+    // that: an available, non-denying mock starts with all metrics
+    // granted (requestPermissions can still narrow the set).
+    if (this.available && !this.denyPermissions) {
+      this.grantedMetrics = ['steps', 'caloriesActive', 'caloriesBasal', 'distanceMeters'];
+    }
+  }
+
+  async getGrantedMetrics(): Promise<HealthMetric[] | null> {
+    return [...this.grantedMetrics];
   }
 
   getPlatform(): 'ios' | 'android' {

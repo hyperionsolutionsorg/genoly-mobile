@@ -110,6 +110,16 @@ const METRIC_TO_HK_PERMISSION: Record<HealthMetric, string> = {
 export class HealthKitAdapter implements HealthAdapter {
   private hk: RNHealthKit | null;
   private debugLogging: boolean;
+  /**
+   * Whether initHealthKit has succeeded in THIS process. HealthKit
+   * authorization persists at the OS level across app restarts, but the
+   * library requires an initHealthKit() call per process before reads
+   * work. The prior code only set this from requestPermissions() — and
+   * since the factory returns a fresh instance per call site, every
+   * reader saw `false` and silently got [] back. Reads now lazily
+   * re-init (no re-prompt for already-determined permissions —
+   * HealthKit only prompts for undetermined ones).
+   */
   private initialized: boolean = false;
 
   constructor(options: HealthAdapterOptions = {}) {
@@ -182,12 +192,47 @@ export class HealthKitAdapter implements HealthAdapter {
     });
   }
 
+  /**
+   * Ensure initHealthKit has run in this process for the given metrics.
+   * Safe to call repeatedly; iOS only shows the permission sheet for
+   * permissions the user hasn't already resolved.
+   */
+  private async ensureInitialized(metrics: HealthMetric[]): Promise<boolean> {
+    if (this.initialized) return true;
+    if (!this.hk) return false;
+
+    const readPermissions = metrics
+      .map((m) => METRIC_TO_HK_PERMISSION[m])
+      .filter(Boolean)
+      .map((p) => this.hk?.Constants?.Permissions?.[p])
+      .filter((p): p is string => typeof p === 'string');
+
+    if (readPermissions.length === 0) return false;
+
+    return new Promise<boolean>((resolve) => {
+      this.hk!.initHealthKit({ permissions: { read: readPermissions, write: [] } }, (error) => {
+        if (error) {
+          if (this.debugLogging) {
+            console.warn('[HealthKitAdapter] lazy initHealthKit error:', error);
+          }
+          resolve(false);
+          return;
+        }
+        this.initialized = true;
+        resolve(true);
+      });
+    });
+  }
+
   async readDailyAggregates(opts: {
     startDate: string;
     endDate: string;
     metrics: HealthMetric[];
   }): Promise<HealthSample[]> {
-    if (!this.hk || !this.initialized) {
+    if (!(await this.ensureInitialized(opts.metrics))) {
+      if (this.debugLogging) {
+        console.warn('[HealthKitAdapter] not initialized and lazy init failed — returning empty');
+      }
       return [];
     }
 
