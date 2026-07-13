@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Progress — genoly-mobile"
-updated: 2026-07-13c (+#54 HC grant recovery (rate-limited permission contract → pre/post getGrantedPermissions checks + openHealthSettings manual path) and #55 FULL GAMES PORT (hub /games + all 8 web games native, cross-platform-identical daily seeds, dailies record recordDailyCompletion; deps d3-geo/topojson-client/world-atlas). main `9a27a91`; Jest 419/34; tsc clean; APK v7 delivered + emulator-verified. Prior 2026-07-13b: #53 health read pipeline fix)
+updated: 2026-07-13d (+#56 Android-14+ HC client declaration — the REAL Samsung grant blocker: missing VIEW_PERMISSION_USAGE/HEALTH_PERMISSIONS activity-alias meant HC never recognized Genoly as a client, so no permission sheet and no manual grant path. Plugin adds the alias; APK v8 delivered, main `b06b34d`. See log.md. Prior 2026-07-13c (+#54 HC grant recovery (rate-limited permission contract → pre/post getGrantedPermissions checks + openHealthSettings manual path) and #55 FULL GAMES PORT (hub /games + all 8 web games native, cross-platform-identical daily seeds, dailies record recordDailyCompletion; deps d3-geo/topojson-client/world-atlas). main `9a27a91`; Jest 419/34; tsc clean; APK v7 delivered + emulator-verified. Prior 2026-07-13b: #53 health read pipeline fix)
 status: active
 ---
 
