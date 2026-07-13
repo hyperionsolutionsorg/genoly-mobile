@@ -9,34 +9,38 @@ import { medalFor, annivEmoji, annivTitle, annivWhen } from '../lib/dashboardFor
 import { isoDayUtc } from '../hooks/useRecordVisit';
 
 describe('pickTodaysGame', () => {
+  // The registry was rewritten to the web's flat multi-category model
+  // (games port, 2026-07-13); pickTodaysGame() now matches the web
+  // signature (no date param), so date control goes through fake timers.
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  function atDate(date: Date): string {
+    jest.useFakeTimers({ now: date });
+    const key = pickTodaysGame().key;
+    jest.useRealTimers();
+    return key;
+  }
+
   it('is deterministic for a given date', () => {
     const date = new Date(2026, 5, 11);
-    expect(pickTodaysGame(date).key).toBe(pickTodaysGame(date).key);
+    expect(atDate(date)).toBe(atDate(date));
   });
 
   it('uses day-of-year modulo registry length (web parity)', () => {
     const date = new Date(2026, 5, 11);
     const startOfYear = new Date(2026, 0, 0);
     const dayOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / 86_400_000);
-    expect(pickTodaysGame(date).key).toBe(GAMES[dayOfYear % GAMES.length].key);
+    expect(atDate(date)).toBe(GAMES[dayOfYear % GAMES.length].key);
   });
 
   it('rotates through all 8 games over consecutive days', () => {
     const seen = new Set<string>();
     for (let i = 0; i < GAMES.length; i++) {
-      seen.add(pickTodaysGame(new Date(2026, 2, 10 + i)).key);
+      seen.add(atDate(new Date(2026, 2, 10 + i)));
     }
     expect(seen.size).toBe(GAMES.length);
-  });
-
-  it('registry mirrors the two-axis model: arcade games carry no playStyle', () => {
-    for (const game of GAMES) {
-      if (game.category === 'arcade') {
-        expect(game.playStyle).toBeUndefined();
-      } else {
-        expect(['quick', 'puzzle', 'sprint']).toContain(game.playStyle);
-      }
-    }
   });
 });
 

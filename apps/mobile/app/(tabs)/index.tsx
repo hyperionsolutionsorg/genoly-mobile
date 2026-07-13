@@ -185,15 +185,19 @@ export default function HomeScreen() {
             )}
           </Section>
 
-          {/* Today's pick */}
-          <Section label="Today's pick">
+          {/* Games */}
+          <Section label="Games">
             <Card
-              title={`${todaysPick.emoji} ${todaysPick.name}`}
-              description={`${todaysPick.blurb} · ~${todaysPick.minutes} min`}
-              onPress={() => {
-                toast.info('Games are coming to mobile soon — play today’s pick on genoly.org!');
-              }}
+              title={`${todaysPick.icon} Today's pick: ${todaysPick.name}`}
+              description={`${todaysPick.description} · ~${todaysPick.playTimeMin} min`}
+              onPress={() => router.push(`/games/${todaysPick.key}` as unknown as Href)}
               accessibilityLabel={`Today's pick: ${todaysPick.name}`}
+            />
+            <Card
+              title="🎮 All games"
+              description="Wordle, word search, quizzes, daily puzzles and more — built from your family tree."
+              onPress={() => router.push('/games' as unknown as Href)}
+              accessibilityLabel="Browse all games"
             />
           </Section>
 

@@ -185,6 +185,7 @@ export interface PersonDoc {
   timezone?: string;
   avatarPhotoKey?: string;
   tags?: string[];
+  archivedAt?: number | null;
 }
 
 export const listAllPersonsByTree = makeFunctionReference<
@@ -365,6 +366,7 @@ export interface RelationshipGraph {
   parents: Record<string, string[]>;
   children: Record<string, string[]>;
   spouses: Record<string, string[]>;
+  totalParentChildLinks?: number;
 }
 
 export const getRelationshipGraph = makeFunctionReference<
@@ -372,6 +374,52 @@ export const getRelationshipGraph = makeFunctionReference<
   { treeId: string },
   RelationshipGraph
 >('games:getRelationshipGraph');
+
+// ── Games data reads (games port, 2026-07-13) ─────────────────────────
+
+/** Subset of atlas.getAtlasData the games read (Atlas Quiz, Who Am I?,
+ *  This or That, Connections all key off `personsTime`). */
+export interface AtlasPersonTime {
+  personId: string;
+  name: string;
+  lat: number;
+  lng: number;
+  birthLat: number | null;
+  birthLng: number | null;
+  birthYear?: number;
+  deathYear?: number;
+  isLiving: boolean;
+}
+
+export const getAtlasData = makeFunctionReference<
+  'query',
+  { treeId: string },
+  { personsTime: AtlasPersonTime[] }
+>('atlas:getAtlasData');
+
+/** Subset of timeline.getTreeTimeline rows Timeline Tap reduces
+ *  (matches lib/timelineTapGame.ts TimelineRowInput). */
+export interface TreeTimelineRow {
+  _id: string;
+  type: string;
+  title: string | null;
+  dateStart: number | null;
+  year: number | null;
+  participants: Array<{ personId: string; preferredName: string; role: string | null }>;
+}
+
+export const getTreeTimeline = makeFunctionReference<
+  'query',
+  { treeId: string; direction?: 'asc' | 'desc'; limit?: number },
+  TreeTimelineRow[]
+>('timeline:getTreeTimeline');
+
+/** This or That reads `anchorPersonId` as the "closer to me" focal. */
+export const getPersonPickerData = makeFunctionReference<
+  'query',
+  { treeId: string },
+  { anchorPersonId: string | null }
+>('persons:getPersonPickerData');
 
 export const createFamily = makeFunctionReference<
   'mutation',
