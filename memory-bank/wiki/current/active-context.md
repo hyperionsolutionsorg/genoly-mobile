@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Active context — genoly-mobile"
-updated: 2026-07-13 (Rule #0 catch-up cascade — reconciled to real merge history: main HEAD `93181cd`, no open mobile PRs. All merged: 2026-07-09 Phase-1/tree run #27–#40; security #46 (fitness HTTPS transport) + #49 (app.config.ts prod-URL fail-closed); fixes #50 (HC permission delegate) / #51 (ExploreCanvas raster cap, ±4 crash) / #52 (expo-secure-store — bearer token now persists, health syncs). ApiClient 16/20. Pending: mobile EAS prod env vars; local-APK stash reconcile; physical-Samsung + iOS verify; token-recovery follow-up. See log.md [2026-07-13]. Prior: 2026-07-11b (prod-URL #49 + transport #46, then OPEN). Prior: 2026-07-09 (Phase-1/tree run + V1.0.0 backfill). Prior: 2026-06-11 (mobile e2e close))
+updated: 2026-07-13b (HEALTH READ PIPELINE FIXED — PR #53 merged, main `d7c3eba`. Root cause of "Samsung not grabbing health data": (1) adapters gated reads on a per-instance grant flag no reader set → all reads silently `[]`; (2) fitness pipeline had NO producer (`SyncQueue.enqueue()` zero call sites) → `sync/daily` never got device data. Fixed: per-process lazy init + `getGrantedPermissions()` read path; new `utils/healthSync.ts` producer wired into dashboard/background/permissions; silent catches surface reasons. Local APK v6 → `~/Desktop/genoly-local-convex.apk`, emulator-verified to "Synced just now"; real-data proof = operator Samsung sideload. Jest 407/34, tsc clean. Prior: 2026-07-13 catch-up (main `93181cd`, #46/#49/#50/#51/#52 merged))
 status: active
 ---
 
@@ -11,7 +11,14 @@ status: active
 
 ## Current focus
 
-**2026-07-13 — nothing in flight; repo is at a clean, fully-merged rest.** main HEAD `93181cd`, no open mobile PRs, working tree clean. This is a docs-only Rule #0 catch-up that reconciled the state files against the real merge history (the prior "8 PRs open / #49 OPEN" state was stale — those all merged).
+**2026-07-13b — health read pipeline root-caused + fixed (PR #53, main `d7c3eba`); awaiting operator's Samsung sideload of APK v6 for real-data confirmation.**
+
+- **Bug 1 (all health reads):** the adapters' per-instance `initialized` grant-flag meant `createHealthAdapter()` callers always read `[]` silently — the permission screen's grant lived and died on its own throwaway instance. Fixed with per-process lazy init + OS-persisted grant checks (`getGrantedPermissions()` on Android; lazy `initHealthKit` on iOS; Mock models persisted grants, un-breaking the DEV mock toggle).
+- **Bug 2 (fitness path):** no producer — `SyncQueue.enqueue()` had zero production call sites; drains no-op'd on an empty queue forever. New `utils/healthSync.ts` collector (30-day initial pull, 7-day steady, `genoly.lastHealthCollectAt` pref) wired into `useDashboardData.refresh()`, the background task, and the permissions screen.
+- **Hardening:** `challengeSync` returns machine-readable `reason`; challenge-detail toasts actionable; login/signup issueToken failures visible; hub logs non-synced results (`__DEV__`).
+- **Emulator-verified** (release APK v6 vs local Convex over LAN): login, authenticated `/auth/me`, HC permission flow (the Android-16 image HAS Health Connect — older notes stale), Health Sync **Enabled**, Activity **"Synced just now"**. Store empty on emulator → Samsung provides the real-data proof.
+
+**2026-07-13 (earlier) — Rule #0 catch-up cascade.** main was `93181cd`, no open PRs; #27–#40, #46, #49, #50, #51, #52 all merged.
 
 **All merged (reconciled):**
 - **2026-07-09 Phase-1/tree run — #27–#40** (merged 2026-07-09/07-10). Fitness Steps 8/9/10/13 → §15 Phase 1 COMPLETE, **ApiClient 16/20** (stubs: getDevices/setPrimaryDevice/revokeDevice + getSubscription). Four Pro-gated tree surfaces (Explore-default + Register table, Classic pedigree, Fan) + AuthGate hardening. Device follow-ups #36–#40 (minSdk 26, icon/splash, Pedigree removed + Fan capped 3 gens + branding, iOS build, HealthKit new-arch). Pro-gating audit: `vault/pro-gating-audit-2026-07-09.md`.
