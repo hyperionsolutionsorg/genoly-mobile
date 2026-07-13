@@ -74,6 +74,27 @@ export default function PermissionsScreen() {
         // just wrote. collectAndDrainNow never throws.
         collectAndDrainNow({ assumeEnabled: true });
         router.replace(TABS_ROUTE);
+      } else if (adapter.openHealthSettings) {
+        // The OS permission dialog resolved with nothing. On Android
+        // this usually means Health Connect has rate-limited the dialog
+        // (after a couple of denials it auto-resolves empty WITHOUT
+        // showing UI — a dead end unless we route the user to grant
+        // manually). Offer that path; when they come back and tap
+        // "Grant access" again, requestPermissions() picks up manual
+        // grants without relaunching the broken dialog.
+        Alert.alert(
+          'No access granted',
+          'If no permission screen appeared, Android is suppressing it. You can grant access directly in Health Connect (App permissions → Genoly), then come back and tap "Grant access" again.',
+          [
+            {
+              text: 'Open Health Connect',
+              onPress: () => {
+                adapter.openHealthSettings?.();
+              },
+            },
+            { text: 'Not now', style: 'cancel', onPress: () => router.replace(TABS_ROUTE) },
+          ],
+        );
       } else {
         Alert.alert(
           'No access granted',

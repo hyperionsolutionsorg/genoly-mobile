@@ -25,18 +25,23 @@ jest.mock('react-native-health-connect', () => ({
   requestPermission: jest.fn(),
   getGrantedPermissions: jest.fn(),
   readRecords: jest.fn(),
+  openHealthConnectSettings: jest.fn(),
 }));
 
 import {
   initialize,
   getGrantedPermissions,
   readRecords,
+  requestPermission,
+  openHealthConnectSettings,
 } from 'react-native-health-connect';
 import { HealthConnectAdapter } from './HealthConnectAdapter';
 
 const mockInitialize = initialize as unknown as jest.Mock;
 const mockGetGranted = getGrantedPermissions as unknown as jest.Mock;
 const mockReadRecords = readRecords as unknown as jest.Mock;
+const mockRequestPermission = requestPermission as unknown as jest.Mock;
+const mockOpenSettings = openHealthConnectSettings as unknown as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -132,6 +137,80 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
 
     expect(samples).toEqual([]);
     expect(mockReadRecords).not.toHaveBeenCalled();
+  });
+
+  it('requestPermissions() short-circuits on pre-granted permissions WITHOUT launching the contract', async () => {
+    // Health Connect rate-limits its permission dialog: after ~2 denials
+    // the contract auto-resolves EMPTY with no UI. If the user granted
+    // manually in HC settings (the recovery path), relaunching the
+    // contract would falsely report "nothing granted".
+    mockInitialize.mockResolvedValue(true);
+    mockGetGranted.mockResolvedValue([
+      { accessType: 'read', recordType: 'Steps' },
+      { accessType: 'read', recordType: 'ActiveCaloriesBurned' },
+      { accessType: 'read', recordType: 'Distance' },
+    ]);
+
+    const adapter = new HealthConnectAdapter({ debugLogging: false });
+    const result = await adapter.requestPermissions(['steps', 'caloriesActive', 'distanceMeters']);
+
+    expect(result.granted).toBe(true);
+    expect(result.metrics).toEqual(['steps', 'caloriesActive', 'distanceMeters']);
+    expect(mockRequestPermission).not.toHaveBeenCalled();
+  });
+
+  it('requestPermissions() trusts the post-contract OS grant state over the contract return', async () => {
+    // Rate-limited contract returns [] — but the user granted manually
+    // while the app was backgrounded, so getGrantedPermissions has them.
+    mockInitialize.mockResolvedValue(true);
+    mockGetGranted
+      .mockResolvedValueOnce([]) // pre-check: nothing yet
+      .mockResolvedValueOnce([{ accessType: 'read', recordType: 'Steps' }]); // post-check
+    mockRequestPermission.mockResolvedValue([]);
+
+    const adapter = new HealthConnectAdapter({ debugLogging: false });
+    const result = await adapter.requestPermissions(['steps']);
+
+    expect(mockRequestPermission).toHaveBeenCalledTimes(1);
+    expect(result.granted).toBe(true);
+    expect(result.metrics).toEqual(['steps']);
+  });
+
+  it('requestPermissions() only requests the metrics that are still missing', async () => {
+    mockInitialize.mockResolvedValue(true);
+    mockGetGranted
+      .mockResolvedValueOnce([{ accessType: 'read', recordType: 'Steps' }])
+      .mockResolvedValueOnce([
+        { accessType: 'read', recordType: 'Steps' },
+        { accessType: 'read', recordType: 'Distance' },
+      ]);
+    mockRequestPermission.mockResolvedValue([]);
+
+    const adapter = new HealthConnectAdapter({ debugLogging: false });
+    const result = await adapter.requestPermissions(['steps', 'distanceMeters']);
+
+    expect(mockRequestPermission).toHaveBeenCalledWith([
+      { accessType: 'read', recordType: 'Distance' },
+    ]);
+    expect(result.granted).toBe(true);
+    expect(result.metrics).toEqual(['steps', 'distanceMeters']);
+  });
+
+  it('requestPermissions() reports not-granted when the contract resolves empty and no grants exist', async () => {
+    mockInitialize.mockResolvedValue(true);
+    mockGetGranted.mockResolvedValue([]);
+    mockRequestPermission.mockResolvedValue([]);
+
+    const adapter = new HealthConnectAdapter({ debugLogging: false });
+    const result = await adapter.requestPermissions(['steps']);
+
+    expect(result).toEqual({ granted: false, metrics: [] });
+  });
+
+  it('openHealthSettings() opens the Health Connect settings surface', async () => {
+    const adapter = new HealthConnectAdapter({ debugLogging: false });
+    expect(await adapter.openHealthSettings()).toBe(true);
+    expect(mockOpenSettings).toHaveBeenCalledTimes(1);
   });
 
   it('getGrantedMetrics() maps granted record types back to HealthMetric names', async () => {

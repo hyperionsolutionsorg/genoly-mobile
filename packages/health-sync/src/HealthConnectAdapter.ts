@@ -45,6 +45,7 @@ interface RNHealthConnect {
     permissions: Array<{ accessType: 'read'; recordType: string }>,
   ): Promise<Array<{ accessType: 'read'; recordType: string }>>;
   getGrantedPermissions(): Promise<Array<{ accessType: string; recordType: string }>>;
+  openHealthConnectSettings(): void;
   readRecords(
     recordType: string,
     options: {
@@ -154,17 +155,33 @@ export class HealthConnectAdapter implements HealthAdapter {
         return { granted: false, metrics: [] };
       }
 
-      // 2. Translate metrics to Health Connect permission objects.
-      const permissions = metrics
+      // 2. Check what the OS already reports as granted. Health Connect
+      // rate-limits its permission contract (after ~2 denials it
+      // auto-resolves EMPTY without showing any UI), so if the user
+      // granted manually in Health Connect settings — the recovery path
+      // we point them to — launching the contract again would report
+      // "nothing granted" even though everything is. Grants are the
+      // source of truth; the contract is only for what's missing.
+      const preGranted = (await this.getGrantedMetrics()) ?? [];
+      const missing = metrics.filter((m) => !preGranted.includes(m));
+      if (missing.length === 0) {
+        return { granted: true, metrics: metrics.filter((m) => preGranted.includes(m)) };
+      }
+
+      // 3. Translate the still-missing metrics to permission objects and
+      // request them.
+      const permissions = missing
         .map((m) => METRIC_TO_HC_RECORD_TYPE[m])
         .filter(Boolean)
         .map((recordType) => ({ accessType: 'read' as const, recordType }));
 
-      // 3. Request — returns the subset of permissions actually granted.
-      const grantedRaw = await this.hc.requestPermission(permissions);
+      await this.hc.requestPermission(permissions);
 
-      // 4. Translate granted record types back to our HealthMetric enum.
-      const grantedMetrics = this.toGrantedMetrics(grantedRaw);
+      // 4. Re-read the OS grant state rather than trusting the contract's
+      // return value (it reports [] when rate-limited even if grants
+      // exist).
+      const postGranted = (await this.getGrantedMetrics()) ?? [];
+      const grantedMetrics = metrics.filter((m) => postGranted.includes(m));
 
       return { granted: grantedMetrics.length > 0, metrics: grantedMetrics };
     } catch (err) {
@@ -173,6 +190,25 @@ export class HealthConnectAdapter implements HealthAdapter {
         console.warn('[HealthConnectAdapter] requestPermissions error:', msg);
       }
       return { granted: false, metrics: [] };
+    }
+  }
+
+  /**
+   * Open the system Health Connect settings screen — the manual-grant
+   * recovery path once the permission contract has hit Health Connect's
+   * ask-rate-limit (it then auto-resolves empty with no UI).
+   */
+  async openHealthSettings(): Promise<boolean> {
+    if (!this.hc) return false;
+    try {
+      this.hc.openHealthConnectSettings();
+      return true;
+    } catch (err) {
+      if (this.debugLogging) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn('[HealthConnectAdapter] openHealthConnectSettings error:', msg);
+      }
+      return false;
     }
   }
 

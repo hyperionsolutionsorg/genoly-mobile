@@ -69,6 +69,10 @@ export class MockHealthAdapter implements HealthAdapter {
     return [...this.grantedMetrics];
   }
 
+  async openHealthSettings(): Promise<boolean> {
+    return true;
+  }
+
   getPlatform(): 'ios' | 'android' {
     return this.platform;
   }
