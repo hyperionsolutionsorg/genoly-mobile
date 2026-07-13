@@ -1,7 +1,7 @@
 ---
 type: current
 name: "Active context — genoly-mobile"
-updated: 2026-07-13b (HEALTH READ PIPELINE FIXED — PR #53 merged, main `d7c3eba`. Root cause of "Samsung not grabbing health data": (1) adapters gated reads on a per-instance grant flag no reader set → all reads silently `[]`; (2) fitness pipeline had NO producer (`SyncQueue.enqueue()` zero call sites) → `sync/daily` never got device data. Fixed: per-process lazy init + `getGrantedPermissions()` read path; new `utils/healthSync.ts` producer wired into dashboard/background/permissions; silent catches surface reasons. Local APK v6 → `~/Desktop/genoly-local-convex.apk`, emulator-verified to "Synced just now"; real-data proof = operator Samsung sideload. Jest 407/34, tsc clean. Prior: 2026-07-13 catch-up (main `93181cd`, #46/#49/#50/#51/#52 merged))
+updated: 2026-07-13c (main `9a27a91`; APK v7 delivered. #54 HC grant recovery — Samsung's "No access granted" = HC rate-limited contract auto-resolving empty; requestPermissions now pre/post-checks getGrantedPermissions + openHealthSettings() manual-grant path. #55 games port — hub at /games + all 8 web games native, registry on the flat model, shared daily-seed libs verbatim (cross-platform-identical dailies), dailies record recordDailyCompletion; deps d3-geo/topojson-client/world-atlas. Jest 419/34, tsc clean, emulator-verified (hub, lock states, Wordle round-trip). Prior 2026-07-13b: #53 health read pipeline (per-instance grant flag + missing producer). Awaiting operator Samsung verification of health + games on v7)
 status: active
 ---
 
@@ -11,7 +11,12 @@ status: active
 
 ## Current focus
 
-**2026-07-13b — health read pipeline root-caused + fixed (PR #53, main `d7c3eba`); awaiting operator's Samsung sideload of APK v6 for real-data confirmation.**
+**2026-07-13c — #54 (HC grant recovery) + #55 (full games port) merged on top of #53; APK v7 delivered; awaiting the operator's Samsung verification of health sync + games.**
+
+- **#54:** Health Connect rate-limits its permission dialog (~2 denials, burned across the v3–v5 APK rounds) then auto-resolves empty with NO UI — the v6 Samsung dead end. `requestPermissions()` now pre-checks `getGrantedPermissions()` (manual grants in HC settings are honored without relaunching the broken contract) and trusts post-contract OS state; the permissions screen offers "Open Health Connect".
+- **#55 (operator request):** games hub + all 8 games native on mobile; daily puzzles seed-identical to the web; the two dailies record `recordDailyCompletion` (feeds contribution streaks). Home's Today's Pick now opens the real game.
+
+**2026-07-13b — health read pipeline root-caused + fixed (PR #53, main `d7c3eba`).**
 
 - **Bug 1 (all health reads):** the adapters' per-instance `initialized` grant-flag meant `createHealthAdapter()` callers always read `[]` silently — the permission screen's grant lived and died on its own throwaway instance. Fixed with per-process lazy init + OS-persisted grant checks (`getGrantedPermissions()` on Android; lazy `initHealthKit` on iOS; Mock models persisted grants, un-breaking the DEV mock toggle).
 - **Bug 2 (fitness path):** no producer — `SyncQueue.enqueue()` had zero production call sites; drains no-op'd on an empty queue forever. New `utils/healthSync.ts` collector (30-day initial pull, 7-day steady, `genoly.lastHealthCollectAt` pref) wired into `useDashboardData.refresh()`, the background task, and the permissions screen.
