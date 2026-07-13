@@ -224,6 +224,24 @@ export class HealthKitAdapter implements HealthAdapter {
     });
   }
 
+  /**
+   * Best effort on iOS: open the Health app (read-authorization lives
+   * under Health → Sharing → Apps). There is no deep link straight to
+   * the app's sharing page.
+   */
+  async openHealthSettings(): Promise<boolean> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- REASON: lazy require keeps this module importable in Node tests.
+      const { Linking } = require('react-native') as {
+        Linking: { openURL(url: string): Promise<unknown> };
+      };
+      await Linking.openURL('x-apple-health://');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async readDailyAggregates(opts: {
     startDate: string;
     endDate: string;

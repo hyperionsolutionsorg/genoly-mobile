@@ -80,6 +80,15 @@ export interface HealthAdapter {
   getGrantedMetrics?(): Promise<HealthMetric[] | null>;
 
   /**
+   * Open the platform's health-permission settings UI (Health Connect
+   * settings on Android) so the user can grant manually — the recovery
+   * path when the in-app permission dialog can no longer be shown
+   * (Health Connect rate-limits it after repeated denials). Resolves
+   * true if a settings surface was opened.
+   */
+  openHealthSettings?(): Promise<boolean>;
+
+  /**
    * Read daily aggregates for the inclusive `[startDate, endDate]` range.
    * Both bounds are ISO YYYY-MM-DD in the user's local timezone. The
    * adapter is responsible for translating to the platform's native
