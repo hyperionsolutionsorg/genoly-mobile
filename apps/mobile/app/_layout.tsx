@@ -283,6 +283,8 @@ function ThemedNavigation({ downgradeBanner }: { downgradeBanner: boolean }) {
         <Stack.Screen name="challenge-create" options={{ title: 'New challenge' }} />
         <Stack.Screen name="challenge/[challengeId]" options={{ title: 'Challenge' }} />
         <Stack.Screen name="friends" options={{ title: 'Friends' }} />
+        <Stack.Screen name="games/index" options={{ title: 'Games' }} />
+        <Stack.Screen name="games/[gameKey]" options={{ title: 'Game' }} />
         <Stack.Screen name="goals" options={{ title: 'Goals' }} />
         <Stack.Screen name="goals-history" options={{ title: 'Goal history' }} />
         <Stack.Screen name="leaderboard" options={{ title: 'Leaderboard' }} />
