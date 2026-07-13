@@ -17,6 +17,21 @@
  *     app reads (steps, active calories, distance) — needed for the grant
  *     flow after the provider is visible.
  *
+ *  4. The Android 14+ Health Connect CLIENT declaration: an exported
+ *     `activity-alias` handling `android.intent.action.VIEW_PERMISSION_USAGE`
+ *     with category `android.intent.category.HEALTH_PERMISSIONS`, guarded by
+ *     `android.permission.START_VIEW_PERMISSION_USAGE`. On Android 14+ (where
+ *     Health Connect is part of the OS) this is what makes the system
+ *     RECOGNIZE the app as a Health Connect client. Without it the app never
+ *     appears under Health Connect → App permissions, and requestPermission()
+ *     resolves EMPTY without showing any UI — the exact "No access granted +
+ *     Genoly missing from Health Connect's app list" dead end on the
+ *     operator's Samsung (device-confirmed 2026-07-13). The library's own
+ *     plugin only adds the Android-13-era
+ *     `androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE` intent filter.
+ *     Note: this does NOT rebrand Genoly as a "health app" — it registers a
+ *     minimal three-read-type integration for the walking-challenge features.
+ *
  * Health Connect requires minSdk 26 (already set via expo-build-properties).
  */
 
@@ -84,6 +99,52 @@ module.exports = function withHealthConnectManifest(config) {
       manifest.queries.push({
         package: [{ $: { 'android:name': PROVIDER_PACKAGE } }],
       });
+    }
+
+    const app = manifest.application && manifest.application[0];
+    if (app) {
+      // 4. Android 14+ client declaration (see header). Idempotent by
+      // alias name.
+      app['activity-alias'] = app['activity-alias'] || [];
+      const aliasName = '.ViewPermissionUsageActivity';
+      const aliasPresent = app['activity-alias'].some(
+        (a) => a.$ && a.$['android:name'] === aliasName,
+      );
+      if (!aliasPresent) {
+        app['activity-alias'].push({
+          $: {
+            'android:name': aliasName,
+            'android:exported': 'true',
+            'android:targetActivity': '.MainActivity',
+            'android:permission': 'android.permission.START_VIEW_PERMISSION_USAGE',
+          },
+          'intent-filter': [
+            {
+              action: [{ $: { 'android:name': 'android.intent.action.VIEW_PERMISSION_USAGE' } }],
+              category: [{ $: { 'android:name': 'android.intent.category.HEALTH_PERMISSIONS' } }],
+            },
+          ],
+        });
+      }
+
+      // Housekeeping: the library's plugin re-appends its Android-13
+      // rationale intent-filter on every prebuild, so MainActivity ends
+      // up with duplicates. Keep exactly one.
+      const mainActivity = (app.activity || []).find(
+        (a) => a.$ && a.$['android:name'] === '.MainActivity',
+      );
+      if (mainActivity && Array.isArray(mainActivity['intent-filter'])) {
+        let seenRationale = false;
+        mainActivity['intent-filter'] = mainActivity['intent-filter'].filter((f) => {
+          const isRationale = (f.action || []).some(
+            (a) => a.$ && a.$['android:name'] === 'androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE',
+          );
+          if (!isRationale) return true;
+          if (seenRationale) return false;
+          seenRationale = true;
+          return true;
+        });
+      }
     }
 
     return config;
