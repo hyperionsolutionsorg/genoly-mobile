@@ -72,10 +72,16 @@ export default function LoginScreen() {
           appVersion: Constants.expoConfig?.version,
         },
       });
-    } catch {
-      // Member session is what matters; health sync can re-auth later
-      // from Settings → Health sync.
-      toast.info('Signed in — health sync will connect when you open Activity.');
+    } catch (e) {
+      // Member session is what matters, but a failed mint means the
+      // fitness bearer token is EMPTY until the next full sign-in —
+      // health uploads will 401 until then (recovery path is a known
+      // follow-up, mobile-sync-architecture.md §3). Don't hide it.
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        const msg = e instanceof Error ? e.message : String(e);
+        console.warn('[login] fitness issueToken failed — health sync will be unauthenticated:', msg);
+      }
+      toast.info('Signed in, but health sync couldn’t connect. Sign out and back in to retry.');
     }
 
     // 3. MFA challenge if enrolled and this session isn't verified.

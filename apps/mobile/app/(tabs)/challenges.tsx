@@ -57,7 +57,17 @@ export default function ChallengesScreen() {
   useEffect(() => {
     if (syncedRef.current || !mine || mine.length === 0) return;
     syncedRef.current = true;
-    syncAllJoinedChallenges(convex, mine).catch(() => {});
+    syncAllJoinedChallenges(convex, mine)
+      .then((results) => {
+        if (typeof __DEV__ !== 'undefined' && __DEV__) {
+          for (const r of results) {
+            if (r.status !== 'synced' && r.status !== 'throttled') {
+              console.warn(`[challenges] hub sync ${r.challengeId}: ${r.status}${r.reason ? ` (${r.reason})` : ''}`);
+            }
+          }
+        }
+      })
+      .catch(() => {});
   }, [mine, convex]);
 
   const openChallenge = (challengeId: string) => {

@@ -91,6 +91,24 @@ export async function setHealthSyncEnabled(value: boolean): Promise<void> {
 }
 
 /**
+ * Timestamp (Unix ms) of the last successful health-store collection
+ * into the sync queue (the fitness-path PRODUCER — utils/healthSync.ts).
+ * `null` means never collected: the next collection uses the 30-day
+ * initial pull window (AGENTS.md §3.7); afterwards a 7-day window.
+ */
+const KEY_LAST_HEALTH_COLLECT_AT = 'genoly.lastHealthCollectAt';
+
+export async function getLastHealthCollectAt(): Promise<number | null> {
+  const raw = await getStorage().getItem(KEY_LAST_HEALTH_COLLECT_AT);
+  const parsed = raw ? Number(raw) : NaN;
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+export async function setLastHealthCollectAt(at: number): Promise<void> {
+  await getStorage().setItem(KEY_LAST_HEALTH_COLLECT_AT, String(at));
+}
+
+/**
  * Theme preference: 'system' follows the OS light/dark setting; 'light',
  * 'dark', and 'classic' pin a specific palette (mirrors the web's three
  * themes). Consumed by ThemeProvider in `theme/index.tsx`.

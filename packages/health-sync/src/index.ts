@@ -71,6 +71,15 @@ export interface HealthAdapter {
   requestPermissions(metrics: HealthMetric[]): Promise<HealthAdapterPermissionState>;
 
   /**
+   * Metrics the platform currently reports as granted for read, or
+   * `null` when the platform cannot say (iOS HealthKit deliberately
+   * hides read-authorization state — the only signal is whether reads
+   * return data). Useful for diagnostics: distinguishes "no permission"
+   * from "permission granted but no data recorded".
+   */
+  getGrantedMetrics?(): Promise<HealthMetric[] | null>;
+
+  /**
    * Read daily aggregates for the inclusive `[startDate, endDate]` range.
    * Both bounds are ISO YYYY-MM-DD in the user's local timezone. The
    * adapter is responsible for translating to the platform's native

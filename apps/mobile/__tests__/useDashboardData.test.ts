@@ -24,6 +24,14 @@ jest.mock('../utils/api', () => ({
   },
 }));
 
+// The refresh cycle now PRODUCES before draining (utils/healthSync.ts —
+// the 2026-07-13 pipeline fix). The producer reads AsyncStorage-backed
+// preferences, which hang under jest without the mock (repo convention:
+// per-file mock, see preferences.test.ts).
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+
 // We inject a fake SyncQueue via the hook's `syncQueue` option, so the
 // createSyncQueue mock here only exists to satisfy the import; tests
 // always pass their own queue.

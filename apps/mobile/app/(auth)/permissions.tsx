@@ -21,6 +21,7 @@ import { useState } from 'react';
 import { createHealthAdapter, type HealthMetric } from '@genoly/health-sync';
 import { setHasRequestedHealthPermissions, setHealthSyncEnabled } from '../../utils/preferences';
 import { registerBackgroundSync } from '../../utils/backgroundSync';
+import { collectAndDrainNow } from '../../utils/healthSync';
 import { useThemedStyles, type Theme } from '../../theme';
 import { Button } from '../../components/ui';
 
@@ -67,6 +68,11 @@ export default function PermissionsScreen() {
         // fatal: the user reaches the tabs either way, and the
         // foreground drain (Step 7+) will still run.
         await registerBackgroundSync();
+        // Day-one initial pull (30-day window, §3.7): collect + upload
+        // now so the dashboard isn't empty until the next drain cycle.
+        // Fire-and-forget; assumeEnabled skips re-reading the flag we
+        // just wrote. collectAndDrainNow never throws.
+        collectAndDrainNow({ assumeEnabled: true });
         router.replace(TABS_ROUTE);
       } else {
         Alert.alert(

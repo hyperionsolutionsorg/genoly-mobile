@@ -64,15 +64,29 @@ describe('MockHealthAdapter', () => {
     expect(result).toEqual([]);
   });
 
-  it('returns empty if permissions not yet requested', async () => {
+  it('reads WITHOUT an in-process requestPermissions call (grants persist at the OS level)', async () => {
+    // Real platforms persist grants across app restarts, so a fresh
+    // adapter instance must be able to read. The old per-instance gate
+    // (empty until requestPermissions ran on the same object) is exactly
+    // the bug that silently blanked every health read (2026-07-13).
     const adapter = new MockHealthAdapter({ samples: fixtureSamples });
-    // No requestPermissions call → no grants recorded.
+    const result = await adapter.readDailyAggregates({
+      startDate: '2026-05-26',
+      endDate: '2026-05-28',
+      metrics: ['steps'],
+    });
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('returns empty when permissions are denied', async () => {
+    const adapter = new MockHealthAdapter({ samples: fixtureSamples, denyPermissions: true });
     const result = await adapter.readDailyAggregates({
       startDate: '2026-05-26',
       endDate: '2026-05-28',
       metrics: ['steps'],
     });
     expect(result).toEqual([]);
+    expect(await adapter.getGrantedMetrics()).toEqual([]);
   });
 
   it('reads daily aggregates within the requested date range', async () => {
