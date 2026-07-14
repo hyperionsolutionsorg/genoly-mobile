@@ -115,11 +115,15 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
     expect(mockReadRecords).not.toHaveBeenCalled();
   });
 
-  it('queries LOCAL day boundaries (naive local strings — no UTC "Z" window)', async () => {
-    // Regression guard for the 2026-07-13 undercount: the old code sent
-    // `${date}T00:00:00.000Z`, which in any timezone west of UTC ended
-    // "today" hours early (6:59:59 PM Central) and dropped every evening
-    // record.
+  it('queries LOCAL-midnight INSTANTS (parseable by the native Instant.parse)', async () => {
+    // Two regression guards in one (both device-confirmed 2026-07-13):
+    //  - `${date}T00:00:00.000Z` (UTC midnight) ended "today" hours early
+    //    west of UTC (6:59:59 PM Central) → evening records dropped.
+    //  - Naive local strings throw in the library's native
+    //    Instant.parse() → the aggregate call rejects and the raw
+    //    fallback's overlap double-counting OVERcounts.
+    // Correct: real instants for local midnight; the native side converts
+    // to device-local LocalDateTime for day-aligned period groups.
     mockInitialize.mockResolvedValue(true);
     mockGetGranted.mockResolvedValue([{ accessType: 'read', recordType: 'Steps' }]);
     mockAggregate.mockResolvedValue([]);
@@ -132,10 +136,36 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
     });
 
     const { timeRangeFilter, timeRangeSlicer } = mockAggregate.mock.calls[0][0];
-    expect(timeRangeFilter.startTime).toBe('2026-07-10T00:00:00');
-    expect(timeRangeFilter.endTime).toBe('2026-07-14T00:00:00'); // exclusive day after endDate
-    expect(timeRangeFilter.startTime).not.toContain('Z');
+    // Instant strings (Z-suffixed ISO) representing LOCAL midnights —
+    // computed the same way here so the assertion is timezone-agnostic.
+    expect(timeRangeFilter.startTime).toBe(new Date('2026-07-10T00:00:00').toISOString());
+    expect(timeRangeFilter.endTime).toBe(new Date('2026-07-14T00:00:00').toISOString()); // exclusive day after endDate
+    // Must parse as a real instant — the native layer runs Instant.parse().
+    expect(Number.isNaN(Date.parse(timeRangeFilter.startTime))).toBe(false);
+    expect(timeRangeFilter.startTime.endsWith('Z')).toBe(true);
     expect(timeRangeSlicer).toEqual({ period: 'DAYS', length: 1 });
+  });
+
+  it('buckets groups by the LOCAL date of the returned group start (naive LocalDateTime strings)', async () => {
+    // The native side returns LocalDateTime.toString() ("2026-07-12T00:00",
+    // no offset) for period groups — JS parses that as LOCAL time, which
+    // is exactly the local day the group represents.
+    mockInitialize.mockResolvedValue(true);
+    mockGetGranted.mockResolvedValue([{ accessType: 'read', recordType: 'Steps' }]);
+    mockAggregate.mockResolvedValue([
+      { startTime: '2026-07-12T00:00', endTime: '2026-07-13T00:00', result: { COUNT_TOTAL: 2735 } },
+    ]);
+
+    const adapter = new HealthConnectAdapter({ debugLogging: false });
+    const samples = await adapter.readDailyAggregates({
+      startDate: '2026-07-10',
+      endDate: '2026-07-13',
+      metrics: ['steps'],
+    });
+
+    expect(samples).toEqual([
+      expect.objectContaining({ date: '2026-07-12', steps: 2735 }),
+    ]);
   });
 
   it('falls back to raw readRecords (with real instants) when the aggregate API throws', async () => {
