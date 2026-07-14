@@ -27,6 +27,7 @@ jest.mock('react-native-health-connect', () => ({
   readRecords: jest.fn(),
   openHealthConnectSettings: jest.fn(),
   aggregateGroupByPeriod: jest.fn(),
+  aggregateGroupByDuration: jest.fn(),
 }));
 
 import {
@@ -36,6 +37,7 @@ import {
   requestPermission,
   openHealthConnectSettings,
   aggregateGroupByPeriod,
+  aggregateGroupByDuration,
 } from 'react-native-health-connect';
 import { HealthConnectAdapter } from './HealthConnectAdapter';
 
@@ -45,6 +47,7 @@ const mockReadRecords = readRecords as unknown as jest.Mock;
 const mockRequestPermission = requestPermission as unknown as jest.Mock;
 const mockOpenSettings = openHealthConnectSettings as unknown as jest.Mock;
 const mockAggregate = aggregateGroupByPeriod as unknown as jest.Mock;
+const mockAggregateDuration = aggregateGroupByDuration as unknown as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -168,10 +171,11 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
     ]);
   });
 
-  it('falls back to raw readRecords (with real instants) when the aggregate API throws', async () => {
+  it('falls back to raw readRecords (with real instants) when BOTH aggregate tiers throw', async () => {
     mockInitialize.mockResolvedValue(true);
     mockGetGranted.mockResolvedValue([{ accessType: 'read', recordType: 'Steps' }]);
     mockAggregate.mockRejectedValue(new Error('aggregate unsupported'));
+    mockAggregateDuration.mockRejectedValue(new Error('duration unsupported'));
     mockReadRecords.mockResolvedValue({
       records: [
         { startTime: '2026-07-12T14:00:00.000Z', endTime: '2026-07-12T15:00:00.000Z', count: 777 },
@@ -195,10 +199,16 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
     expect(samples[0].steps).toBe(777);
   });
 
-  it('records read diagnostics: aggregate path + raw fallback with the native error', async () => {
+  it('records read diagnostics across the tier chain (period, duration, raw)', async () => {
+    // Mirrors the on-device r61 finding: the library rejects the period
+    // request for ActiveCalories/Distance ("Either use TimeRangeFilter
+    // with LocalDateTime or AggregateGroupByDurationRequest") but its
+    // DURATION variant uses the correct Instant contract — so distance
+    // is served by tier 2, and only a double failure reaches raw.
     mockInitialize.mockResolvedValue(true);
     mockGetGranted.mockResolvedValue([
       { accessType: 'read', recordType: 'Steps' },
+      { accessType: 'read', recordType: 'ActiveCaloriesBurned' },
       { accessType: 'read', recordType: 'Distance' },
     ]);
     mockAggregate.mockImplementation(async ({ recordType }: { recordType: string }) => {
@@ -207,25 +217,38 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
           { startTime: '2026-07-12T00:00', endTime: '2026-07-13T00:00', result: { COUNT_TOTAL: 100 } },
         ];
       }
-      throw new Error('DateTimeParseException: boom');
+      throw new Error('Either use TimeRangeFilter with LocalDateTime or AggregateGroupByDurationRequest');
+    });
+    mockAggregateDuration.mockImplementation(async ({ recordType }: { recordType: string }) => {
+      if (recordType === 'Distance') {
+        return [
+          {
+            startTime: new Date('2026-07-12T00:00:00').toISOString(),
+            endTime: new Date('2026-07-13T00:00:00').toISOString(),
+            result: { DISTANCE: { inMeters: 2100 } },
+          },
+        ];
+      }
+      throw new Error('duration also failed');
     });
     mockReadRecords.mockResolvedValue({ records: [] });
 
     const adapter = new HealthConnectAdapter({ debugLogging: false });
-    await adapter.readDailyAggregates({
+    const samples = await adapter.readDailyAggregates({
       startDate: '2026-07-10',
       endDate: '2026-07-13',
-      metrics: ['steps', 'distanceMeters'],
+      metrics: ['steps', 'caloriesActive', 'distanceMeters'],
     });
 
     const diag = adapter.getReadDiagnostics();
     expect(diag?.metrics.steps).toEqual({ path: 'aggregate', days: 1 });
-    expect(diag?.metrics.distanceMeters).toMatchObject({
-      path: 'raw-fallback',
-      days: 0,
-    });
-    expect(diag?.metrics.distanceMeters?.aggregateError).toContain('DateTimeParseException');
+    expect(diag?.metrics.distanceMeters).toMatchObject({ path: 'aggregate-duration', days: 1 });
+    expect(diag?.metrics.distanceMeters?.aggregateError).toContain('LocalDateTime');
+    expect(diag?.metrics.caloriesActive).toMatchObject({ path: 'raw-fallback', days: 0 });
     expect(diag?.window.start.endsWith('Z')).toBe(true);
+
+    const distanceSample = samples.find((s) => s.date === '2026-07-12');
+    expect(distanceSample?.distanceMeters).toBe(2100);
   });
 
   it('returns [] when NO permissions are granted (never throws)', async () => {
