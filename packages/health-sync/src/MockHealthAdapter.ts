@@ -73,6 +73,10 @@ export class MockHealthAdapter implements HealthAdapter {
     return true;
   }
 
+  getReadDiagnostics(): null {
+    return null;
+  }
+
   getPlatform(): 'ios' | 'android' {
     return this.platform;
   }

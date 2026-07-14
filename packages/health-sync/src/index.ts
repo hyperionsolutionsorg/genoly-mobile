@@ -29,6 +29,25 @@ export type HealthSample = Pick<
 
 export type HealthMetric = 'steps' | 'caloriesActive' | 'caloriesBasal' | 'distanceMeters';
 
+/** Per-metric outcome of the most recent read (see getReadDiagnostics). */
+export interface HealthReadDiagnostics {
+  /** The read window as sent to the platform (instants). */
+  window: { start: string; end: string };
+  metrics: Partial<
+    Record<
+      HealthMetric,
+      {
+        /** Which code path produced the values. */
+        path: 'aggregate' | 'raw-fallback';
+        /** Days in the window that carried a non-zero value. */
+        days: number;
+        /** Present when the aggregate API threw and the fallback ran. */
+        aggregateError?: string;
+      }
+    >
+  >;
+}
+
 /**
  * Permission state returned from the platform's permission dialog flow.
  * `granted` is true only if the user granted at least one of the requested
@@ -87,6 +106,15 @@ export interface HealthAdapter {
    * true if a settings surface was opened.
    */
   openHealthSettings?(): Promise<boolean>;
+
+  /**
+   * Diagnostics for the MOST RECENT readDailyAggregates() call on this
+   * instance: which path served each metric (platform aggregate vs raw
+   * fallback), how many days carried data, and the aggregate error when
+   * the fallback engaged. Surfaced in Settings so field devices can
+   * report the read path without adb (2026-07-13 debugging sessions).
+   */
+  getReadDiagnostics?(): HealthReadDiagnostics | null;
 
   /**
    * Read daily aggregates for the inclusive `[startDate, endDate]` range.

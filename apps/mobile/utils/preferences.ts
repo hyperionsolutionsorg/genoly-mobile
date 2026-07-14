@@ -115,6 +115,37 @@ export async function clearLastHealthCollectAt(): Promise<void> {
 }
 
 /**
+ * Last health-read diagnostics (JSON) — which read path served each
+ * metric, day counts, native errors. Written by the producer after
+ * every collect; rendered in Settings so field devices can report the
+ * read path without adb.
+ */
+const KEY_LAST_HEALTH_READ_DIAG = 'genoly.lastHealthReadDiag';
+
+export interface HealthReadDiagSnapshot {
+  at: number;
+  /** Code revision marker — identifies which APK produced the snapshot. */
+  rev: string;
+  status: string;
+  samples: number;
+  todaySteps: number | null;
+  metrics: Record<string, { path: string; days: number; aggregateError?: string }>;
+}
+
+export async function getLastHealthReadDiag(): Promise<HealthReadDiagSnapshot | null> {
+  try {
+    const raw = await getStorage().getItem(KEY_LAST_HEALTH_READ_DIAG);
+    return raw ? (JSON.parse(raw) as HealthReadDiagSnapshot) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function setLastHealthReadDiag(diag: HealthReadDiagSnapshot): Promise<void> {
+  await getStorage().setItem(KEY_LAST_HEALTH_READ_DIAG, JSON.stringify(diag));
+}
+
+/**
  * Theme preference: 'system' follows the OS light/dark setting; 'light',
  * 'dark', and 'classic' pin a specific palette (mirrors the web's three
  * themes). Consumed by ThemeProvider in `theme/index.tsx`.

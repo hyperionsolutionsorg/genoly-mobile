@@ -40,7 +40,12 @@ import {
   getLastHealthCollectAt,
   getUseMockHealthData,
   setLastHealthCollectAt,
+  setLastHealthReadDiag,
 } from './preferences';
+
+/** Bumped whenever the read path changes — shows up in the Settings
+ *  diagnostic line so a screenshot identifies the installed build. */
+export const HEALTH_READ_REV = 'r61';
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -181,6 +186,26 @@ export async function collectHealthDataIntoQueue(
       endDate,
       metrics: COLLECTED_METRICS,
     });
+
+    // Persist read diagnostics for the Settings readout (fire-and-forget;
+    // never let diagnostics break the pipeline).
+    try {
+      const adapterDiag = adapter.getReadDiagnostics?.() ?? null;
+      const todaySample = samples.find((s) => s.date === endDate);
+      await setLastHealthReadDiag({
+        at: Date.now(),
+        rev: HEALTH_READ_REV,
+        status: samples.length > 0 ? 'read' : 'empty',
+        samples: samples.length,
+        todaySteps: typeof todaySample?.steps === 'number' ? todaySample.steps : null,
+        metrics: (adapterDiag?.metrics ?? {}) as Record<
+          string,
+          { path: string; days: number; aggregateError?: string }
+        >,
+      });
+    } catch {
+      // Best-effort only.
+    }
 
     if (samples.length === 0) {
       // Distinguish "nothing recorded" from "we can't read at all" where
