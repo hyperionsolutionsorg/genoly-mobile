@@ -47,6 +47,7 @@ import {
   setUseMockHealthData,
 } from '../../utils/preferences';
 import { unregisterBackgroundSync } from '../../utils/backgroundSync';
+import { collectAndDrainNow } from '../../utils/healthSync';
 import {
   useTheme,
   useThemedStyles,
@@ -89,6 +90,7 @@ export default function SettingsScreen() {
   const [notifEnabled, setNotifEnabled] = useState<boolean>(true);
   const [mockHealth, setMockHealth] = useState<boolean>(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [historySyncing, setHistorySyncing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Initial load — fetch session + prefs in parallel. Failure is OK;
@@ -172,6 +174,37 @@ export default function SettingsScreen() {
 
   const onManagePermissions = () => {
     router.push(PERMISSIONS_ROUTE);
+  };
+
+  /**
+   * Force a 30-day collect + upload. Source apps (Samsung Health etc.)
+   * backfill Health Connect on their own schedule, so history that
+   * wasn't present at the first sync can be captured later. Idempotent
+   * server-side — safe to run repeatedly.
+   */
+  const onSyncHistory = async () => {
+    setHistorySyncing(true);
+    try {
+      const { collect, drain } = await collectAndDrainNow({ windowDays: 30 });
+      if (collect.status === 'enqueued') {
+        const accepted = drain?.accepted ?? 0;
+        toast.success(
+          `Synced ${collect.enqueued} day${collect.enqueued === 1 ? '' : 's'} of health data${accepted ? ` (${accepted} uploaded)` : ''}.`,
+        );
+      } else if (collect.status === 'no-data') {
+        toast.info('No health data found in the last 30 days — your health app may not have synced history to Health Connect yet.');
+      } else if (collect.status === 'no-permissions') {
+        toast.error('Genoly has no permission to read health data — grant access in Health Connect.');
+      } else if (collect.status === 'disabled') {
+        toast.info('Health sync is off — grant access via Manage permissions first.');
+      } else if (collect.status === 'unavailable') {
+        toast.info('No health store available on this device.');
+      } else {
+        toast.error(`History sync failed${collect.reason ? ` (${collect.reason})` : ''}. Try again.`);
+      }
+    } finally {
+      setHistorySyncing(false);
+    }
   };
 
   const onManageSubscription = () => {
@@ -323,6 +356,15 @@ export default function SettingsScreen() {
           variant="secondary"
           label="Manage permissions"
           onPress={onManagePermissions}
+          style={styles.sectionButton}
+        />
+        <Button
+          variant="secondary"
+          label="Sync last 30 days"
+          accessibilityLabel="Sync the last 30 days of health data"
+          loading={historySyncing}
+          disabled={!healthEnabled || historySyncing}
+          onPress={onSyncHistory}
           style={styles.sectionButton}
         />
       </Section>

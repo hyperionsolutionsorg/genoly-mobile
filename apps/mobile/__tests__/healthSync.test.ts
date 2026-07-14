@@ -156,6 +156,20 @@ describe('collectHealthDataIntoQueue', () => {
     expect(spy.mock.calls[1][0].startDate).toBe(localDate(INITIAL_PULL_DAYS - 1));
   });
 
+  it('windowDays overrides the initial/steady policy (Settings "Sync last 30 days")', async () => {
+    await setHealthSyncEnabled(true);
+    // Steady state (a prior collect happened) — normally a 7-day window.
+    await setLastHealthCollectAt(Date.now() - 60_000);
+    const queue = makeQueue();
+    const adapter = new MockHealthAdapter({ samples: [sample(0, 100)] });
+    const spy = jest.spyOn(adapter, 'readDailyAggregates');
+
+    await collectHealthDataIntoQueue(queue as never, { adapter, windowDays: 30 });
+
+    expect(spy.mock.calls[0][0].startDate).toBe(localDate(29));
+    expect(spy.mock.calls[0][0].endDate).toBe(localDate(0));
+  });
+
   it('assumeEnabled bypasses the preference read (permissions-screen race)', async () => {
     // healthSyncEnabled deliberately NOT set.
     const queue = makeQueue();

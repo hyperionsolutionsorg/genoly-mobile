@@ -134,6 +134,15 @@ export interface CollectOptions {
   /** Skip the healthSyncEnabled gate (permissions screen calls this
    *  right after setting the flag — races AsyncStorage otherwise). */
   assumeEnabled?: boolean;
+  /**
+   * Force a specific read window (days, inclusive of today), bypassing
+   * the initial/steady policy. Used by the Settings "Sync last 30 days"
+   * action: source apps (e.g. Samsung Health) backfill Health Connect on
+   * their own schedule, so history that wasn't there on the first
+   * collection can be captured later. Server upserts are idempotent by
+   * (userId, date), so re-reading a window is always safe.
+   */
+  windowDays?: number;
 }
 
 /**
@@ -151,7 +160,8 @@ export async function collectHealthDataIntoQueue(
     }
 
     const lastCollectAt = await getLastHealthCollectAt();
-    const windowDays = lastCollectAt === null ? INITIAL_PULL_DAYS : STEADY_PULL_DAYS;
+    const windowDays =
+      options.windowDays ?? (lastCollectAt === null ? INITIAL_PULL_DAYS : STEADY_PULL_DAYS);
     const endDate = toLocalDateString(new Date());
     const startDate = daysAgoLocal(windowDays - 1);
 
