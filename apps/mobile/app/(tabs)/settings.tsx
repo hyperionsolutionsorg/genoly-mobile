@@ -42,6 +42,8 @@ import {
   setHasRequestedHealthPermissions,
   setHealthSyncEnabled,
   clearLastHealthCollectAt,
+  getLastHealthReadDiag,
+  type HealthReadDiagSnapshot,
   getNotificationsEnabled,
   setNotificationsEnabled,
   getUseMockHealthData,
@@ -94,6 +96,7 @@ export default function SettingsScreen() {
   const [signingOut, setSigningOut] = useState(false);
   const [historySyncing, setHistorySyncing] = useState(false);
   const [deletingHealthData, setDeletingHealthData] = useState(false);
+  const [readDiag, setReadDiag] = useState<HealthReadDiagSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Initial load — fetch session + prefs in parallel. Failure is OK;
@@ -101,12 +104,14 @@ export default function SettingsScreen() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const [sessionResult, healthResult, notifResult, mockResult] = await Promise.allSettled([
-        apiClient.getSession(),
-        getHealthSyncEnabled(),
-        getNotificationsEnabled(),
-        getUseMockHealthData(),
-      ]);
+      const [sessionResult, healthResult, notifResult, mockResult, diagResult] =
+        await Promise.allSettled([
+          apiClient.getSession(),
+          getHealthSyncEnabled(),
+          getNotificationsEnabled(),
+          getUseMockHealthData(),
+          getLastHealthReadDiag(),
+        ]);
       if (cancelled) return;
       if (sessionResult.status === 'fulfilled' && sessionResult.value?.user?.email) {
         setEmail(sessionResult.value.user.email);
@@ -119,6 +124,9 @@ export default function SettingsScreen() {
       }
       if (mockResult.status === 'fulfilled') {
         setMockHealth(mockResult.value);
+      }
+      if (diagResult.status === 'fulfilled') {
+        setReadDiag(diagResult.value);
       }
       setLoading(false);
     }
@@ -440,6 +448,17 @@ export default function SettingsScreen() {
           onPress={onDeleteHealthData}
           style={styles.sectionButton}
         />
+        {readDiag ? (
+          <Text style={styles.diagText}>
+            {`Last read (${readDiag.rev}) ${new Date(readDiag.at).toLocaleTimeString()} — ${readDiag.samples} day${readDiag.samples === 1 ? '' : 's'}${readDiag.todaySteps !== null ? `, today ${readDiag.todaySteps} steps` : ''}\n` +
+              Object.entries(readDiag.metrics)
+                .map(
+                  ([metric, m]) =>
+                    `${metric}: ${m.path}${m.days ? ` ×${m.days}d` : ' (no data)'}${m.aggregateError ? ` [agg err: ${m.aggregateError.slice(0, 80)}]` : ''}`,
+                )
+                .join('\n')}
+          </Text>
+        ) : null}
       </Section>
 
       {/* Appearance — theme picker */}
@@ -604,6 +623,13 @@ function createStyles(t: Theme) {
       marginBottom: t.spacing.md,
     },
     sectionButton: {
+      marginTop: t.spacing.sm,
+    },
+    diagText: {
+      ...t.typography.helper,
+      fontSize: 11,
+      lineHeight: 15,
+      color: t.colors.textMuted,
       marginTop: t.spacing.sm,
     },
     nameEditRow: {

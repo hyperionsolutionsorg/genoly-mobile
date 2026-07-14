@@ -21,7 +21,14 @@
  * + tests run in Node and on iOS without crashing.
  */
 
-import type { HealthAdapter, HealthAdapterOptions, HealthAdapterPermissionState, HealthMetric, HealthSample } from './index';
+import type {
+  HealthAdapter,
+  HealthAdapterOptions,
+  HealthAdapterPermissionState,
+  HealthMetric,
+  HealthReadDiagnostics,
+  HealthSample,
+} from './index';
 
 // react-native-health-connect SdkAvailabilityStatus.SDK_AVAILABLE. Inlined
 // (not imported) to keep this file's only require() the lazy native-module
@@ -110,10 +117,15 @@ export class HealthConnectAdapter implements HealthAdapter {
    * now lazily initialize instead (root-caused 2026-07-13).
    */
   private initialized: boolean = false;
+  private lastReadDiagnostics: HealthReadDiagnostics | null = null;
 
   constructor(options: HealthAdapterOptions = {}) {
     this.hc = loadNativeModule();
     this.debugLogging = options.debugLogging ?? (typeof __DEV__ !== 'undefined' && __DEV__);
+  }
+
+  getReadDiagnostics(): HealthReadDiagnostics | null {
+    return this.lastReadDiagnostics;
   }
 
   /** Initialize the Health Connect client once per process. */
@@ -307,6 +319,12 @@ export class HealthConnectAdapter implements HealthAdapter {
     const byDate = new Map<string, HealthSample>();
     const todayLocal = formatLocalDate(new Date());
 
+    const diag: HealthReadDiagnostics = {
+      window: { start: startInstant, end: endInstantExclusive },
+      metrics: {},
+    };
+    this.lastReadDiagnostics = diag;
+
     function recordSample(date: string, partial: Partial<HealthSample>) {
       if (date > todayLocal) return; // clock-drift defense
       const existing = byDate.get(date) ?? {
@@ -325,6 +343,7 @@ export class HealthConnectAdapter implements HealthAdapter {
     // Falls back to raw readRecords per metric if the aggregate API
     // throws (older provider versions).
     const aggregateDaily = async (
+      metric: HealthMetric,
       recordType: string,
       extract: (result: {
         COUNT_TOTAL?: number;
@@ -342,11 +361,23 @@ export class HealthConnectAdapter implements HealthAdapter {
         },
         timeRangeSlicer: { period: 'DAYS', length: 1 },
       });
+      let days = 0;
       for (const group of groups) {
         const value = extract(group.result ?? {});
         if (typeof value !== 'number' || value <= 0) continue;
+        days++;
         apply(isoToLocalDate(group.startTime), Math.round(value));
       }
+      diag.metrics[metric] = { path: 'aggregate', days };
+    };
+
+    /** Record the fallback outcome (aggregate threw) for diagnostics. */
+    const noteFallback = (metric: HealthMetric, err: unknown, days: number) => {
+      diag.metrics[metric] = {
+        path: 'raw-fallback',
+        days,
+        aggregateError: err instanceof Error ? err.message : String(err),
+      };
     };
 
     const tasks: Array<Promise<void>> = [];
@@ -354,10 +385,11 @@ export class HealthConnectAdapter implements HealthAdapter {
     if (readableMetrics.includes('steps')) {
       tasks.push(
         aggregateDaily(
+          'steps',
           'Steps',
           (r) => r.COUNT_TOTAL,
           (date, value) => recordSample(date, { date, steps: value }),
-        ).catch(() =>
+        ).catch((err) =>
           this.readMetric('Steps', startInstant, endInstant, (records) => {
             // Fallback: sum raw records by start-of-record's local day.
             const byDay = new Map<string, number>();
@@ -369,6 +401,7 @@ export class HealthConnectAdapter implements HealthAdapter {
             for (const [date, value] of byDay) {
               recordSample(date, { date, steps: Math.round(value) });
             }
+            noteFallback('steps', err, byDay.size);
           }),
         ),
       );
@@ -377,10 +410,11 @@ export class HealthConnectAdapter implements HealthAdapter {
     if (readableMetrics.includes('caloriesActive')) {
       tasks.push(
         aggregateDaily(
+          'caloriesActive',
           'ActiveCaloriesBurned',
           (r) => r.ACTIVE_CALORIES_TOTAL?.inKilocalories,
           (date, value) => recordSample(date, { date, caloriesActive: value }),
-        ).catch(() =>
+        ).catch((err) =>
           this.readMetric('ActiveCaloriesBurned', startInstant, endInstant, (records) => {
             const byDay = new Map<string, number>();
             for (const r of records) {
@@ -392,6 +426,7 @@ export class HealthConnectAdapter implements HealthAdapter {
             for (const [date, value] of byDay) {
               recordSample(date, { date, caloriesActive: Math.round(value) });
             }
+            noteFallback('caloriesActive', err, byDay.size);
           }),
         ),
       );
@@ -400,10 +435,11 @@ export class HealthConnectAdapter implements HealthAdapter {
     if (readableMetrics.includes('distanceMeters')) {
       tasks.push(
         aggregateDaily(
+          'distanceMeters',
           'Distance',
           (r) => r.DISTANCE?.inMeters,
           (date, value) => recordSample(date, { date, distanceMeters: value }),
-        ).catch(() =>
+        ).catch((err) =>
           this.readMetric('Distance', startInstant, endInstant, (records) => {
             const byDay = new Map<string, number>();
             for (const r of records) {
@@ -415,6 +451,7 @@ export class HealthConnectAdapter implements HealthAdapter {
             for (const [date, value] of byDay) {
               recordSample(date, { date, distanceMeters: Math.round(value) });
             }
+            noteFallback('distanceMeters', err, byDay.size);
           }),
         ),
       );

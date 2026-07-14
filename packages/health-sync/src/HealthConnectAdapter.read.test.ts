@@ -195,6 +195,39 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
     expect(samples[0].steps).toBe(777);
   });
 
+  it('records read diagnostics: aggregate path + raw fallback with the native error', async () => {
+    mockInitialize.mockResolvedValue(true);
+    mockGetGranted.mockResolvedValue([
+      { accessType: 'read', recordType: 'Steps' },
+      { accessType: 'read', recordType: 'Distance' },
+    ]);
+    mockAggregate.mockImplementation(async ({ recordType }: { recordType: string }) => {
+      if (recordType === 'Steps') {
+        return [
+          { startTime: '2026-07-12T00:00', endTime: '2026-07-13T00:00', result: { COUNT_TOTAL: 100 } },
+        ];
+      }
+      throw new Error('DateTimeParseException: boom');
+    });
+    mockReadRecords.mockResolvedValue({ records: [] });
+
+    const adapter = new HealthConnectAdapter({ debugLogging: false });
+    await adapter.readDailyAggregates({
+      startDate: '2026-07-10',
+      endDate: '2026-07-13',
+      metrics: ['steps', 'distanceMeters'],
+    });
+
+    const diag = adapter.getReadDiagnostics();
+    expect(diag?.metrics.steps).toEqual({ path: 'aggregate', days: 1 });
+    expect(diag?.metrics.distanceMeters).toMatchObject({
+      path: 'raw-fallback',
+      days: 0,
+    });
+    expect(diag?.metrics.distanceMeters?.aggregateError).toContain('DateTimeParseException');
+    expect(diag?.window.start.endsWith('Z')).toBe(true);
+  });
+
   it('returns [] when NO permissions are granted (never throws)', async () => {
     mockInitialize.mockResolvedValue(true);
     mockGetGranted.mockResolvedValue([]);
