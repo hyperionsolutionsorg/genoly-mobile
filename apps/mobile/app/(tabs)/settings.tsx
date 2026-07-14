@@ -454,7 +454,7 @@ export default function SettingsScreen() {
               Object.entries(readDiag.metrics)
                 .map(
                   ([metric, m]) =>
-                    `${metric}: ${m.path}${m.days ? ` ×${m.days}d` : ' (no data)'}${m.aggregateError ? ` [agg err: ${m.aggregateError.slice(0, 80)}]` : ''}`,
+                    `${metric}: ${m.path}${m.days ? ` ×${m.days}d` : ' (no data)'}${m.origins?.length ? ` src: ${m.origins.map((o) => o.split('.').pop()).join(',')}` : ''}${m.aggregateError ? ` [agg err: ${m.aggregateError.slice(0, 80)}]` : ''}`,
                 )
                 .join('\n')}
           </Text>

@@ -79,6 +79,8 @@ interface HCAggregateGroup {
     COUNT_TOTAL?: number; // Steps
     ACTIVE_CALORIES_TOTAL?: { inKilocalories: number };
     DISTANCE?: { inMeters: number };
+    /** Package names of the apps whose records contributed. */
+    dataOrigins?: string[];
   };
 }
 
@@ -361,15 +363,17 @@ export class HealthConnectAdapter implements HealthAdapter {
       groups: HCAggregateGroup[],
       extract: (result: HCAggregateGroup['result']) => number | undefined,
       apply: (date: string, value: number) => void,
-    ): number => {
+    ): { days: number; origins: string[] } => {
       let days = 0;
+      const origins = new Set<string>();
       for (const group of groups) {
+        for (const origin of group.result?.dataOrigins ?? []) origins.add(origin);
         const value = extract(group.result ?? {});
         if (typeof value !== 'number' || value <= 0) continue;
         days++;
         apply(isoToLocalDate(group.startTime), Math.round(value));
       }
-      return days;
+      return { days, origins: Array.from(origins) };
     };
 
     const aggregateDaily = async (
@@ -389,16 +393,19 @@ export class HealthConnectAdapter implements HealthAdapter {
           timeRangeFilter,
           timeRangeSlicer: { period: 'DAYS', length: 1 },
         });
-        diag.metrics[metric] = { path: 'aggregate', days: applyGroups(groups, extract, apply) };
+        const { days, origins } = applyGroups(groups, extract, apply);
+        diag.metrics[metric] = { path: 'aggregate', days, origins };
       } catch (periodErr) {
         const groups = await this.hc!.aggregateGroupByDuration({
           recordType,
           timeRangeFilter,
           timeRangeSlicer: { duration: 'DAYS', length: 1 },
         });
+        const { days, origins } = applyGroups(groups, extract, apply);
         diag.metrics[metric] = {
           path: 'aggregate-duration',
-          days: applyGroups(groups, extract, apply),
+          days,
+          origins,
           aggregateError: periodErr instanceof Error ? periodErr.message : String(periodErr),
         };
       }

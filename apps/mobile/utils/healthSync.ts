@@ -45,7 +45,7 @@ import {
 
 /** Bumped whenever the read path changes — shows up in the Settings
  *  diagnostic line so a screenshot identifies the installed build. */
-export const HEALTH_READ_REV = 'r62';
+export const HEALTH_READ_REV = 'r63';
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -200,7 +200,7 @@ export async function collectHealthDataIntoQueue(
         todaySteps: typeof todaySample?.steps === 'number' ? todaySample.steps : null,
         metrics: (adapterDiag?.metrics ?? {}) as Record<
           string,
-          { path: string; days: number; aggregateError?: string }
+          { path: string; days: number; aggregateError?: string; origins?: string[] }
         >,
       });
     } catch {
