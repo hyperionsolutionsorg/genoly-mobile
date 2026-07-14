@@ -758,3 +758,13 @@ Operator data policy landed across both repos: **user-triggered 30-day import; 1
 - **APK v10 delivered** to `~/Desktop/genoly-local-convex.apk` (main `926a463` + temp local config, reverted; tree clean). Emulator-verified: Health Sync section shows all four controls. Audit note: web has NO fitness data-control surface (`src/pages/fitness/Settings.tsx` is a mock stub) — mobile is the control surface for now; web follow-up open.
 
 **Field verification (operator's Samsung, this session):** real steps flowed end-to-end for the first time — 145 steps synced Samsung Health → Health Connect → Genoly → local Convex → Activity dashboard. Distance/calories pending Samsung Health writing those record types into HC (source-side; app renders "—" for absent types by design).
+
+## [2026-07-13] merge | Step-count accuracy: local-day windows + HC aggregate API (#59); APK v11
+
+Operator field report on v9: Genoly showed **145** steps vs Samsung Health's **2,517** for the same day; "Sync last 30 days" reported "Synced 1 day".
+
+**Root cause 1 — UTC window from local dates (real undercount bug):** `HealthConnectAdapter.readDailyAggregates` queried HC with `${localDate}T00:00:00.000Z`. West of UTC that window ends before the local day does — **6:59:59 PM Central** — so every evening record was silently dropped (the operator's most-active hour was 6–7 PM). Fixed: true local-day boundaries (naive local strings for the aggregate API; real instants for the raw fallback).
+**Root cause 2 — raw-record summing:** adding up `readRecords` results double-counts once multiple sources write overlapping records. Primary read path is now HC's own **`aggregateGroupByPeriod`** (1-day periods) — deduplicated, matches what source apps display — with the raw path retained as fallback if the aggregate API throws.
+**Context (not a bug):** the 145-vs-2517 gap was also partly source-side — Samsung Health had only been writing to HC since the write-grant that evening and backfills on its own schedule. The "Sync last 30 days" toast now explains a short result instead of the bare count.
+
+Tests: read suite reworked around the aggregate path + regression guards (local-boundary window assertion, raw-fallback path). Suite **426 passed / 34 skipped**; tsc clean. **APK v11 delivered** to `~/Desktop/genoly-local-convex.apk` (main `fa9d395` + temp local config, reverted; tree clean); emulator boot clean. Real-count parity check vs Samsung Health = operator's Samsung on v11.
