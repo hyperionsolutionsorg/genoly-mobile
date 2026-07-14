@@ -129,7 +129,7 @@ export interface HealthReadDiagSnapshot {
   status: string;
   samples: number;
   todaySteps: number | null;
-  metrics: Record<string, { path: string; days: number; aggregateError?: string }>;
+  metrics: Record<string, { path: string; days: number; aggregateError?: string; origins?: string[] }>;
 }
 
 export async function getLastHealthReadDiag(): Promise<HealthReadDiagSnapshot | null> {

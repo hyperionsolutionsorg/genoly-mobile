@@ -43,6 +43,9 @@ export interface HealthReadDiagnostics {
         days: number;
         /** Present when the aggregate API threw and the fallback ran. */
         aggregateError?: string;
+        /** Package names whose records contributed (aggregate tiers only)
+         *  — attributes WHERE a value came from on field devices. */
+        origins?: string[];
       }
     >
   >;

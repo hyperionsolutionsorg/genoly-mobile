@@ -241,7 +241,7 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
     });
 
     const diag = adapter.getReadDiagnostics();
-    expect(diag?.metrics.steps).toEqual({ path: 'aggregate', days: 1 });
+    expect(diag?.metrics.steps).toMatchObject({ path: 'aggregate', days: 1 });
     expect(diag?.metrics.distanceMeters).toMatchObject({ path: 'aggregate-duration', days: 1 });
     expect(diag?.metrics.distanceMeters?.aggregateError).toContain('LocalDateTime');
     expect(diag?.metrics.caloriesActive).toMatchObject({ path: 'raw-fallback', days: 0 });
