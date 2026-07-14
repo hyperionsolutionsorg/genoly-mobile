@@ -108,6 +108,12 @@ export async function setLastHealthCollectAt(at: number): Promise<void> {
   await getStorage().setItem(KEY_LAST_HEALTH_COLLECT_AT, String(at));
 }
 
+/** Reset the collector to "never collected" — the next enabled collect
+ *  uses the 30-day initial window again (used by "Delete my health data"). */
+export async function clearLastHealthCollectAt(): Promise<void> {
+  await getStorage().removeItem(KEY_LAST_HEALTH_COLLECT_AT);
+}
+
 /**
  * Theme preference: 'system' follows the OS light/dark setting; 'light',
  * 'dark', and 'classic' pin a specific palette (mirrors the web's three

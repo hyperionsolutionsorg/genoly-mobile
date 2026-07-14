@@ -136,6 +136,13 @@ export interface ApiClient {
     serverTime: number;
   }>;
 
+  /**
+   * DELETE /api/fitness/health-data — wipes ALL of the caller's synced
+   * health entries server-side (the "remove my health data" user right;
+   * pairs with the server's 1-year retention cron). Idempotent.
+   */
+  deleteHealthData(): Promise<{ deleted: number; serverTime: number }>;
+
   // §3 Friends & leaderboard ──────────────────────────────────────────────
 
   /** GET /api/fitness/friends. */

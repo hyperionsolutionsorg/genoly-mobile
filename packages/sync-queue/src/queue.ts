@@ -164,6 +164,13 @@ export class SyncQueue {
     return this.store.clearDeadLettered();
   }
 
+  /** Hard-delete EVERY queued row (pending + dead-lettered). Pairs with
+   *  DELETE /api/fitness/health-data — a server wipe must not be undone
+   *  by a later drain re-uploading stale local rows. */
+  async clearAll(): Promise<void> {
+    return this.store.clearAll();
+  }
+
   // ── Internal handlers ──────────────────────────────────────────────
 
   /**

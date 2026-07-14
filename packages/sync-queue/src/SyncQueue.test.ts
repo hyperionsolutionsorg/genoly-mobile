@@ -285,6 +285,26 @@ describe('SyncQueue', () => {
       await queue.clearDeadLetters();
       expect(await queue.getDeadLetterDepth()).toBe(0);
     });
+
+    it('clearAll() removes pending AND dead-lettered rows ("delete my health data")', async () => {
+      const store = new MemoryStore();
+      const apiClient = makeMockApiClient(async () => {
+        throw new ApiClientError({ code: 'unauthenticated', message: 'bad' }, 401);
+      });
+      const queue = new SyncQueue({ apiClient, store });
+
+      await queue.enqueue([makeEntry('2026-05-28', 8000)], makeId);
+      await queue.drain(); // dead-letters that row
+      await queue.enqueue([makeEntry('2026-05-29', 9000)], makeId); // pending
+
+      expect(await queue.getQueueDepth()).toBe(1);
+      expect(await queue.getDeadLetterDepth()).toBe(1);
+
+      await queue.clearAll();
+
+      expect(await queue.getQueueDepth()).toBe(0);
+      expect(await queue.getDeadLetterDepth()).toBe(0);
+    });
   });
 
   describe('concurrency', () => {

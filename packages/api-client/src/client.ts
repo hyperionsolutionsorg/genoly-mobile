@@ -290,6 +290,15 @@ export class FetchApiClient implements ApiClient {
     }>('POST', '/api/fitness/sync/daily', { entries });
   }
 
+  /** DELETE /api/fitness/health-data — wipe all of the caller's synced
+   *  health entries (idempotent; see the 1-year retention policy). */
+  async deleteHealthData(): Promise<{ deleted: number; serverTime: number }> {
+    return this.request<{ deleted: number; serverTime: number }>(
+      'DELETE',
+      '/api/fitness/health-data',
+    );
+  }
+
   // §3 Friends & leaderboard ──────────────────────────────────────────────
 
   /** GET /api/fitness/friends — list partitioned into accepted / pendingIncoming / pendingOutgoing / blocked. */
