@@ -26,6 +26,7 @@ jest.mock('react-native-health-connect', () => ({
   getGrantedPermissions: jest.fn(),
   readRecords: jest.fn(),
   openHealthConnectSettings: jest.fn(),
+  aggregateGroupByPeriod: jest.fn(),
 }));
 
 import {
@@ -34,6 +35,7 @@ import {
   readRecords,
   requestPermission,
   openHealthConnectSettings,
+  aggregateGroupByPeriod,
 } from 'react-native-health-connect';
 import { HealthConnectAdapter } from './HealthConnectAdapter';
 
@@ -42,6 +44,7 @@ const mockGetGranted = getGrantedPermissions as unknown as jest.Mock;
 const mockReadRecords = readRecords as unknown as jest.Mock;
 const mockRequestPermission = requestPermission as unknown as jest.Mock;
 const mockOpenSettings = openHealthConnectSettings as unknown as jest.Mock;
+const mockAggregate = aggregateGroupByPeriod as unknown as jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -55,15 +58,17 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
       { accessType: 'read', recordType: 'ActiveCaloriesBurned' },
       { accessType: 'read', recordType: 'Distance' },
     ]);
-    mockReadRecords.mockImplementation(async (recordType: string) => {
+    mockAggregate.mockImplementation(async ({ recordType }: { recordType: string }) => {
       if (recordType === 'Steps') {
-        return {
-          records: [
-            { startTime: '2026-07-12T08:00:00.000Z', endTime: '2026-07-12T09:00:00.000Z', count: 4321 },
-          ],
-        };
+        return [
+          {
+            startTime: '2026-07-12T00:00:00',
+            endTime: '2026-07-13T00:00:00',
+            result: { COUNT_TOTAL: 4321 },
+          },
+        ];
       }
-      return { records: [] };
+      return [];
     });
 
     // Fresh instance — exactly what createHealthAdapter() hands callers.
@@ -83,7 +88,7 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
   it('initializes the client once per instance across repeated reads', async () => {
     mockInitialize.mockResolvedValue(true);
     mockGetGranted.mockResolvedValue([{ accessType: 'read', recordType: 'Steps' }]);
-    mockReadRecords.mockResolvedValue({ records: [] });
+    mockAggregate.mockResolvedValue([]);
 
     const adapter = new HealthConnectAdapter({ debugLogging: false });
     await adapter.readDailyAggregates({ startDate: '2026-07-12', endDate: '2026-07-13', metrics: ['steps'] });
@@ -92,11 +97,11 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
     expect(mockInitialize).toHaveBeenCalledTimes(1);
   });
 
-  it('only reads record types the OS reports as granted', async () => {
+  it('only aggregates record types the OS reports as granted', async () => {
     mockInitialize.mockResolvedValue(true);
     // Steps granted; calories + distance NOT granted.
     mockGetGranted.mockResolvedValue([{ accessType: 'read', recordType: 'Steps' }]);
-    mockReadRecords.mockResolvedValue({ records: [] });
+    mockAggregate.mockResolvedValue([]);
 
     const adapter = new HealthConnectAdapter({ debugLogging: false });
     await adapter.readDailyAggregates({
@@ -105,8 +110,59 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
       metrics: ['steps', 'caloriesActive', 'distanceMeters'],
     });
 
-    const readTypes = mockReadRecords.mock.calls.map((c) => c[0]);
-    expect(readTypes).toEqual(['Steps']);
+    const aggTypes = mockAggregate.mock.calls.map((c) => c[0].recordType);
+    expect(aggTypes).toEqual(['Steps']);
+    expect(mockReadRecords).not.toHaveBeenCalled();
+  });
+
+  it('queries LOCAL day boundaries (naive local strings — no UTC "Z" window)', async () => {
+    // Regression guard for the 2026-07-13 undercount: the old code sent
+    // `${date}T00:00:00.000Z`, which in any timezone west of UTC ended
+    // "today" hours early (6:59:59 PM Central) and dropped every evening
+    // record.
+    mockInitialize.mockResolvedValue(true);
+    mockGetGranted.mockResolvedValue([{ accessType: 'read', recordType: 'Steps' }]);
+    mockAggregate.mockResolvedValue([]);
+
+    const adapter = new HealthConnectAdapter({ debugLogging: false });
+    await adapter.readDailyAggregates({
+      startDate: '2026-07-10',
+      endDate: '2026-07-13',
+      metrics: ['steps'],
+    });
+
+    const { timeRangeFilter, timeRangeSlicer } = mockAggregate.mock.calls[0][0];
+    expect(timeRangeFilter.startTime).toBe('2026-07-10T00:00:00');
+    expect(timeRangeFilter.endTime).toBe('2026-07-14T00:00:00'); // exclusive day after endDate
+    expect(timeRangeFilter.startTime).not.toContain('Z');
+    expect(timeRangeSlicer).toEqual({ period: 'DAYS', length: 1 });
+  });
+
+  it('falls back to raw readRecords (with real instants) when the aggregate API throws', async () => {
+    mockInitialize.mockResolvedValue(true);
+    mockGetGranted.mockResolvedValue([{ accessType: 'read', recordType: 'Steps' }]);
+    mockAggregate.mockRejectedValue(new Error('aggregate unsupported'));
+    mockReadRecords.mockResolvedValue({
+      records: [
+        { startTime: '2026-07-12T14:00:00.000Z', endTime: '2026-07-12T15:00:00.000Z', count: 777 },
+      ],
+    });
+
+    const adapter = new HealthConnectAdapter({ debugLogging: false });
+    const samples = await adapter.readDailyAggregates({
+      startDate: '2026-07-10',
+      endDate: '2026-07-13',
+      metrics: ['steps'],
+    });
+
+    expect(mockReadRecords).toHaveBeenCalledTimes(1);
+    const fallbackFilter = mockReadRecords.mock.calls[0][1].timeRangeFilter;
+    // Fallback uses REAL instants spanning the full local days.
+    expect(new Date(fallbackFilter.startTime).getTime()).toBe(
+      new Date('2026-07-10T00:00:00').getTime(),
+    );
+    expect(samples.length).toBe(1);
+    expect(samples[0].steps).toBe(777);
   });
 
   it('returns [] when NO permissions are granted (never throws)', async () => {
@@ -122,6 +178,7 @@ describe('HealthConnectAdapter.readDailyAggregates() — fresh-instance reads', 
 
     expect(samples).toEqual([]);
     expect(mockReadRecords).not.toHaveBeenCalled();
+    expect(mockAggregate).not.toHaveBeenCalled();
     expect(await adapter.getGrantedMetrics()).toEqual([]);
   });
 

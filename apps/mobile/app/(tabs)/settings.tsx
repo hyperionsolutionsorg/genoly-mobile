@@ -236,12 +236,16 @@ export default function SettingsScreen() {
   const onSyncHistory = async () => {
     setHistorySyncing(true);
     try {
-      const { collect, drain } = await collectAndDrainNow({ windowDays: 30 });
+      const { collect } = await collectAndDrainNow({ windowDays: 30 });
       if (collect.status === 'enqueued') {
-        const accepted = drain?.accepted ?? 0;
-        toast.success(
-          `Synced ${collect.enqueued} day${collect.enqueued === 1 ? '' : 's'} of health data${accepted ? ` (${accepted} uploaded)` : ''}.`,
-        );
+        const days = collect.enqueued;
+        // A short result usually means the SOURCE app hasn't backfilled
+        // Health Connect yet, not that the sync failed — say so.
+        const partialNote =
+          days < 7
+            ? " — that's all your phone's health app has shared with Health Connect so far. Re-run this later as more history syncs over."
+            : '.';
+        toast.success(`Synced ${days} day${days === 1 ? '' : 's'} of health data${partialNote}`);
       } else if (collect.status === 'no-data') {
         toast.info('No health data found in the last 30 days — your health app may not have synced history to Health Connect yet.');
       } else if (collect.status === 'no-permissions') {

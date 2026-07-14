@@ -53,6 +53,21 @@ interface RNHealthConnect {
       ascendingOrder?: boolean;
     },
   ): Promise<{ records: HCRecord[] }>;
+  aggregateGroupByPeriod(request: {
+    recordType: string;
+    timeRangeFilter: { operator: 'between'; startTime: string; endTime: string };
+    timeRangeSlicer: { period: 'DAYS'; length: number };
+  }): Promise<
+    Array<{
+      startTime: string;
+      endTime: string;
+      result: {
+        COUNT_TOTAL?: number; // Steps
+        ACTIVE_CALORIES_TOTAL?: { inKilocalories: number };
+        DISTANCE?: { inMeters: number };
+      };
+    }>
+  >;
 }
 
 function loadNativeModule(): RNHealthConnect | null {
@@ -269,8 +284,19 @@ export class HealthConnectAdapter implements HealthAdapter {
       return [];
     }
 
-    const startTime = `${opts.startDate}T00:00:00.000Z`;
-    const endTime = `${opts.endDate}T23:59:59.999Z`;
+    // LOCAL day boundaries. The previous code appended "Z" to the local
+    // date (UTC midnight) — in any timezone west of UTC that window ends
+    // BEFORE the local day does (e.g. 6:59:59 PM Central), silently
+    // dropping every evening record. Device-confirmed undercount on the
+    // operator's Samsung, 2026-07-13. Naive local strings go to the
+    // aggregate API (Health Connect slices period groups on LocalDateTime);
+    // real instants go to the raw readRecords fallback.
+    const startLocal = `${opts.startDate}T00:00:00`;
+    const endExclusive = new Date(`${opts.endDate}T00:00:00`);
+    endExclusive.setDate(endExclusive.getDate() + 1);
+    const endLocal = `${formatLocalDate(endExclusive)}T00:00:00`;
+    const startInstant = new Date(startLocal).toISOString();
+    const endInstant = new Date(endExclusive.getTime() - 1).toISOString();
 
     const byDate = new Map<string, HealthSample>();
     const todayLocal = formatLocalDate(new Date());
@@ -286,52 +312,102 @@ export class HealthConnectAdapter implements HealthAdapter {
       byDate.set(date, { ...existing, ...partial });
     }
 
+    // Primary path: Health Connect's own per-day aggregation. It
+    // DEDUPLICATES overlapping records across sources (raw-record
+    // summing double-counts once e.g. both Samsung Health and a
+    // watch write steps) and matches what the source apps display.
+    // Falls back to raw readRecords per metric if the aggregate API
+    // throws (older provider versions).
+    const aggregateDaily = async (
+      recordType: string,
+      extract: (result: {
+        COUNT_TOTAL?: number;
+        ACTIVE_CALORIES_TOTAL?: { inKilocalories: number };
+        DISTANCE?: { inMeters: number };
+      }) => number | undefined,
+      apply: (date: string, value: number) => void,
+    ): Promise<void> => {
+      const groups = await this.hc!.aggregateGroupByPeriod({
+        recordType,
+        timeRangeFilter: { operator: 'between', startTime: startLocal, endTime: endLocal },
+        timeRangeSlicer: { period: 'DAYS', length: 1 },
+      });
+      for (const group of groups) {
+        const value = extract(group.result ?? {});
+        if (typeof value !== 'number' || value <= 0) continue;
+        apply(isoToLocalDate(group.startTime), Math.round(value));
+      }
+    };
+
     const tasks: Array<Promise<void>> = [];
 
     if (readableMetrics.includes('steps')) {
-      tasks.push(this.readMetric('Steps', startTime, endTime, (records) => {
-        // Health Connect Steps records can span partial days; aggregate
-        // by start-of-record's local day.
-        const byDay = new Map<string, number>();
-        for (const r of records) {
-          if (typeof r.count !== 'number') continue;
-          const date = isoToLocalDate(r.startTime);
-          byDay.set(date, (byDay.get(date) ?? 0) + r.count);
-        }
-        for (const [date, value] of byDay) {
-          recordSample(date, { date, steps: Math.round(value) });
-        }
-      }));
+      tasks.push(
+        aggregateDaily(
+          'Steps',
+          (r) => r.COUNT_TOTAL,
+          (date, value) => recordSample(date, { date, steps: value }),
+        ).catch(() =>
+          this.readMetric('Steps', startInstant, endInstant, (records) => {
+            // Fallback: sum raw records by start-of-record's local day.
+            const byDay = new Map<string, number>();
+            for (const r of records) {
+              if (typeof r.count !== 'number') continue;
+              const date = isoToLocalDate(r.startTime);
+              byDay.set(date, (byDay.get(date) ?? 0) + r.count);
+            }
+            for (const [date, value] of byDay) {
+              recordSample(date, { date, steps: Math.round(value) });
+            }
+          }),
+        ),
+      );
     }
 
     if (readableMetrics.includes('caloriesActive')) {
-      tasks.push(this.readMetric('ActiveCaloriesBurned', startTime, endTime, (records) => {
-        const byDay = new Map<string, number>();
-        for (const r of records) {
-          const kcal = r.energy?.inKilocalories;
-          if (typeof kcal !== 'number') continue;
-          const date = isoToLocalDate(r.startTime);
-          byDay.set(date, (byDay.get(date) ?? 0) + kcal);
-        }
-        for (const [date, value] of byDay) {
-          recordSample(date, { date, caloriesActive: Math.round(value) });
-        }
-      }));
+      tasks.push(
+        aggregateDaily(
+          'ActiveCaloriesBurned',
+          (r) => r.ACTIVE_CALORIES_TOTAL?.inKilocalories,
+          (date, value) => recordSample(date, { date, caloriesActive: value }),
+        ).catch(() =>
+          this.readMetric('ActiveCaloriesBurned', startInstant, endInstant, (records) => {
+            const byDay = new Map<string, number>();
+            for (const r of records) {
+              const kcal = r.energy?.inKilocalories;
+              if (typeof kcal !== 'number') continue;
+              const date = isoToLocalDate(r.startTime);
+              byDay.set(date, (byDay.get(date) ?? 0) + kcal);
+            }
+            for (const [date, value] of byDay) {
+              recordSample(date, { date, caloriesActive: Math.round(value) });
+            }
+          }),
+        ),
+      );
     }
 
     if (readableMetrics.includes('distanceMeters')) {
-      tasks.push(this.readMetric('Distance', startTime, endTime, (records) => {
-        const byDay = new Map<string, number>();
-        for (const r of records) {
-          const meters = r.distance?.inMeters;
-          if (typeof meters !== 'number') continue;
-          const date = isoToLocalDate(r.startTime);
-          byDay.set(date, (byDay.get(date) ?? 0) + meters);
-        }
-        for (const [date, value] of byDay) {
-          recordSample(date, { date, distanceMeters: Math.round(value) });
-        }
-      }));
+      tasks.push(
+        aggregateDaily(
+          'Distance',
+          (r) => r.DISTANCE?.inMeters,
+          (date, value) => recordSample(date, { date, distanceMeters: value }),
+        ).catch(() =>
+          this.readMetric('Distance', startInstant, endInstant, (records) => {
+            const byDay = new Map<string, number>();
+            for (const r of records) {
+              const meters = r.distance?.inMeters;
+              if (typeof meters !== 'number') continue;
+              const date = isoToLocalDate(r.startTime);
+              byDay.set(date, (byDay.get(date) ?? 0) + meters);
+            }
+            for (const [date, value] of byDay) {
+              recordSample(date, { date, distanceMeters: Math.round(value) });
+            }
+          }),
+        ),
+      );
     }
 
     await Promise.all(tasks);
