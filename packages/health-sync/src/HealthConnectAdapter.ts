@@ -284,18 +284,24 @@ export class HealthConnectAdapter implements HealthAdapter {
       return [];
     }
 
-    // LOCAL day boundaries. The previous code appended "Z" to the local
-    // date (UTC midnight) — in any timezone west of UTC that window ends
-    // BEFORE the local day does (e.g. 6:59:59 PM Central), silently
-    // dropping every evening record. Device-confirmed undercount on the
-    // operator's Samsung, 2026-07-13. Naive local strings go to the
-    // aggregate API (Health Connect slices period groups on LocalDateTime);
-    // real instants go to the raw readRecords fallback.
-    const startLocal = `${opts.startDate}T00:00:00`;
+    // LOCAL day boundaries, expressed as INSTANTS. Two prior failure
+    // modes, both device-confirmed on the operator's Samsung 2026-07-13:
+    //  1. `${localDate}T00:00:00.000Z` (UTC midnight) — west of UTC that
+    //     window ends before the local day does (6:59:59 PM Central),
+    //     silently dropping every evening record (undercount).
+    //  2. Naive local strings ("...T00:00:00", no offset) — the library's
+    //     native layer runs Instant.parse() on BOTH filter variants
+    //     (HealthConnectUtils.kt getTimeRangeFilter/getTimeRangeFilterLocal),
+    //     so a naive string throws DateTimeParseException, the aggregate
+    //     call rejects, and the raw fallback's overlap double-counting
+    //     produced an OVERcount.
+    // Correct contract: real instants for local midnight. For the
+    // aggregate API the native side converts them to device-local
+    // LocalDateTime, so period groups align exactly to local days.
     const endExclusive = new Date(`${opts.endDate}T00:00:00`);
     endExclusive.setDate(endExclusive.getDate() + 1);
-    const endLocal = `${formatLocalDate(endExclusive)}T00:00:00`;
-    const startInstant = new Date(startLocal).toISOString();
+    const startInstant = new Date(`${opts.startDate}T00:00:00`).toISOString();
+    const endInstantExclusive = endExclusive.toISOString();
     const endInstant = new Date(endExclusive.getTime() - 1).toISOString();
 
     const byDate = new Map<string, HealthSample>();
@@ -329,7 +335,11 @@ export class HealthConnectAdapter implements HealthAdapter {
     ): Promise<void> => {
       const groups = await this.hc!.aggregateGroupByPeriod({
         recordType,
-        timeRangeFilter: { operator: 'between', startTime: startLocal, endTime: endLocal },
+        timeRangeFilter: {
+          operator: 'between',
+          startTime: startInstant,
+          endTime: endInstantExclusive,
+        },
         timeRangeSlicer: { period: 'DAYS', length: 1 },
       });
       for (const group of groups) {
