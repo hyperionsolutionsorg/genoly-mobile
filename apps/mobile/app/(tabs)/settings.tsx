@@ -41,6 +41,7 @@ import {
   getHealthSyncEnabled,
   setHasRequestedHealthPermissions,
   setHealthSyncEnabled,
+  clearLastHealthCollectAt,
   getNotificationsEnabled,
   setNotificationsEnabled,
   getUseMockHealthData,
@@ -48,6 +49,7 @@ import {
 } from '../../utils/preferences';
 import { unregisterBackgroundSync } from '../../utils/backgroundSync';
 import { collectAndDrainNow } from '../../utils/healthSync';
+import { createSyncQueue } from '@genoly/sync-queue';
 import {
   useTheme,
   useThemedStyles,
@@ -91,6 +93,7 @@ export default function SettingsScreen() {
   const [mockHealth, setMockHealth] = useState<boolean>(false);
   const [signingOut, setSigningOut] = useState(false);
   const [historySyncing, setHistorySyncing] = useState(false);
+  const [deletingHealthData, setDeletingHealthData] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Initial load — fetch session + prefs in parallel. Failure is OK;
@@ -174,6 +177,54 @@ export default function SettingsScreen() {
 
   const onManagePermissions = () => {
     router.push(PERMISSIONS_ROUTE);
+  };
+
+  /** Stop syncing (grants stay untouched at the OS level; re-enable via
+   *  Manage permissions → Grant access, which short-circuits on the
+   *  existing grants). */
+  const onDisableHealthSync = async () => {
+    await setHealthSyncEnabled(false);
+    await unregisterBackgroundSync();
+    setHealthEnabled(false);
+    toast.info('Health sync is off. Re-enable anytime via Manage permissions.');
+  };
+
+  /**
+   * Delete EVERY synced health entry server-side (the "remove my data"
+   * user right — pairs with the server's 1-year retention). Also wipes
+   * the local upload queue (stale rows must not re-upload the data) and
+   * resets the collector so a future re-enable does a fresh 30-day pull.
+   */
+  const onDeleteHealthData = () => {
+    Alert.alert(
+      'Delete all health data?',
+      'This permanently removes every synced day of steps, calories, and distance from your Genoly profile. Data still on your phone (Health Connect / Apple Health) is not affected.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingHealthData(true);
+            try {
+              const result = await apiClient.deleteHealthData();
+              const queue = await createSyncQueue({ apiClient });
+              await queue.clearAll();
+              await clearLastHealthCollectAt();
+              toast.success(
+                `Deleted ${result.deleted} day${result.deleted === 1 ? '' : 's'} of health data.`,
+              );
+            } catch (e) {
+              const msg = e instanceof Error ? e.message : 'Unknown error';
+              toast.error(`Couldn't delete health data (${msg}). Try again.`);
+            } finally {
+              setDeletingHealthData(false);
+            }
+          },
+        },
+      ],
+      { cancelable: true },
+    );
   };
 
   /**
@@ -365,6 +416,24 @@ export default function SettingsScreen() {
           loading={historySyncing}
           disabled={!healthEnabled || historySyncing}
           onPress={onSyncHistory}
+          style={styles.sectionButton}
+        />
+        {healthEnabled ? (
+          <Button
+            variant="secondary"
+            label="Turn off health sync"
+            accessibilityLabel="Stop syncing health data"
+            onPress={onDisableHealthSync}
+            style={styles.sectionButton}
+          />
+        ) : null}
+        <Button
+          variant="secondary"
+          label="Delete my health data…"
+          accessibilityLabel="Delete all synced health data"
+          loading={deletingHealthData}
+          disabled={deletingHealthData}
+          onPress={onDeleteHealthData}
           style={styles.sectionButton}
         />
       </Section>

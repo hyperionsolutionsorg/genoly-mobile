@@ -76,6 +76,11 @@ export interface SyncStore {
   /** Hard-delete all dead-lettered rows (for the user-triggered "clear
    *  errors" button in Settings). */
   clearDeadLettered(): Promise<void>;
+
+  /** Hard-delete EVERY row (pending + dead-lettered). Used by the
+   *  "delete my health data" control so wiped server data can't be
+   *  re-uploaded by a later drain of stale local rows. */
+  clearAll(): Promise<void>;
 }
 
 // ── MemoryStore ───────────────────────────────────────────────────────
@@ -134,6 +139,10 @@ export class MemoryStore implements SyncStore {
     for (const [id, row] of this.rows) {
       if (row.deadLetteredAt !== null) this.rows.delete(id);
     }
+  }
+
+  async clearAll(): Promise<void> {
+    this.rows.clear();
   }
 
   /** Test helper — inspect raw row state without filtering. */
@@ -291,5 +300,10 @@ export class ExpoSqliteStore implements SyncStore {
   async clearDeadLettered(): Promise<void> {
     const db = this.requireDb();
     await db.runAsync(`DELETE FROM sync_outbox WHERE dead_lettered_at IS NOT NULL`);
+  }
+
+  async clearAll(): Promise<void> {
+    const db = this.requireDb();
+    await db.runAsync(`DELETE FROM sync_outbox`);
   }
 }
