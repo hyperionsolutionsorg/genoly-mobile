@@ -64,17 +64,22 @@ interface RNHealthConnect {
     recordType: string;
     timeRangeFilter: { operator: 'between'; startTime: string; endTime: string };
     timeRangeSlicer: { period: 'DAYS'; length: number };
-  }): Promise<
-    Array<{
-      startTime: string;
-      endTime: string;
-      result: {
-        COUNT_TOTAL?: number; // Steps
-        ACTIVE_CALORIES_TOTAL?: { inKilocalories: number };
-        DISTANCE?: { inMeters: number };
-      };
-    }>
-  >;
+  }): Promise<HCAggregateGroup[]>;
+  aggregateGroupByDuration(request: {
+    recordType: string;
+    timeRangeFilter: { operator: 'between'; startTime: string; endTime: string };
+    timeRangeSlicer: { duration: 'DAYS'; length: number };
+  }): Promise<HCAggregateGroup[]>;
+}
+
+interface HCAggregateGroup {
+  startTime: string;
+  endTime: string;
+  result: {
+    COUNT_TOTAL?: number; // Steps
+    ACTIVE_CALORIES_TOTAL?: { inKilocalories: number };
+    DISTANCE?: { inMeters: number };
+  };
 }
 
 function loadNativeModule(): RNHealthConnect | null {
@@ -336,31 +341,27 @@ export class HealthConnectAdapter implements HealthAdapter {
       byDate.set(date, { ...existing, ...partial });
     }
 
-    // Primary path: Health Connect's own per-day aggregation. It
-    // DEDUPLICATES overlapping records across sources (raw-record
-    // summing double-counts once e.g. both Samsung Health and a
-    // watch write steps) and matches what the source apps display.
-    // Falls back to raw readRecords per metric if the aggregate API
-    // throws (older provider versions).
-    const aggregateDaily = async (
-      metric: HealthMetric,
-      recordType: string,
-      extract: (result: {
-        COUNT_TOTAL?: number;
-        ACTIVE_CALORIES_TOTAL?: { inKilocalories: number };
-        DISTANCE?: { inMeters: number };
-      }) => number | undefined,
+    // Primary path: Health Connect's own aggregation, which DEDUPLICATES
+    // overlapping records across sources (raw-record summing
+    // double-counts) and matches what the source apps display. THREE
+    // tiers, because react-native-health-connect builds the
+    // period-aggregate request INCONSISTENTLY per record type (Steps
+    // passes a LocalDateTime filter as the SDK requires; ActiveCalories/
+    // Distance pass an Instant filter, which the SDK rejects with
+    // "Either use TimeRangeFilter with LocalDateTime or
+    // AggregateGroupByDurationRequest" — device-confirmed via the r61
+    // diagnostics, 2026-07-13):
+    //   1. aggregateGroupByPeriod  — calendar local days (DST-proof)
+    //   2. aggregateGroupByDuration — 24h buckets anchored at local
+    //      midnight (Instant filter is the CORRECT contract here; only
+    //      drifts on the two DST-change days a year)
+    //   3. raw readRecords summing — last resort, may double-count
+    //      overlapping records.
+    const applyGroups = (
+      groups: HCAggregateGroup[],
+      extract: (result: HCAggregateGroup['result']) => number | undefined,
       apply: (date: string, value: number) => void,
-    ): Promise<void> => {
-      const groups = await this.hc!.aggregateGroupByPeriod({
-        recordType,
-        timeRangeFilter: {
-          operator: 'between',
-          startTime: startInstant,
-          endTime: endInstantExclusive,
-        },
-        timeRangeSlicer: { period: 'DAYS', length: 1 },
-      });
+    ): number => {
       let days = 0;
       for (const group of groups) {
         const value = extract(group.result ?? {});
@@ -368,10 +369,42 @@ export class HealthConnectAdapter implements HealthAdapter {
         days++;
         apply(isoToLocalDate(group.startTime), Math.round(value));
       }
-      diag.metrics[metric] = { path: 'aggregate', days };
+      return days;
     };
 
-    /** Record the fallback outcome (aggregate threw) for diagnostics. */
+    const aggregateDaily = async (
+      metric: HealthMetric,
+      recordType: string,
+      extract: (result: HCAggregateGroup['result']) => number | undefined,
+      apply: (date: string, value: number) => void,
+    ): Promise<void> => {
+      const timeRangeFilter = {
+        operator: 'between' as const,
+        startTime: startInstant,
+        endTime: endInstantExclusive,
+      };
+      try {
+        const groups = await this.hc!.aggregateGroupByPeriod({
+          recordType,
+          timeRangeFilter,
+          timeRangeSlicer: { period: 'DAYS', length: 1 },
+        });
+        diag.metrics[metric] = { path: 'aggregate', days: applyGroups(groups, extract, apply) };
+      } catch (periodErr) {
+        const groups = await this.hc!.aggregateGroupByDuration({
+          recordType,
+          timeRangeFilter,
+          timeRangeSlicer: { duration: 'DAYS', length: 1 },
+        });
+        diag.metrics[metric] = {
+          path: 'aggregate-duration',
+          days: applyGroups(groups, extract, apply),
+          aggregateError: periodErr instanceof Error ? periodErr.message : String(periodErr),
+        };
+      }
+    };
+
+    /** Record the last-resort outcome (both aggregate tiers threw). */
     const noteFallback = (metric: HealthMetric, err: unknown, days: number) => {
       diag.metrics[metric] = {
         path: 'raw-fallback',

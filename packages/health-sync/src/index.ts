@@ -38,7 +38,7 @@ export interface HealthReadDiagnostics {
       HealthMetric,
       {
         /** Which code path produced the values. */
-        path: 'aggregate' | 'raw-fallback';
+        path: 'aggregate' | 'aggregate-duration' | 'raw-fallback';
         /** Days in the window that carried a non-zero value. */
         days: number;
         /** Present when the aggregate API threw and the fallback ran. */
